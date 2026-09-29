@@ -1,0 +1,1 @@
+import AuthScreen from "@/components/AuthScreen";export default function Daftar(){return <AuthScreen mode="register"/>}
