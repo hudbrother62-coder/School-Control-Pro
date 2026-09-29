@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+import "./paywall.css";
 import {LockKeyhole,CheckCircle2,ShieldCheck,RefreshCw,ArrowRight,CalendarClock} from "lucide-react";
 type Plan={key:"monthly"|"yearly";label:string;price:number;days:number;caption:string};
 type Plans={monthly:Plan;yearly:Plan};
