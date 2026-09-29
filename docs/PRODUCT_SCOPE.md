@@ -1,6 +1,6 @@
 # School Control — product scope and implementation status
 
-**Product promise:** one school, one owner account and subscription, private staff accounts with role-based access; seven-day trial; mobile-first and light/dark UI. School Control is a new product, not a copy of the databases of other applications.
+**Product promise:** one school, one owner account and subscription, private staff accounts with role-based access; three-day trial; mobile-first and light/dark UI. School Control is a new product, not a copy of the databases of other applications.
 
 ## Source modules and target behavior
 | Source | Target modules | Required behavior |
@@ -19,7 +19,7 @@ The owner can manage membership, principal accesses school operation and aggrega
 
 ## Delivered in current repository
 - Next.js + TypeScript responsive shell, light/dark, desktop sidebar and mobile bottom bar, role-aware navigation.
-- Email/password Auth binding; school creation RPC and seven-day trial; invite code to join with a personal account.
+- Email/password Auth binding; school creation RPC and three-day trial; invite code to join with a personal account.
 - School-scoped database schema and RLS, student/class/staff core entities, records, tasks, case, finance/payroll tables.
 - Staff self-attendance RPC using server time and school timezone; manager-only manual attendance with reason/audit; configurable staff shift; factual member-specific performance counts and evidence verification.
 - Leave requests with management/HR approvals; school classes and students, student attendance, assessment entries and teacher journals.
@@ -43,7 +43,7 @@ This is a functioning **foundation once a dedicated Supabase project is connecte
 - Viewer cannot write, and principal cannot read identifying confidential counseling notes.
 - Check-in and check-out use server time; repeating an action cannot create a second daily attendance record; manual correction requires a reason and actor.
 - The attendance result is a factual indicator, not an automatic competency verdict.
-- Trial expires after seven days; expired schools cannot write or consume AI; billing cannot be activated by a client-side button.
+- Trial expires after three days; expired schools cannot write or consume AI; billing cannot be activated by a client-side button.
 - Midtrans notification has a valid signature, order ID, amount and idempotent server reconciliation; duplicate notifications cannot extend the subscription twice.
 - Permissions revoke promptly when membership is removed; secrets stay server-only; uploaded evidence is privately stored.
 - Original applications remain operational throughout migration.

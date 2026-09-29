@@ -1,6 +1,6 @@
 # School Control
 
-**Satu Sistem, Semua Urusan Sekolah.** Modular school SaaS. One school = one owner account + one subscription; invite members with separate logins. 7-day trial.
+**Satu Sistem, Semua Urusan Sekolah.** Modular school SaaS. One school = one owner account + one subscription; invite members with separate logins. 3-day trial.
 
 ## Status
 
@@ -18,7 +18,7 @@ Next.js 15 / React 19 / TypeScript; Supabase Auth/PostgreSQL/RLS; Gemini server 
 4. Run `npm install`, `npm run lint`, `npm run build`, and `npm run dev`.
 5. Import `hudbrother62-coder/School-Control-Pro` into a new Vercel project and set environment variables. Do not point the new app at another product's database.
 6. Set Midtrans notification URL to `https://YOUR_DOMAIN/api/billing/midtrans`. Supply `SCHOOL_CONTROL_MONTHLY_PRICE_IDR` from the chosen commercial pricing; the value is intentionally not invented. Start with sandbox mode.
-7. Login, create school, confirm 7-day trial, make staff profile, test check-in/out, invite member, and test tenant isolation before production.
+7. Login, create school, confirm 3-day trial, make staff profile, test check-in/out, invite member, and test tenant isolation before production.
 
 ## Features in source
 
