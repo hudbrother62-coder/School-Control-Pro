@@ -20,6 +20,7 @@ export async function POST(req:NextRequest){
   const {data:membership}=await db.from("sc_members").select("role").eq("school_id",schoolId).eq("user_id",user.id).maybeSingle();
   if(!membership)return NextResponse.json({error:"Tidak memiliki akses sekolah."},{status:403,headers});
   if(module==="kepsek_ai"&&!["owner","principal","vice_principal"].includes(membership.role))return NextResponse.json({error:"Menu khusus manajemen sekolah."},{status:403,headers});
+  if(module==="guru_ai"&&!["owner","principal","vice_principal","teacher"].includes(membership.role))return NextResponse.json({error:"Akses generator guru ditolak."},{status:403,headers});
   const {data:school}=await db.from("sc_schools").select("name,academic_year,npsn").eq("id",schoolId).maybeSingle();
   const {data:facts}=await db.from("sc_school_facts").select("key,value").eq("school_id",schoolId).limit(20);
   const memory=(facts||[]).map(x=>x.key+": "+x.value).join("\n").slice(0,6000);

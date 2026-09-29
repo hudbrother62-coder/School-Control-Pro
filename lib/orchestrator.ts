@@ -18,7 +18,7 @@ const routes:Route[]=[
 export type Orchestration={module:ModuleKey;label:string;reason:string;permitted:boolean;matched:string[]};
 export function orchestrate(input:string,role:Role):Orchestration{
  const text=input.toLocaleLowerCase("id-ID").normalize("NFKC").replace(/[^\p{L}\p{N}\s-]/gu," ").replace(/\s+/g," ").trim();
- const candidates=routes.map((r,index)=>{const matched=r.keywords.filter(k=>text.includes(k));const score=matched.length?Math.max(...matched.map(x=>x.length))+matched.length*2:0;return {...r,matched,score,index}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||a.index-b.index);
+ const candidates=routes.map((r,index)=>{const matched=r.keywords.filter(k=>text.includes(k));const score=matched.length?Math.max(...matched.map(x=>x.length))+matched.length*2+(r.module==="master"?-8:0)+(r.module==="kepsek_ai"&&matched.some(k=>["rkt","rkjm","ksp","kosp","pbd","eds","rkas"].includes(k))?18:0):0;return {...r,matched,score,index}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||a.index-b.index);
  const pick=candidates[0]||{module:"overview" as ModuleKey,label:"Beranda Sekolah",reason:"Pilih modul tujuan dari menu atau jelaskan tugas dengan lebih spesifik.",matched:[]};
  const mod=modules.find(m=>m.key===pick.module);
  return {module:pick.module,label:pick.label,reason:pick.reason,permitted:!!mod&&canAccess(mod,role),matched:pick.matched};
