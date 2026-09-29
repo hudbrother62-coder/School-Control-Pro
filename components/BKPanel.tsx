@@ -3,12 +3,12 @@ import {useEffect,useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
 type Student={id:string;name:string;nis:string|null;class_id:string|null;status:string};
 type Case={id:string;student_id:string;category:string;status:string;follow_up_date:string|null;confidential_notes:string|null;assigned_counselor:string};
-type Record={id:string;case_id:string|null;student_id:string;kind:string;domain:string;happened_on:string;title:string;notes:string|null;follow_up_on:string|null};
+type BKRecord={id:string;case_id:string|null;student_id:string;kind:string;domain:string;happened_on:string;title:string;notes:string|null;follow_up_on:string|null};
 type Attendance={student_id:string;attendance_date:string;mark:string;lesson_key:string};
 const kinds=[["need","Pemetaan kebutuhan"],["counseling","Konseling individu"],["group","Konseling kelompok"],["classical","Layanan klasikal"],["rpl","RPL layanan"],["program","Program BK"],["agenda","Agenda"],["followup","Tindak lanjut"],["visit","Kunjungan rumah"],["referral","Rujukan"],["career","Perencanaan karier"],["document","Dokumen"]];
 const date=()=>{const p=new Intl.DateTimeFormat("en-US",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:"Asia/Jakarta"}).formatToParts(new Date());const g=(x:string)=>p.find(y=>y.type===x)?.value||"";return g("year")+"-"+g("month")+"-"+g("day")};
 export default function BKPanel({schoolId,userId}:{schoolId:string;userId:string}){
- const db=useMemo(()=>browserDb(),[]);const [students,setStudents]=useState<Student[]>([]),[cases,setCases]=useState<Case[]>([]),[records,setRecords]=useState<Record[]>([]),[att,setAtt]=useState<Attendance[]>([]);
+ const db=useMemo(()=>browserDb(),[]);const [students,setStudents]=useState<Student[]>([]),[cases,setCases]=useState<Case[]>([]),[records,setRecords]=useState<BKRecord[]>([]),[att,setAtt]=useState<Attendance[]>([]);
  const [tab,setTab]=useState("cases"),[studentId,setStudentId]=useState(""),[caseId,setCaseId]=useState(""),[domain,setDomain]=useState("Pribadi"),[kind,setKind]=useState("need"),[topic,setTopic]=useState(""),[notes,setNotes]=useState(""),[followDate,setFollowDate]=useState(""),[day,setDay]=useState(date());
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
  const studentName=(id:string)=>students.find(s=>s.id===id)?.name||"Siswa";
@@ -17,7 +17,7 @@ export default function BKPanel({schoolId,userId}:{schoolId:string;userId:string
  db.from("sc_bk_cases").select("id,student_id,category,status,follow_up_date,confidential_notes,assigned_counselor").eq("school_id",schoolId).order("created_at",{ascending:false}).limit(120),
  db.from("sc_bk_records").select("id,case_id,student_id,kind,domain,happened_on,title,notes,follow_up_on").eq("school_id",schoolId).order("happened_on",{ascending:false}).limit(200),
  db.from("sc_student_attendance").select("student_id,attendance_date,mark,lesson_key").eq("school_id",schoolId).order("attendance_date",{ascending:false}).limit(100)
- ]);setStudents((s.data||[]) as Student[]);setCases((c.data||[]) as Case[]);setRecords((r.data||[]) as Record[]);setAtt((a.data||[]) as Attendance[]);if(c.error)setError(c.error.message);else if(r.error)setError(r.error.message)}
+ ]);setStudents((s.data||[]) as Student[]);setCases((c.data||[]) as Case[]);setRecords((r.data||[]) as BKRecord[]);setAtt((a.data||[]) as Attendance[]);if(c.error)setError(c.error.message);else if(r.error)setError(r.error.message)}
  useEffect(()=>{void load()},[db,schoolId]);
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Layanan BK tersimpan secara privat.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
  async function insert(table:string,row:Record<string,unknown>){if(!db)throw Error("Database tidak terhubung");const {error}=await db.from(table).insert({...row,school_id:schoolId});if(error)throw error}
