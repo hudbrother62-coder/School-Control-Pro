@@ -2,7 +2,7 @@
 
 import {useEffect,useMemo,useState} from "react";
 import type {User} from "@supabase/supabase-js";
-import {LayoutDashboard,Users,Clock3,Activity,Sparkles,BookOpen,ShieldAlert,HeartHandshake,School,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,ChevronRight,Plus,RefreshCw} from "lucide-react";
+import {LayoutDashboard,Users,Clock3,Activity,Sparkles,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,ChevronRight,Plus,RefreshCw} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import StaffWorkflows from "@/components/StaffWorkflows";
 import {modules,canAccess,isAdmin,type School,type Role,type ModuleKey,type Membership,type Staff} from "@/lib/modules";
@@ -11,7 +11,7 @@ type SchoolAccess={school:School;role:Role};
 type Attendance={id:string;duty_date:string;check_in_at:string|null;check_out_at:string|null;status:string;source:string;user_id:string;notes:string|null};
 type RecordItem={id:string;module_key:string;title:string;notes:string|null;status:string;created_at:string};
 type Summary={present_days:number;late_days:number;programs:number;trainings:number;verified_events:number};
-const icons={overview:LayoutDashboard,master:Users,attendance:Clock3,performance:Activity,guru_ai:Sparkles,kepsek_ai:School,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,command:ListChecks,sikas:Wallet,gajian:CreditCard,settings:Settings};
+const icons={overview:LayoutDashboard,master:Users,attendance:Clock3,performance:Activity,guru_ai:Sparkles,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,command:ListChecks,sikas:Wallet,gajian:CreditCard,settings:Settings};
 const allowedRecordModules=["guru_ai","kepsek_ai","buku_kerja","disiplin","command","sikas","gajian"];
 const formatDate=(s:string|null|undefined)=>s?new Date(s).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"}):"—";
 const schoolDay=(tz:string)=>{const p=new Intl.DateTimeFormat("en-US",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const get=(k:string)=>p.find(x=>x.type===k)?.value||"";return get("year")+"-"+get("month")+"-"+get("day")};
