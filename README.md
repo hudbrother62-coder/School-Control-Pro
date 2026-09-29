@@ -12,12 +12,12 @@ Next.js 15 / React 19 / TypeScript; Supabase Auth/PostgreSQL/RLS; Gemini server 
 
 ## Setup
 
-1. Provision a NEW Supabase project solely for School Control (not BK Pro, Disiplin Pro or WiFi Pro).
-2. Apply migrations in `supabase/migrations/` in timestamp order. Disable email confirmation only if account-registration and invite-code controls are configured for your intended security model.
-3. Copy `.env.example` to `.env.local`; set public URL/publishable key and private server keys. Do not commit .env.
-4. Run `npm install`, `npm run lint`, `npm run build`, and `npm run dev`.
-5. Import `hudbrother62-coder/School-Control-Pro` into a new Vercel project and set environment variables. Do not point the new app at another product's database.
-6. Set Midtrans notification URL to `https://YOUR_DOMAIN/api/billing/midtrans`. Supply `SCHOOL_CONTROL_MONTHLY_PRICE_IDR` from the chosen commercial pricing; the value is intentionally not invented. Start with sandbox mode.
+1. School Control is bound to the pre-provisioned EMPTY Supabase project `sfzaexzpbcvynkhglndi`; do not attach other products' databases.
+2. The current database migrations have been applied in timestamp order. Configure Supabase Auth Site URL / Redirect URL for your Vercel domain and use a verified SMTP sender for public signups. Email confirmation remains supported.
+3. Public Supabase URL and publishable key are already present in `.env.production` (safe browser-visible identifiers). Set the private server-only keys in Vercel Environment Variables; never commit secrets.
+4. Run `npm install`, `npm test`, `npm run lint`, `npm run build` before deploying.
+5. Import `hudbrother62-coder/School-Control-Pro` into Vercel. The landing page is `/`, signup `/daftar`, login `/masuk`, workspace `/app`.
+6. Payment plans default to Rp79,000/30 days or Rp790,000/365 days, configurable by `SCHOOL_CONTROL_MONTHLY_PRICE_IDR` and `SCHOOL_CONTROL_YEARLY_PRICE_IDR`. To accept real money, enter `MIDTRANS_SERVER_KEY` and `SUPABASE_SERVICE_ROLE_KEY` as private Vercel environment variables, use sandbox first, set notification URL `https://YOUR_DOMAIN/api/billing/midtrans`, and set `MIDTRANS_IS_PRODUCTION=true` only after sandbox test passes.
 7. Login, create school, confirm 3-day trial, make staff profile, test check-in/out, invite member, and test tenant isolation before production.
 
 ## Features in source

@@ -29,7 +29,7 @@ export async function POST(req:NextRequest){
   const {error:insertError}=await admin.from("sc_payment_orders").insert({order_id:orderId,school_id:schoolId,gross_amount:plan.price,period_days:plan.days});
   if(insertError)return NextResponse.json({error:"Gagal menyiapkan pesanan."},{status:500,headers:h});
   const gateway=process.env.MIDTRANS_IS_PRODUCTION==="true"?"https://app.midtrans.com/snap/v1/transactions":"https://app.sandbox.midtrans.com/snap/v1/transactions";
-  const base=(process.env.SCHOOL_CONTROL_BASE_URL||"").replace(/\/$/,"");
+  const base=(process.env.SCHOOL_CONTROL_BASE_URL||req.nextUrl.origin).replace(/\/$/,"");
   const payload={
    transaction_details:{order_id:orderId,gross_amount:plan.price},
    customer_details:{email:user.email},
