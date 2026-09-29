@@ -2,7 +2,7 @@ export type Role = "owner"|"principal"|"vice_principal"|"teacher"|"counselor"|"h
 export type ModuleKey = "overview"|"master"|"attendance"|"performance"|"guru_ai"|"kepsek_ai"|"buku_kerja"|"disiplin"|"bk"|"command"|"sikas"|"gajian"|"settings";
 export type School = {id:string;name:string;timezone:string};
 export type Membership = {school_id:string;role:Role};
-export type Staff = {id:string;school_id:string;user_id:string|null;name:string;position:string|null;shift_start:string|null};
+export type Staff = {id:string;school_id:string;user_id:string|null;name:string;position:string|null;shift_start:string|null;late_tolerance_minutes?:number|null};
 export const ADMIN_ROLES:Role[] = ["owner","principal","vice_principal"];
 export const modules:{key:ModuleKey;label:string;section:string;description:string;roles?:Role[]}[] = [
   {key:"overview",label:"Beranda",section:"Utama",description:"Aktivitas sekolah secara terintegrasi."},
