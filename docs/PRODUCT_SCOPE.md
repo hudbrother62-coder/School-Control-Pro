@@ -21,12 +21,14 @@ The owner can manage membership, principal accesses school operation and aggrega
 - Next.js + TypeScript responsive shell, light/dark, desktop sidebar and mobile bottom bar, role-aware navigation.
 - Email/password Auth binding; school creation RPC and seven-day trial; invite code to join with a personal account.
 - School-scoped database schema and RLS, student/class/staff core entities, records, tasks, case, finance/payroll tables.
-- Staff self-attendance RPC using server time and school timezone; manual attendance reason and audit; member-specific performance counts.
+- Staff self-attendance RPC using server time and school timezone; manager-only manual attendance with reason/audit; configurable staff shift; factual member-specific performance counts and evidence verification.
+- Leave requests with management/HR approvals; school classes and students, student attendance, assessment entries and teacher journals.
+- Initial structured UI for disciplinary events, counselor-assigned cases, school programs, finance transactions and monthly payroll drafts.
 - Limited school-scoped AI draft endpoint for Guru AI and Kepsek AI with per-school request quota.
 - Midtrans Snap checkout API and signature-checked idempotent subscription activation webhook (requires private server env and testing).
 
 ## Not yet production-ready
-This is a functioning **foundation once a dedicated Supabase project is connected and the migrations are applied**. Full domain-specific screens, imports/exports, student grades, complete counseling workflows, evidence and approval chain, payroll calculation/slips, report generation, school memory AI pipeline, automated legacy data migration, billing portal and operational QA are NOT complete. The generic module notes do not claim to replace original product functions. Do not advertise as a complete school ERP before the acceptance tests below pass.
+This is a functioning **foundation once a dedicated Supabase project is connected and the migrations are applied**. Complete domain-specific workflows, bulk imports/exports, comprehensive student grade reports, complete counseling workflows, cross-module evidence and approval chain, payroll calculation/slips, report generation, school memory AI pipeline, automated legacy data migration, billing portal and operational QA are NOT complete. The generic module notes do not claim to replace original product functions. Do not advertise as a complete school ERP before the acceptance tests below pass.
 
 ## Integration strategy
 1. Freeze an explicit mapping of school, user, employee, student, class, academic year, subject and legacy source IDs. Preserve source IDs in a mapping table when migration is authorized.

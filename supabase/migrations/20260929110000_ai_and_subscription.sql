@@ -39,7 +39,7 @@ create or replace function public.sc_confirm_payment(p_order_id text,p_amount in
   if v_order.status<>'pending' then raise exception 'Pesanan tidak dapat dikonfirmasi';end if;
   update public.sc_payment_orders set status='paid',gateway_transaction_id=p_gateway_tx,paid_at=now() where order_id=p_order_id;
   update public.sc_subscriptions set status='active',
-   current_period_end=greatest(now(),coalesce(current_period_end,now()))+make_interval(days=>v_order.period_days),
+   current_period_end=greatest(now(),coalesce(current_period_end,trial_ends_at))+make_interval(days=>v_order.period_days),
    updated_at=now() where school_id=v_order.school_id;
   insert into public.sc_audit_log(school_id,action,target_id,metadata)
    values(v_order.school_id,'subscription.payment.confirmed',p_order_id,jsonb_build_object('amount',p_amount,'days',v_order.period_days));
