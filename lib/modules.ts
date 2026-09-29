@@ -1,5 +1,5 @@
 export type Role = "owner"|"principal"|"vice_principal"|"teacher"|"counselor"|"hr"|"treasurer"|"staff"|"viewer";
-export type ModuleKey = "overview"|"master"|"attendance"|"performance"|"guru_ai"|"kepsek_ai"|"buku_kerja"|"disiplin"|"bk"|"command"|"sikas"|"gajian"|"settings";
+export type ModuleKey = "overview"|"master"|"attendance"|"performance"|"guru_ai"|"kepsek_ai"|"buku_kerja"|"disiplin"|"bk"|"command"|"sikas"|"gajian"|"payslip"|"settings";
 export type School = {id:string;name:string;timezone:string};
 export type Membership = {school_id:string;role:Role};
 export type Staff = {id:string;school_id:string;user_id:string|null;name:string;position:string|null;shift_start:string|null;late_tolerance_minutes?:number|null};
@@ -17,6 +17,7 @@ export const modules:{key:ModuleKey;label:string;section:string;description:stri
   {key:"command",label:"Command Pro",section:"Manajemen",description:"Program sekolah, PIC, tugas, hasil rapat dan bukti pelaksanaan."},
   {key:"sikas",label:"SIKAS Pro",section:"Administrasi",description:"Pemasukan, pengeluaran, rekening, kegiatan dan laporan.",roles:["owner","principal","treasurer"]},
   {key:"gajian",label:"Gajian Pro",section:"Administrasi",description:"SDM, izin, cuti, lembur, payroll dan slip gaji.",roles:["owner","hr"]},
+  {key:"payslip",label:"Slip Gaji Saya",section:"SDM",description:"Slip setelah periode dikunci.",roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","staff"]},
   {key:"settings",label:"Sekolah & Langganan",section:"Administrasi",description:"Pengaturan, akses tim, serta masa aktif sekolah.",roles:["owner","principal"]},
 ];
 export const isAdmin=(role:Role)=>ADMIN_ROLES.includes(role);

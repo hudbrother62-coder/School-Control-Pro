@@ -20,14 +20,16 @@ export async function POST(req:NextRequest){
   const {data:membership}=await db.from("sc_members").select("role").eq("school_id",schoolId).eq("user_id",user.id).maybeSingle();
   if(!membership)return NextResponse.json({error:"Tidak memiliki akses sekolah."},{status:403,headers});
   if(module==="kepsek_ai"&&!["owner","principal","vice_principal"].includes(membership.role))return NextResponse.json({error:"Menu khusus manajemen sekolah."},{status:403,headers});
-  const {data:school}=await db.from("sc_schools").select("name").eq("id",schoolId).maybeSingle();
+  const {data:school}=await db.from("sc_schools").select("name,academic_year,npsn").eq("id",schoolId).maybeSingle();
+  const {data:facts}=await db.from("sc_school_facts").select("key,value").eq("school_id",schoolId).limit(20);
+  const memory=(facts||[]).map(x=>x.key+": "+x.value).join("\n").slice(0,6000);
   const apiKey=process.env.GEMINI_API_KEY;
   if(!apiKey)return NextResponse.json({error:"Kunci AI server belum dikonfigurasi. Hubungi pengelola platform."},{status:503,headers});
   const {error:budgetError}=await db.rpc("sc_consume_ai_budget",{p_school:schoolId,p_module:module});
   if(budgetError)return NextResponse.json({error:budgetError.message}, {status:429,headers});
   const model=process.env.GEMINI_MODEL||"gemini-2.5-flash";
   const instruction="Anda adalah asisten administrasi pendidikan Indonesia dalam School Control. Bantu menyusun DRAF yang dapat ditinjau pengguna. Jangan mengarang data kehadiran, data siswa, sumber resmi, regulasi atau dokumen sekolah. Jika data belum diberikan, minta pengguna melengkapi. Jangan meminta atau memproses rahasia konseling BK. Jangan mengklaim sinkronisasi dengan ARKAS, e-Kinerja, atau sistem pemerintah. Gunakan Bahasa Indonesia rapi.";
-  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({system_instruction:{parts:[{text:instruction}]},contents:[{role:"user",parts:[{text:"Sekolah: "+(school?.name||"Tidak tersedia")+". Modul: "+module+". Permintaan: "+prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:2048}}),signal:AbortSignal.timeout(28000),cache:"no-store"});
+  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({system_instruction:{parts:[{text:instruction}]},contents:[{role:"user",parts:[{text:"Sekolah: "+(school?.name||"Tidak tersedia")+". Tahun ajaran: "+(school?.academic_year||"Tidak diketahui")+". NPSN: "+(school?.npsn||"Belum diisi")+". Memori sekolah umum terverifikasi:\n"+memory+"\nModul: "+module+". Permintaan: "+prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:2048}}),signal:AbortSignal.timeout(28000),cache:"no-store"});
   if(!response.ok){return NextResponse.json({error:response.status===429?"Kuota penyedia AI sedang terbatas. Coba lagi nanti.":"Layanan AI sedang tidak tersedia."},{status:503,headers});}
   const result=await response.json();
   const text=(result?.candidates?.[0]?.content?.parts||[]).map((x:{text?:string})=>x.text||"").join("\n").trim();
