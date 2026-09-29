@@ -1,0 +1,10 @@
+"use client";
+import {useMemo,useState} from "react";
+import {orchestrate} from "@/lib/orchestrator";
+import type {ModuleKey,Role} from "@/lib/modules";
+export default function UniversalOrchestrator({role,onRoute}:{role:Role;onRoute:(m:ModuleKey)=>void}){
+ const [request,setRequest]=useState(""),[submitted,setSubmitted]=useState(""),[active,setActive]=useState(false);
+ const result=useMemo(()=>submitted?orchestrate(submitted,role):null,[submitted,role]);
+ const shortcuts=["Absen pribadi","Buat RKT","Nilai siswa","Program kerja","Tagihan siswa","Evaluasi guru"];
+ return <section className="panel"><div className="flow" style={{justifyContent:"space-between"}}><div><span className="pill">Universal AI Orchestrator</span><h2 style={{marginTop:10}}>Apa yang ingin dikerjakan hari ini?</h2></div><span className="hint">Pengarah tugas lintas modul</span></div><p className="muted">Sampaikan kebutuhan dengan bahasa biasa. Sistem menentukan ruang kerja yang sesuai dan memeriksa hak akses; tidak menyentuh data pribadi atau mengirim perubahan sebelum Anda mengonfirmasi di modul.</p><form onSubmit={e=>{e.preventDefault();setSubmitted(request.trim());setActive(true)}} className="fields"><label className="field full">Permintaan<textarea value={request} onChange={e=>setRequest(e.target.value)} rows={3} placeholder="Contoh: Saya ingin melihat absensi guru dan membuat evaluasi pelatihan bulan ini"/></label><button className="button" disabled={request.trim().length<3}>Analisis Permintaan</button></form><div className="flow" style={{marginTop:13}}>{shortcuts.map(k=><button key={k} className="button secondary" onClick={()=>{setRequest(k);setSubmitted(k);setActive(true)}}>{k}</button>)}</div>{active&&result&&<div className="banner" style={{marginTop:16}}><strong>{result.label}</strong><p>{result.reason}</p>{result.permitted?<button className="button" onClick={()=>onRoute(result.module)}>Buka Modul Terkait</button>:<p className="hint">Modul tidak tersedia untuk peran ini. Hubungi pengelola sekolah untuk penugasan akses yang sesuai.</p>}</div>}</section>;
+}
