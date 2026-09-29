@@ -15,6 +15,7 @@ import CommandBoard from "@/components/CommandBoard";
 import FinancePanel from "@/components/FinancePanel";
 import PayrollPanel from "@/components/PayrollPanel";
 import Operations from "@/components/Operations";
+import BKPanel from "@/components/BKPanel";
 import {modules,canAccess,isAdmin,type School,type Role,type ModuleKey,type Membership,type Staff} from "@/lib/modules";
 
 type SchoolAccess={school:School;role:Role};
@@ -100,7 +101,9 @@ export default function Home(){
   {module==="sikas"&&<FinancePanel schoolId={schoolId} userId={user.id}/>}
   {module==="gajian"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff}/>}
   {module==="payslip"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} selfOnly/>}
-  {module==="bk"&&<><section className="panel"><h2>Ruang BK Privat</h2><p>Catatan siswa dibatasi kepada konselor yang ditugaskan. Manajemen hanya menerima angka agregat, tidak isi percakapan atau identitas kasus.</p></section><Operations mode="bk" schoolId={schoolId} userId={user.id} role={role} staff={staff}/></>}
-ey={k} className={module===k?"active":""} onClick={()=>choose(k)}><Icon size={20}/>{modules.find(x=>x.key===k)?.label}</button>})}<button onClick={()=>setOpenMenu(true)}><Menu size={20}/>Menu</button></nav>
+  {module==="bk"&&<><section className="panel"><h2>Ruang BK Privat</h2><p>Catatan siswa dibatasi kepada konselor yang ditugaskan. Manajemen hanya menerima angka agregat, tidak isi percakapan atau identitas kasus.</p></section><BKPanel schoolId={schoolId} userId={user.id}/></>}
+  </div></main>
+  {openMenu&&<div className="mobiledrawer"><div className="panel"><div className="flow" style={{justifyContent:"space-between"}}><strong>Semua modul</strong><button className="iconbutton" onClick={()=>setOpenMenu(false)}>Tutup</button></div><Nav mobile/></div></div>}
+  <nav className="bottomnav" aria-label="Navigasi utama">{(["overview","master","attendance","performance"] as ModuleKey[]).map(k=>{const Icon=icons[k];return <button key={k} className={module===k?"active":""} onClick={()=>choose(k)}><Icon size={20}/>{modules.find(x=>x.key===k)?.label}</button>})}<button onClick={()=>setOpenMenu(true)}><Menu size={20}/>Menu</button></nav>
  </div>;
 }
