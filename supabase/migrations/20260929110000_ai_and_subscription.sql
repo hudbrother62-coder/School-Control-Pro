@@ -1,13 +1,12 @@
 -- Add bounded AI requests and atomic, idempotent payment activation.
 create table if not exists public.sc_ai_usage (
  school_id uuid not null references public.sc_schools(id) on delete cascade,
- user_id uuid not null references auth.users(id) on delete cascade,
  period text not null,
  requests integer not null default 0 check(requests>=0),
- primary key(school_id,user_id,period)
+ primary key(school_id,period)
 );
 alter table public.sc_ai_usage enable row level security;
-create policy sc_ai_usage_read on public.sc_ai_usage for select to authenticated using(user_id=auth.uid() or public.sc_manager(school_id));
+create policy sc_ai_usage_read on public.sc_ai_usage for select to authenticated using(public.sc_manager(school_id));
 revoke all on public.sc_ai_usage from anon,authenticated;
 grant select on public.sc_ai_usage to authenticated;
 
@@ -20,8 +19,8 @@ create or replace function public.sc_consume_ai_budget(p_school uuid,p_module te
   select status into v_status from public.sc_subscriptions where school_id=p_school;
   v_limit:=case when v_status='trial' then 15 else 200 end;
   v_period:=to_char(now() at time zone 'UTC','YYYY-MM');
-  insert into public.sc_ai_usage(school_id,user_id,period,requests) values(p_school,auth.uid(),v_period,1)
-   on conflict(school_id,user_id,period) do update set requests=public.sc_ai_usage.requests+1
+  insert into public.sc_ai_usage(school_id,period,requests) values(p_school,v_period,1)
+   on conflict(school_id,period) do update set requests=public.sc_ai_usage.requests+1
    where public.sc_ai_usage.requests<v_limit returning requests into v_count;
   if v_count is null then raise exception 'Kuota permintaan AI periode ini telah habis';end if;
   return v_count;

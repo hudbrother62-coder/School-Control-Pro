@@ -21,10 +21,10 @@ export async function POST(req:NextRequest){
   if(!membership)return NextResponse.json({error:"Tidak memiliki akses sekolah."},{status:403,headers});
   if(module==="kepsek_ai"&&!["owner","principal","vice_principal"].includes(membership.role))return NextResponse.json({error:"Menu khusus manajemen sekolah."},{status:403,headers});
   const {data:school}=await db.from("sc_schools").select("name").eq("id",schoolId).maybeSingle();
-  const {error:budgetError}=await db.rpc("sc_consume_ai_budget",{p_school:schoolId,p_module:module});
-  if(budgetError)return NextResponse.json({error:budgetError.message}, {status:429,headers});
   const apiKey=process.env.GEMINI_API_KEY;
   if(!apiKey)return NextResponse.json({error:"Kunci AI server belum dikonfigurasi. Hubungi pengelola platform."},{status:503,headers});
+  const {error:budgetError}=await db.rpc("sc_consume_ai_budget",{p_school:schoolId,p_module:module});
+  if(budgetError)return NextResponse.json({error:budgetError.message}, {status:429,headers});
   const model=process.env.GEMINI_MODEL||"gemini-2.5-flash";
   const instruction="Anda adalah asisten administrasi pendidikan Indonesia dalam School Control. Bantu menyusun DRAF yang dapat ditinjau pengguna. Jangan mengarang data kehadiran, data siswa, sumber resmi, regulasi atau dokumen sekolah. Jika data belum diberikan, minta pengguna melengkapi. Jangan meminta atau memproses rahasia konseling BK. Jangan mengklaim sinkronisasi dengan ARKAS, e-Kinerja, atau sistem pemerintah. Gunakan Bahasa Indonesia rapi.";
   const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({system_instruction:{parts:[{text:instruction}]},contents:[{role:"user",parts:[{text:"Sekolah: "+(school?.name||"Tidak tersedia")+". Modul: "+module+". Permintaan: "+prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:2048}}),signal:AbortSignal.timeout(28000),cache:"no-store"});

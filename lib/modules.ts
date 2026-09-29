@@ -20,4 +20,4 @@ export const modules:{key:ModuleKey;label:string;section:string;description:stri
   {key:"settings",label:"Sekolah & Langganan",section:"Administrasi",description:"Pengaturan, akses tim, serta masa aktif sekolah.",roles:["owner","principal"]},
 ];
 export const isAdmin=(role:Role)=>ADMIN_ROLES.includes(role);
-export const canAccess=(m:(typeof modules)[number], role:Role)=>!m.roles || m.roles.includes(role) || (m.key==="bk" && role==="owner" ? false : false);
+export const canAccess=(m:(typeof modules)[number], role:Role)=>!m.roles || m.roles.includes(role);
