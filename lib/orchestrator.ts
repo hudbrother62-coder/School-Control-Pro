@@ -2,7 +2,8 @@ import {modules,canAccess,type ModuleKey,type Role} from "./modules";
 type Route={module:ModuleKey;label:string;reason:string;keywords:string[]};
 const routes:Route[]=[
  {module:"payslip",label:"Slip Gaji Saya",reason:"Membuka riwayat slip pribadi yang sudah dikunci atau dibayar.",keywords:["slip gaji saya","slip","payslip"]},
- {module:"attendance",label:"Presensi, Jadwal & Cuti",reason:"Kehadiran masuk/pulang, jadwal, izin dan cuti menggunakan identitas pegawai sendiri.",keywords:["absen guru","absen pribadi","check in","check out","presensi guru","kehadiran guru","cuti","izin guru","jadwal guru","shift"]},
+ {module:"calendar",label:"Agenda Sekolah",reason:"Menampilkan agenda bersama dalam kalender bulanan.",keywords:["agenda sekolah","kalender sekolah","agenda besok","bulan depan","jadwal kegiatan","kalender agenda"]},
+ {module:"attendance",label:"Presensi Realtime",reason:"Kehadiran masuk/pulang, jadwal, izin dan cuti menggunakan identitas pegawai sendiri.",keywords:["absen guru","absen staf","absen karyawan","absen pribadi","check in","check out","presensi guru","presensi staf","kehadiran guru","cuti","izin guru","jadwal guru","shift"]},
  {module:"performance",label:"Kinerja & Pengembangan",reason:"Menggabungkan bukti kehadiran, program sekolah, pelatihan, capaian dan verifikasi.",keywords:["kinerja guru","evaluasi guru","supervisi kinerja","pelatihan guru","partisipasi guru","pengembangan diri"]},
  {module:"guru_ai",label:"Perangkat Ajar AI",reason:"Generator modul ajar, bahan ajar, LKPD, soal dan asesmen.",keywords:["modul ajar","bahan ajar","lkpd","rpp","soal","asesmen","perangkat ajar"]},
  {module:"buku_kerja",label:"Pembelajaran & Penilaian",reason:"Presensi siswa, nilai, jurnal, agenda dan rekap mengambil data induk sekolah.",keywords:["jurnal mengajar","buku kerja","nilai siswa","presensi siswa","rekap kelas","agenda mengajar","penilaian"]},
@@ -13,12 +14,14 @@ const routes:Route[]=[
  {module:"sikas",label:"Keuangan, Anggaran & Tagihan",reason:"Kelola kas, rekening, anggaran, tagihan siswa, pembayaran dan laporan.",keywords:["keuangan","rekening sekolah","kas sekolah","tagihan","iuran","spp","anggaran","bosp","pemasukan","pengeluaran","kuitansi"]},
  {module:"gajian",label:"Payroll & Kompensasi",reason:"Kelola komponen gaji, tunjangan, potongan, review, approval dan pembayaran.",keywords:["payroll","gajian","gaji pegawai","komponen gaji","penggajian","tunjangan","potongan gaji"]},
  {module:"master",label:"Data Induk",reason:"Satu sumber untuk sekolah, siswa, kelas, tahun ajaran, mata pelajaran dan SDM.",keywords:["data siswa","tambah kelas","nama kelas","tahun ajaran","data guru","import siswa","ekspor siswa","master data","mata pelajaran"]},
- {module:"settings",label:"Pengaturan Sekolah",reason:"Profil sekolah, memori, undangan tim, akses dan langganan.",keywords:["langganan","trial","undang tim","akun sekolah","profil sekolah","pengaturan","hak akses"]}
+ {module:"access",label:"Akses & Peran",reason:"Mengatur struktur peran dan hak akses pengguna.",keywords:["hak akses","role","peran pengguna","akses guru","akses staf","akses kepala sekolah","struktur akses"]},
+ {module:"settings",label:"Pengaturan Sekolah",reason:"Profil sekolah, memori, undangan tim dan langganan.",keywords:["langganan","trial","undang tim","akun sekolah","profil sekolah","pengaturan"]}
 ];
 function featureFor(module:ModuleKey,text:string){
  const has=(...x:string[])=>x.some(k=>text.includes(k));
  switch(module){
   case "master": return has("import","ekspor")?"Import/export data":has("mata pelajaran","mapel")?"Mata pelajaran":has("kelas")?"Kelas":has("guru","staf","sdm")?"Guru & tenaga kependidikan":has("penugasan")?"Penugasan guru":"Siswa";
+  case "calendar": return has("besok")?"Agenda besok":has("bulan depan")?"Agenda bulan depan":has("tambah","buat agenda")?"Tambah agenda":"Kalender bulan";
   case "attendance": return has("jadwal","shift")?"Jadwal/shift":has("koreksi","manual")?"Koreksi beralasan":has("cuti")?"Cuti":has("izin")?"Izin":has("riwayat")?"Riwayat kehadiran":"Check-in/check-out";
   case "performance": return has("tanggapan","respon")?"Tanggapan guru":has("evaluasi")?"Evaluasi":has("pelatihan","pengembangan diri")?"Pelatihan":has("program")?"Partisipasi program":has("bukti","capaian")?"Bukti capaian":"Kehadiran";
   case "guru_ai": return has("lkpd")?"LKPD":has("rpp")?"RPP/rencana pembelajaran":has("bahan ajar")?"Bahan ajar":has("soal","asesmen")?"Soal & asesmen":has("riwayat","draf")?"Riwayat draf":"Modul ajar";
@@ -30,7 +33,8 @@ function featureFor(module:ModuleKey,text:string){
   case "sikas": return has("rekening","kas")?"Kas/rekening":has("pemasukan")?"Pemasukan":has("pengeluaran")?"Pengeluaran":has("anggaran","bosp")?"Anggaran":has("tagihan","spp","iuran")?"Tagihan siswa":has("kuitansi")?"Kuitansi":has("pembayaran")?"Pembayaran":has("ekspor")?"Ekspor":"Laporan";
   case "gajian": return has("tunjangan")?"Tunjangan":has("potongan")?"Potongan":has("review")?"Review":has("approval","setujui")?"Approval":has("kunci")?"Kunci periode":has("rekap")?"Rekap payroll":has("draft")?"Draft payroll":"Komponen gaji";
   case "payslip": return has("cetak")?"Cetak slip":"Riwayat slip";
-  case "settings": return has("undang")?"Undang anggota":has("hak akses","role","peran")?"Hak akses":has("memori")?"Memori sekolah":has("riwayat","pembayaran")?"Riwayat pembayaran":has("langganan","trial")?"Langganan":"Profil sekolah";
+  case "access": return has("anggota","tim")?"Anggota tim":has("fitur")?"Hak akses fitur":"Struktur peran";
+  case "settings": return has("undang")?"Undang anggota":has("memori")?"Memori sekolah":has("riwayat","pembayaran")?"Riwayat pembayaran":has("langganan","trial")?"Langganan":"Profil sekolah";
   default:return "";
  }
 }
