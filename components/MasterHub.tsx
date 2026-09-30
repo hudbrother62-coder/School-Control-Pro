@@ -48,7 +48,7 @@ export default function MasterHub({schoolId,role,focus}:{schoolId:string;role:Ro
  const teacherName=(id:string)=>staff.find(s=>s.user_id===id)?.name||members.find(m=>m.user_id===id)?.role+" · "+id.slice(0,8);
  async function template(){
   const guide=[{Kolom:"Wajib",Keterangan:"Jangan mengubah nama kolom pada baris pertama. Baris contoh boleh dihapus sebelum import."},{Kolom:"Batas",Keterangan:"Maksimal 500 baris per file."}];
-  const rows=importKind==="students"?[{NIS:"1001",Nama:"Alya Putri",Kelas:"VIII A",Tahun_Ajaran:"2026/2027"}]:
+  const rows=importKind==="students"?[{NIS:"1001",NISN:"0098765432",Nama:"Alya Putri",Jenis_Kelamin:"Perempuan",Kelas:"VIII A",Tahun_Ajaran:"2026/2027"}]:
    importKind==="classes"?[{Nama_Kelas:"VIII A",Jenjang:"SMP 8",Tahun_Ajaran:"2026/2027"}]:
    importKind==="staff"?[{Nama:"Budi Santoso",Jabatan:"Guru Matematika",Jam_Masuk:"07:00",Toleransi_Terlambat_Menit:15}]:
    [{Kode:"MTK",Nama:"Matematika"}];
@@ -57,7 +57,7 @@ export default function MasterHub({schoolId,role,focus}:{schoolId:string;role:Ro
  async function read(file?:File){if(!file)return;setError("");try{if(file.size>5_000_000)throw Error("File maksimal 5 MB");const rows=await readExcel(file);if(rows.length>500)throw Error("Maksimal 500 baris");setPreview(rows as Record<string,unknown>[]);setFilename(file.name)}catch(e){setError(e instanceof Error?e.message:String(e));setPreview([])}}
  async function commitImport(){if(!preview.length)return;await run(async()=>{
   if(importKind==="students"){
-   const rows=preview.map(r=>({nis:clean(r.NIS),name:clean(r.Nama),class_name:clean(r.Kelas),academic_year:clean(r.Tahun_Ajaran)}));
+   const rows=preview.map(r=>({nis:clean(r.NIS),nisn:clean(r.NISN),name:clean(r.Nama),gender:clean(r.Jenis_Kelamin),class_name:clean(r.Kelas),academic_year:clean(r.Tahun_Ajaran)}));
    const res=await rpc("sc_import_students",{p_school:schoolId,p_rows:rows});setOk("Import siswa selesai: "+JSON.stringify(res));
   }else if(importKind==="classes"){
    const rows=preview.map(r=>({name:clean(r.Nama_Kelas),grade:clean(r.Jenjang),academic_year:clean(r.Tahun_Ajaran)}));await rpc("sc_import_classes",{p_school:schoolId,p_rows:rows});
