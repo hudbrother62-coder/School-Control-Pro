@@ -15,11 +15,30 @@ const routes:Route[]=[
  {module:"master",label:"Data Induk",reason:"Satu sumber untuk sekolah, siswa, kelas, tahun ajaran, mata pelajaran dan SDM.",keywords:["data siswa","tambah kelas","nama kelas","tahun ajaran","data guru","import siswa","ekspor siswa","master data","mata pelajaran"]},
  {module:"settings",label:"Pengaturan Sekolah",reason:"Profil sekolah, memori, undangan tim, akses dan langganan.",keywords:["langganan","trial","undang tim","akun sekolah","profil sekolah","pengaturan","hak akses"]}
 ];
-export type Orchestration={module:ModuleKey;label:string;reason:string;permitted:boolean;matched:string[]};
+function featureFor(module:ModuleKey,text:string){
+ const has=(...x:string[])=>x.some(k=>text.includes(k));
+ switch(module){
+  case "master": return has("import","ekspor")?"Import/export data":has("mata pelajaran","mapel")?"Mata pelajaran":has("kelas")?"Kelas":has("guru","staf","sdm")?"Guru & tenaga kependidikan":has("penugasan")?"Penugasan guru":"Siswa";
+  case "attendance": return has("jadwal","shift")?"Jadwal/shift":has("koreksi","manual")?"Koreksi beralasan":has("cuti")?"Cuti":has("izin")?"Izin":has("riwayat")?"Riwayat kehadiran":"Check-in/check-out";
+  case "performance": return has("tanggapan","respon")?"Tanggapan guru":has("evaluasi")?"Evaluasi":has("pelatihan","pengembangan diri")?"Pelatihan":has("program")?"Partisipasi program":has("bukti","capaian")?"Bukti capaian":"Kehadiran";
+  case "guru_ai": return has("lkpd")?"LKPD":has("rpp")?"RPP/rencana pembelajaran":has("bahan ajar")?"Bahan ajar":has("soal","asesmen")?"Soal & asesmen":has("riwayat","draf")?"Riwayat draf":"Modul ajar";
+  case "buku_kerja": return has("import","ekspor")?"Import/export Excel":has("nilai","penilaian")?"Nilai":has("jurnal")?"Jurnal mengajar":has("agenda")?"Agenda":has("rekap")?"Rekap bulanan":has("laporan")?"Laporan kelas":"Presensi siswa";
+  case "disiplin": return has("prestasi")?"Prestasi":has("pembinaan")?"Pembinaan":has("tindak lanjut")?"Tindak lanjut":has("rekap","ekspor")?"Rekap & ekspor":has("filter","kelas")?"Filter kelas":"Pelanggaran";
+  case "bk": return has("kebutuhan")?"Pemetaan kebutuhan":has("kelompok")?"Konseling kelompok":has("klasikal")?"Layanan klasikal":has("rpl")?"RPL":has("kunjungan","home visit")?"Kunjungan rumah":has("rujukan")?"Rujukan":has("karier")?"Karier":has("tindak lanjut")?"Tindak lanjut":has("kasus")?"Kasus":"Konseling individu";
+  case "kepsek_ai": return has("kosp","ksp")?"KSP/KOSP":has("rkjm")?"RKJM":has("rkt")?"RKT":has("rkas")?"RKAS":has("pbd","eds")?"PBD/EDS":has("sop")?"SOP":has("supervisi")?"Supervisi guru":has("persetujuan")?"Persetujuan dokumen":has("dokumen")?"Pusat dokumen":"PBD/EDS";
+  case "command": return has("pic")?"PIC":has("deadline")?"Deadline":has("kendala")?"Kendala":has("progres")?"Progres":has("rapat","notula")?"Hasil rapat":has("agenda")?"Agenda":has("bukti")?"Bukti kegiatan":has("tugas")?"Tugas":"Program kerja";
+  case "sikas": return has("rekening","kas")?"Kas/rekening":has("pemasukan")?"Pemasukan":has("pengeluaran")?"Pengeluaran":has("anggaran","bosp")?"Anggaran":has("tagihan","spp","iuran")?"Tagihan siswa":has("kuitansi")?"Kuitansi":has("pembayaran")?"Pembayaran":has("ekspor")?"Ekspor":"Laporan";
+  case "gajian": return has("tunjangan")?"Tunjangan":has("potongan")?"Potongan":has("review")?"Review":has("approval","setujui")?"Approval":has("kunci")?"Kunci periode":has("rekap")?"Rekap payroll":has("draft")?"Draft payroll":"Komponen gaji";
+  case "payslip": return has("cetak")?"Cetak slip":"Riwayat slip";
+  case "settings": return has("undang")?"Undang anggota":has("hak akses","role","peran")?"Hak akses":has("memori")?"Memori sekolah":has("riwayat","pembayaran")?"Riwayat pembayaran":has("langganan","trial")?"Langganan":"Profil sekolah";
+  default:return "";
+ }
+}
+export type Orchestration={module:ModuleKey;feature:string;label:string;reason:string;permitted:boolean;matched:string[]};
 export function orchestrate(input:string,role:Role):Orchestration{
  const text=input.toLocaleLowerCase("id-ID").normalize("NFKC").replace(/[^\p{L}\p{N}\s-]/gu," ").replace(/\s+/g," ").trim();
  const candidates=routes.map((r,index)=>{const matched=r.keywords.filter(k=>text.includes(k));const score=matched.length?Math.max(...matched.map(x=>x.length))+matched.length*2+(r.module==="master"?-8:0)+(r.module==="kepsek_ai"&&matched.some(k=>["rkt","rkjm","ksp","kosp","pbd","eds","rkas"].includes(k))?18:0):0;return {...r,matched,score,index}}).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||a.index-b.index);
  const pick=candidates[0]||{module:"overview" as ModuleKey,label:"Beranda",reason:"Jelaskan pekerjaan yang ingin dilakukan, lalu sistem akan memilih fitur yang paling sesuai.",matched:[]};
  const mod=modules.find(m=>m.key===pick.module);
- return {module:pick.module,label:pick.label,reason:pick.reason,permitted:!!mod&&canAccess(mod,role),matched:pick.matched};
+ return {module:pick.module,feature:featureFor(pick.module,text),label:pick.label,reason:pick.reason,permitted:!!mod&&canAccess(mod,role),matched:pick.matched};
 }
