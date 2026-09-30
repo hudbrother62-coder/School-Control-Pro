@@ -44,6 +44,7 @@ export default function Home(){
  const [staff,setStaff]=useState<Staff[]>([]),[attendance,setAttendance]=useState<Attendance[]>([]),[records,setRecords]=useState<RecordItem[]>([]);
  const [recordTitle,setRecordTitle]=useState(""),[recordNotes,setRecordNotes]=useState(""),[summary,setSummary]=useState<Summary|null>(null),[performanceUser,setPerformanceUser]=useState("");const [ownAttendance,setOwnAttendance]=useState<Attendance|null>(null);
  const [aiPrompt,setAiPrompt]=useState(""),[aiAnswer,setAiAnswer]=useState(""),[subscription,setSubscription]=useState<{status:string;trial_ends_at:string;current_period_end:string|null}|null>(null),[subscriptionSchoolId,setSubscriptionSchoolId]=useState("");
+ useEffect(()=>{if(!db||!user)return;void db.rpc("sc_is_platform_admin").then(({data})=>{if(data===true&&window.location.pathname==="/app")window.location.replace("/admin")})},[db,user]);
  const access=schools.find(s=>s.school.id===schoolId); const role=access?.role||"viewer";
  const selected=modules.find(m=>m.key===module)||modules[0]; const visible=modules.filter(m=>canAccess(m,role));
  const isManager=isAdmin(role)||role==="hr";
@@ -110,7 +111,7 @@ export default function Home(){
   {module==="sikas"&&<FinancePanel schoolId={schoolId} userId={user.id}/>}
   {module==="gajian"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff}/>}
   {module==="payslip"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} selfOnly/>}
-  {module==="bk"&&<><section className="panel"><h2>Ruang BK Privat</h2><p>Catatan siswa dibatasi kepada konselor yang ditugaskan. Manajemen hanya menerima angka agregat, tidak isi percakapan atau identitas kasus.</p></section><BKPanel schoolId={schoolId} userId={user.id}/></>}
+  {module==="bk"&&<><section className="panel"><h2>Ruang BK Privat</h2><p>Catatan siswa dibatasi kepada konselor yang ditugaskan. Manajemen hanya menerima angka agregat, tidak isi percakapan atau identitas kasus.</p></section>{role==="counselor"?<BKPanel schoolId={schoolId} userId={user.id}/>:<section className="panel"><h3>Layanan BK tersedia</h3><p>Modul kasus, konseling, RPL, kunjungan rumah dan tindak lanjut hanya dapat digunakan oleh konselor yang diundang dengan peran BK. Sebagai pemilik sekolah, Anda dapat menambahkan konselor melalui Pengaturan Sekolah.</p></section>}</>}
   </div></main>
   {openMenu&&<div className="mobiledrawer"><div className="panel"><div className="flow" style={{justifyContent:"space-between"}}><strong>Semua modul</strong><button className="iconbutton" onClick={()=>setOpenMenu(false)}>Tutup</button></div><Nav mobile/></div></div>}
   <nav className="bottomnav" aria-label="Navigasi utama">{(["overview","master","attendance","performance"] as ModuleKey[]).map(k=>{const Icon=icons[k];return <button key={k} className={module===k?"active":""} onClick={()=>choose(k)}><Icon size={20}/>{modules.find(x=>x.key===k)?.label}</button>})}<button onClick={()=>setOpenMenu(true)}><Menu size={20}/>Menu</button></nav>
