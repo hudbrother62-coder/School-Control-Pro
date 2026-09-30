@@ -12,7 +12,7 @@ type Totals={income:number;expense:number;opening:number;budget:number;billed:nu
 type Balance={account_id:string;account_name:string;kind:string;balance:number};
 const money=(n:number)=>new Intl.NumberFormat("id-ID",{style:"currency",currency:"IDR",maximumFractionDigits:0}).format(Number(n)||0);
 const localDay=()=>{const p=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const v=(x:string)=>p.find(y=>y.type===x)?.value||"";return v("year")+"-"+v("month")+"-"+v("day")};
-export default function FinancePanel({schoolId,userId}:{schoolId:string;userId:string}){
+export default function FinancePanel({schoolId,userId,focus}:{schoolId:string;userId:string;focus?:string}){
  const db=useMemo(()=>browserDb(),[]);
  const [accounts,setAccounts]=useState<Account[]>([]),[tx,setTx]=useState<Tx[]>([]),[budgets,setBudgets]=useState<Budget[]>([]),[students,setStudents]=useState<Student[]>([]),[bills,setBills]=useState<Bill[]>([]),[payments,setPayments]=useState<Payment[]>([]),[totals,setTotals]=useState<Totals|null>(null),[balances,setBalances]=useState<Balance[]>([]);
  const [tab,setTab]=useState("overview"),[name,setName]=useState(""),[kind,setKind]=useState("cash"),[opening,setOpening]=useState("0"),[accountId,setAccountId]=useState(""),[category,setCategory]=useState(""),[amount,setAmount]=useState(""),[description,setDescription]=useState(""),[date,setDate]=useState(localDay()),[year,setYear]=useState(String(new Date().getFullYear())),[studentId,setStudentId]=useState(""),[billTitle,setBillTitle]=useState(""),[billId,setBillId]=useState(""),[receipt,setReceipt]=useState("");
@@ -28,6 +28,7 @@ export default function FinancePanel({schoolId,userId}:{schoolId:string;userId:s
  db.rpc("sc_account_balances",{p_school:schoolId})
  ]);setAccounts((r[0].data||[]) as Account[]);setTx((r[1].data||[]) as Tx[]);setBudgets((r[2].data||[]) as Budget[]);setStudents((r[3].data||[]) as Student[]);setBills((r[4].data||[]) as Bill[]);setPayments((r[5].data||[]) as Payment[]);setTotals((r[6].data||null) as Totals|null);setBalances((r[7].data||[]) as Balance[]);for(const x of r){if(x.error){setError(x.error.message);break}}}
  useEffect(()=>{void load()},[db,schoolId]);
+ useEffect(()=>{const f=(focus||"").toLowerCase();if(f.includes("kas")||f.includes("rekening"))setTab("overview");else if(f.includes("pemasukan")||f.includes("pengeluaran"))setTab("transaction");else if(f.includes("anggaran"))setTab("budget");else if(f.includes("tagihan"))setTab("bill");else if(f.includes("pembayaran")||f.includes("kuitansi"))setTab("payment");else if(f.includes("laporan")||f.includes("ekspor"))setTab("report")},[focus]);
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Data keuangan berhasil tersimpan.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
  async function insert(table:string,row:Record<string,unknown>){if(!db)throw Error("Database belum terhubung");const {error}=await db.from(table).insert({...row,school_id:schoolId});if(error)throw error}
  async function rpc(fn:string,row:Record<string,unknown>){if(!db)throw Error("Database belum terhubung");const {error}=await db.rpc(fn,row);if(error)throw error}
