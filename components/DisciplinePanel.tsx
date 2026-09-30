@@ -8,7 +8,7 @@ type Class={id:string;name:string;academic_year:string};
 type Incident={id:string;student_id:string;category:string;title:string;occurred_at:string;follow_up:string|null;created_by:string};
 type Follow={id:string;event_id:string;action_taken:string;due_on:string|null;status:string;created_by:string};
 const day=()=>{const a=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const f=(k:string)=>a.find(z=>z.type===k)?.value||"";return f("year")+"-"+f("month")+"-"+f("day")};
-export default function DisciplinePanel({schoolId,role,userId}:{schoolId:string;role:Role;userId:string}){
+export default function DisciplinePanel({schoolId,role,userId,focus}:{schoolId:string;role:Role;userId:string;focus?:string}){
  const db=useMemo(()=>browserDb(),[]),manager=isAdmin(role);
  const [students,setStudents]=useState<Student[]>([]),[classes,setClasses]=useState<Class[]>([]),[incidents,setIncidents]=useState<Incident[]>([]),[followups,setFollowups]=useState<Follow[]>([]);
  const [tab,setTab]=useState("events"),[query,setQuery]=useState(""),[filterClass,setFilterClass]=useState(""),[studentId,setStudentId]=useState(""),[kind,setKind]=useState("violation"),[title,setTitle]=useState(""),[date,setDate]=useState(day()),[followup,setFollowup]=useState(""),[eventId,setEventId]=useState("");
@@ -16,6 +16,7 @@ export default function DisciplinePanel({schoolId,role,userId}:{schoolId:string;
  const name=(id:string)=>students.find(s=>s.id===id)?.name||"Siswa";
  async function load(){if(!db)return;const [s,c,i,f]=await Promise.all([db.from("sc_students").select("id,name,nis,class_id,status").eq("school_id",schoolId).order("name"),db.from("sc_classes").select("id,name,academic_year").eq("school_id",schoolId),db.from("sc_discipline_events").select("id,student_id,category,title,occurred_at,follow_up,created_by").eq("school_id",schoolId).order("occurred_at",{ascending:false}).limit(350),db.from("sc_discipline_followups").select("id,event_id,action_taken,due_on,status,created_by").eq("school_id",schoolId).limit(350)]);setStudents((s.data||[]) as Student[]);setClasses((c.data||[]) as Class[]);setIncidents((i.data||[]) as Incident[]);setFollowups((f.data||[]) as Follow[]);if(i.error)setError(i.error.message)}
  useEffect(()=>{void load()},[db,schoolId]);
+ useEffect(()=>{const f=(focus||"").toLowerCase();if(f.includes("pembinaan")||f.includes("tindak"))setTab("followup");else if(f.includes("rekap"))setTab("report");else if(f.includes("pelanggaran")||f.includes("prestasi"))setTab("events")},[focus]);
  async function job(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Perubahan data disiplin dan prestasi tersimpan.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
  async function insert(table:string,row:Record<string,unknown>){if(!db)throw Error("Database belum siap");const {error:e}=await db.from(table).insert({...row,school_id:schoolId});if(e)throw e}
  const matches=students.filter(s=>(!filterClass||s.class_id===filterClass)&&(!query||s.name.toLowerCase().includes(query.toLowerCase())||s.nis?.includes(query)));
