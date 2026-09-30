@@ -38,10 +38,10 @@ const data:Record<Key,{title:string;desc:string;features:string[];body:React.Rea
 
 export default function DemoWorkspace(){
  const [active,setActive]=useState<Key>("overview");
- const [ready,setReady]=useState(false);
- useEffect(()=>{if(sessionStorage.getItem("sc_internal_review")!=="1"){window.location.replace("/masuk");return}setReady(true)},[]);
+ const [ready,setReady]=useState(false),[theme,setTheme]=useState<"light"|"dark">("light");
+ useEffect(()=>{if(sessionStorage.getItem("sc_internal_review")!=="1"){window.location.replace("/masuk");return}const t=localStorage.getItem("school-control-theme")==="dark"?"dark":"light";setTheme(t);document.body.dataset.theme=t;setReady(true)},[]);
  if(!ready)return null;
  const current=data[active];
- function logout(){sessionStorage.removeItem("sc_internal_review");window.location.replace("/masuk")}
+ function toggleTheme(){const next=theme==="light"?"dark":"light";setTheme(next);localStorage.setItem("school-control-theme",next);document.body.dataset.theme=next}\n function logout(){sessionStorage.removeItem("sc_internal_review");window.location.replace("/masuk")}
  return <div className="demo-shell"><aside><div className="demo-brand"><img src="/school-control-mark.svg" width={38} height={38} alt=""/><span><b>School Control</b><small>Satu Sistem, Semua Urusan Sekolah</small></span></div><nav>{menu.map(([k,label,Icon])=><button className={active===k?"active":""} key={k} onClick={()=>setActive(k)}><Icon size={18}/>{label}<ChevronRight size={15}/></button>)}</nav><button className="demo-exit" onClick={logout}><LogOut size={17}/> Keluar</button></aside><main><header><div><span className="demo-kicker">SCHOOL CONTROL / WORKSPACE SEKOLAH</span><h1>{current.title}</h1><p>{current.desc}</p></div><div className="demo-search"><Search size={16}/><span>Cari fitur…</span></div></header><div className="demo-feature-strip">{current.features.map(x=><span key={x}>{x}</span>)}</div><div className="demo-content">{current.body}</div></main></div>;
 }
