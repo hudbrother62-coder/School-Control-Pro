@@ -8,7 +8,7 @@ type Meeting={id:string;title:string;held_at:string;minutes:string;decisions:str
 type Agenda={id:string;title:string;event_date:string;category:string;notes:string|null};
 type Evidence={id:string;target_type:string;target_id:string;file_path:string;description:string|null};
 const localDay=()=>{const x=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const val=(t:string)=>x.find(y=>y.type===t)?.value||"";return val("year")+"-"+val("month")+"-"+val("day")};
-export default function CommandBoard({schoolId,role,staff,userId}:{schoolId:string;role:Role;staff:Staff[];userId:string}){
+export default function CommandBoard({schoolId,role,staff,userId,focus}:{schoolId:string;role:Role;staff:Staff[];userId:string;focus?:string}){
  const db=useMemo(()=>browserDb(),[]),manager=isAdmin(role);
  const [programs,setPrograms]=useState<Program[]>([]),[tasks,setTasks]=useState<Task[]>([]),[meetings,setMeetings]=useState<Meeting[]>([]),[agenda,setAgenda]=useState<Agenda[]>([]),[evidence,setEvidence]=useState<Evidence[]>([]);
  const [tab,setTab]=useState("program"),[title,setTitle]=useState(""),[date,setDate]=useState(localDay()),[pic,setPic]=useState(""),[programId,setProgramId]=useState(""),[notes,setNotes]=useState(""),[decisions,setDecisions]=useState(""),[problem,setProblem]=useState(""),[result,setResult]=useState(""),[category,setCategory]=useState("school"),[status,setStatus]=useState("ongoing"),[targetType,setTargetType]=useState("program"),[targetId,setTargetId]=useState(""),[file,setFile]=useState<File|null>(null);
@@ -22,6 +22,7 @@ export default function CommandBoard({schoolId,role,staff,userId}:{schoolId:stri
  db.from("sc_evidence").select("id,target_type,target_id,file_path,description").eq("school_id",schoolId).limit(150)
  ]);setPrograms((results[0].data||[]) as Program[]);setTasks((results[1].data||[]) as Task[]);setMeetings((results[2].data||[]) as Meeting[]);setAgenda((results[3].data||[]) as Agenda[]);setEvidence((results[4].data||[]) as Evidence[]);for(const r of results){if(r.error){setError(r.error.message);break}}}
  useEffect(()=>{void load()},[db,schoolId]);
+ useEffect(()=>{const f=(focus||"").toLowerCase();if(f.includes("program")||f.includes("pic"))setTab("program");else if(f.includes("tugas")||f.includes("deadline")||f.includes("progres")||f.includes("kendala"))setTab("task");else if(f.includes("rapat"))setTab("meeting");else if(f.includes("agenda"))setTab("calendar");else if(f.includes("bukti"))setTab("evidence")},[focus]);
  async function job(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Data operasional tersimpan.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
  async function insert(table:string,row:Record<string,unknown>){if(!db)throw Error("Database tidak terhubung.");const {error}=await db.from(table).insert({...row,school_id:schoolId});if(error)throw error}
  async function rpc(fn:string,args:Record<string,unknown>){if(!db)throw Error("Database tidak terhubung.");const {error}=await db.rpc(fn,args);if(error)throw error}
