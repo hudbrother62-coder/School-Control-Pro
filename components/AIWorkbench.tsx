@@ -3,11 +3,12 @@ import {useEffect,useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
 import {aiTemplates,type AiModule} from "@/lib/education-templates";
 type Draft={id:string;template_key:string|null;title:string;content:string;created_at:string};
-export default function AIWorkbench({module,schoolId}:{module:AiModule;schoolId:string}){
+export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;schoolId:string;focus?:string}){
  const db=useMemo(()=>browserDb(),[]);const [template,setTemplate]=useState(""),[context,setContext]=useState(""),[output,setOutput]=useState(""),[title,setTitle]=useState(""),[drafts,setDrafts]=useState<Draft[]>([]),[error,setError]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false);
  const config=aiTemplates[module].find(t=>t.key===template);
  async function load(){if(!db)return;const {data}=await db.from("sc_ai_drafts").select("id,template_key,title,content,created_at").eq("school_id",schoolId).eq("module_key",module).order("created_at",{ascending:false}).limit(30);setDrafts((data||[]) as Draft[])}
  useEffect(()=>{void load()},[db,schoolId,module]);
+ useEffect(()=>{const f=(focus||"").toLowerCase();if(!f)return;const found=aiTemplates[module].find(t=>t.label.toLowerCase().includes(f)||f.includes(t.label.toLowerCase()));if(found)setTemplate(found.key)},[focus,module]);
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
  async function generate(){if(!db||!config)return;await run(async()=>{const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Masuk kembali untuk menjalankan AI.");const response=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({school_id:schoolId,module,prompt:config.prompt+"\nKonteks atau instruksi tambahan: "+context})});const j=await response.json();if(!response.ok)throw Error(j.error||"AI belum tersedia.");setOutput(j.text||"");setTitle(config.label);setOk("Draf selesai dibuat, periksa dan sunting sebelum disimpan.")})}
  async function store(){if(!db)return;await run(async()=>{const {error}=await db.rpc("sc_store_ai_draft",{p_school:schoolId,p_module:module,p_template:template,p_title:title,p_prompt:context,p_content:output});if(error)throw error;await load();setOk("Draf AI disimpan ke riwayat pribadi.")})}
