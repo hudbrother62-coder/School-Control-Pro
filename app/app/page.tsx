@@ -42,7 +42,7 @@ export default function Home(){
  const [loading,setLoading]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState("");
  const [email,setEmail]=useState(""),[password,setPassword]=useState(""),[register,setRegister]=useState(false);
  const [newSchool,setNewSchool]=useState(""),[inviteCode,setInviteCode]=useState(""),[inviteRole,setInviteRole]=useState<Role>("teacher"),[inviteResult,setInviteResult]=useState("");
- const [theme,setTheme]=useState("light"),[openMenu,setOpenMenu]=useState(false),[expandedNav,setExpandedNav]=useState<ModuleKey|null>("overview"),[featureFocus,setFeatureFocus]=useState("");
+ const [theme,setTheme]=useState("light"),[openMenu,setOpenMenu]=useState(false),[expandedNav,setExpandedNav]=useState<ModuleKey|null>(null),[featureFocus,setFeatureFocus]=useState("");
  const [staff,setStaff]=useState<Staff[]>([]),[attendance,setAttendance]=useState<Attendance[]>([]),[records,setRecords]=useState<RecordItem[]>([]);
  const [recordTitle,setRecordTitle]=useState(""),[recordNotes,setRecordNotes]=useState(""),[summary,setSummary]=useState<Summary|null>(null),[performanceUser,setPerformanceUser]=useState("");const [ownAttendance,setOwnAttendance]=useState<Attendance|null>(null);
  const [aiPrompt,setAiPrompt]=useState(""),[aiAnswer,setAiAnswer]=useState(""),[subscription,setSubscription]=useState<{status:string;trial_ends_at:string;current_period_end:string|null}|null>(null),[subscriptionSchoolId,setSubscriptionSchoolId]=useState("");
