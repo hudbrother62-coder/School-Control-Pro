@@ -7,3 +7,29 @@
 .demo-hbar{display:grid;grid-template-columns:55px 1fr 25px;gap:8px;align-items:center;margin:11px 0;font-size:9px}.demo-hbar>i{height:8px;background:#edf2ef;border-radius:10px;overflow:hidden}.demo-hbar>i>b{display:block;height:100%;background:#168663;border-radius:10px}.demo-hbar>strong{text-align:right}
 body[data-theme=dark] .demo-module-grid button,body[data-theme=dark] .demo-location{background:#101d30;border-color:#33465e;color:#bfe6d7}body[data-theme=dark] .demo-empty{border-color:#33465e;color:#b1c2d7}body[data-theme=dark] .demo-lead,body[data-theme=dark] .demo-form-head p{color:#b1c2d7}
 @media(max-width:900px){.demo-module-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.demo-module-grid{grid-template-columns:1fr}.demo-bars{height:170px}}
+
+
+/* Dedicated School Control demo workspaces */
+.demo-search input{border:0;outline:0;background:transparent;color:inherit;font:inherit;width:150px}
+.demo-form-head,.demo-section-title{grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.demo-form-head p,.demo-section-title p,.demo-lead{margin:4px 0 0;color:#7b8f87;font-size:10px;line-height:1.55}
+.demo-badge{font-size:9px;font-weight:800;background:#eaf7f0;color:#17664f;border-radius:999px;padding:6px 9px}
+.demo-dashboard-stack{display:grid;gap:16px}
+.demo-bars{height:190px;display:flex;align-items:flex-end;gap:12px;padding:20px 4px 0}
+.demo-bars>div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;min-width:0}
+.demo-bars i{display:block;width:min(28px,70%);min-height:4px;background:#198663;border-radius:7px 7px 2px 2px}
+.demo-bars b{font-size:10px}.demo-bars small{font-size:9px;color:#83958c}.demo-bars.wide i{width:min(46px,76%)}
+.demo-hbar{display:grid;grid-template-columns:92px 1fr 30px;gap:8px;align-items:center;margin:12px 0;font-size:10px}
+.demo-hbar>i{height:8px;border-radius:999px;background:#edf2ef;overflow:hidden}.demo-hbar>i>b{height:100%;display:block;background:#1a8e67;border-radius:999px}.demo-hbar>strong{text-align:right}
+.demo-calendar-week,.demo-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.demo-calendar-week{margin:14px 0 5px}.demo-calendar-week span{text-align:center;font-size:9px;color:#7e9189;font-weight:800}
+.demo-calendar button{min-height:82px;border:1px solid #e0e9e3;background:#fbfdfb;border-radius:9px;padding:8px;text-align:left;color:#21443a}.demo-calendar button:hover{border-color:#70ae96}.demo-calendar button.outside{opacity:.38}.demo-calendar button b{display:block}.demo-calendar button small{display:block;margin-top:9px;font-size:8px;color:#16805f;font-weight:800}
+.demo-toolbar-live{display:flex;gap:9px;flex-wrap:wrap}.demo-toolbar-live button,.demo-toolbar-live label{display:inline-flex;align-items:center;gap:7px;border:1px solid #d8e5dd;background:#f8fbf9;color:#17614f;border-radius:9px;padding:10px 12px;font-size:10px;font-weight:800;cursor:pointer}
+.demo-realtime{display:flex!important;align-items:center;justify-content:space-between;gap:16px}.demo-realtime>div{display:grid;grid-template-columns:auto 1fr;gap:4px 9px;align-items:center}.demo-realtime small{grid-column:2;color:#80928a;font-size:10px}.demo-live-dot{width:9px;height:9px;border-radius:50%;background:#16a36f;box-shadow:0 0 0 5px #16a36f18}
+.demo-empty{padding:26px;text-align:center;color:#87978f;font-size:11px;border:1px dashed #dce6df;border-radius:10px}
+body[data-theme=dark] .demo-search input{color:#f2f6fb}
+body[data-theme=dark] .demo-calendar button{background:#101d30;border-color:#33465e;color:#ecf4ff}
+body[data-theme=dark] .demo-calendar button small{color:#8de1c3}
+body[data-theme=dark] .demo-hbar>i{background:#24374d}
+body[data-theme=dark] .demo-toolbar-live button,body[data-theme=dark] .demo-toolbar-live label{background:#17263c;border-color:#33465e;color:#bfe6d7}
+body[data-theme=dark] .demo-form-head p,body[data-theme=dark] .demo-section-title p{color:#b1c2d7}
+@media(max-width:700px){.demo-calendar button{min-height:58px;padding:5px}.demo-calendar button small{font-size:7px}.demo-realtime{align-items:stretch;flex-direction:column}.demo-search input{width:100%}}
