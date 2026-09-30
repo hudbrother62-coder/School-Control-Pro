@@ -12,5 +12,5 @@ const roles:{key:Role;label:string;desc:string}[]=[
  {key:"viewer",label:"Viewer",desc:"Hanya melihat data yang diizinkan"}
 ];
 export default function AccessPanel({schoolId,role}:{schoolId:string;role:Role}){
- return <><section className="panel"><h2>Struktur Akses</h2><div className="access-grid">{roles.map(r=><article className="access-card" key={r.key}><strong>{r.label}</strong><small>{r.desc}</small><div className="access-tags">{modules.filter(m=>!["overview","settings","access"].includes(m.key)&&canAccess(m,r.key)).slice(0,7).map(m=><span key={m.key}>{m.label}</span>)}</div></article>)}</div></section><TeamAccess schoolId={schoolId} role={role}/></>;
+ return <><section className="panel"><h2>Struktur Akses</h2><div className="access-grid">{roles.map(r=><article className="access-card" key={r.key}><strong>{r.label}</strong><small>{r.desc}</small><div className="access-tags">{modules.filter(m=>!["overview","settings","access"].includes(m.key)&&canAccess(m,r.key)).map(m=><span key={m.key}>{m.label}</span>)}</div></article>)}</div></section><TeamAccess schoolId={schoolId} role={role}/></>;
 }
