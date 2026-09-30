@@ -8,7 +8,7 @@ type A={id:string;student_id:string;attendance_date:string;lesson_key:string;mar
 type G={id:string;student_id:string;subject:string;assessment_name:string;score:number;assessment_date:string};
 type J={id:string;class_id:string;subject:string;topic:string;lesson_date:string};
 const now=()=>new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Jakarta"});
-export default function SchoolData({mode,schoolId,userId,role}:{mode:"master"|"academic";schoolId:string;userId:string;role:Role}){
+export default function SchoolData({mode,schoolId,userId,role,focus}:{mode:"master"|"academic";schoolId:string;userId:string;role:Role;focus?:string}){
  const db=useMemo(()=>browserDb(),[]);
  const [classes,setClasses]=useState<C[]>([]),[students,setStudents]=useState<S[]>([]),[att,setAtt]=useState<A[]>([]),[grades,setGrades]=useState<G[]>([]),[journals,setJournals]=useState<J[]>([]);
  const [className,setClassName]=useState(""),[grade,setGrade]=useState(""),[year,setYear]=useState("2026/2027");
@@ -20,6 +20,7 @@ export default function SchoolData({mode,schoolId,userId,role}:{mode:"master"|"a
  async function load(){if(!db)return;const [{data:c},{data:s}]=await Promise.all([db.from("sc_classes").select("id,name,grade,academic_year").eq("school_id",schoolId).order("name"),db.from("sc_students").select("id,class_id,nis,name,status").eq("school_id",schoolId).order("name")]);setClasses((c||[]) as C[]);setStudents((s||[]) as S[]);
  if(mode==="academic"){const [{data:a},{data:g},{data:j}]=await Promise.all([db.from("sc_student_attendance").select("id,student_id,attendance_date,lesson_key,mark").eq("school_id",schoolId).order("attendance_date",{ascending:false}).limit(30),db.from("sc_grades").select("id,student_id,subject,assessment_name,score,assessment_date").eq("school_id",schoolId).order("assessment_date",{ascending:false}).limit(30),db.from("sc_teacher_journals").select("id,class_id,subject,topic,lesson_date").eq("school_id",schoolId).order("lesson_date",{ascending:false}).limit(30)]);setAtt((a||[]) as A[]);setGrades((g||[]) as G[]);setJournals((j||[]) as J[])}}
  useEffect(()=>{void load()},[db,schoolId,mode]);
+ useEffect(()=>{const f=(focus||"").toLowerCase();if(f.includes("presensi"))setTab("attendance");else if(f.includes("nilai"))setTab("grades");else if(f.includes("jurnal"))setTab("journal")},[focus]);
  async function save(action:()=>Promise<void>){setError("");setOk("");setBusy(true);try{await action();await load();setOk("Data tersimpan pada sekolah ini.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
  async function insert(table:string,row:Record<string,unknown>){if(!db)throw Error("Database belum terhubung.");const {error:e}=await db.from(table).insert({...row,school_id:schoolId});if(e)throw e;}
  const field=(title:string,value:string,set:(x:string)=>void,type="text")=><label className="field">{title}<input type={type} value={value} onChange={e=>set(e.target.value)} required/></label>;
