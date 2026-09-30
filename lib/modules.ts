@@ -4,6 +4,9 @@ export type School = {id:string;name:string;timezone:string};
 export type Membership = {school_id:string;role:Role};
 export type Staff = {id:string;school_id:string;user_id:string|null;name:string;position:string|null;shift_start:string|null;late_tolerance_minutes?:number|null};
 export type FeatureModule={key:ModuleKey;label:string;section:string;description:string;features:string[];roles?:Role[]};
+export const ROLE_LABELS:Record<Role,string>={
+ owner:"Pemilik Akun",principal:"Kepala Sekolah",vice_principal:"Wakil Kepala Sekolah",teacher:"Guru",counselor:"Guru BK",hr:"SDM / HR",treasurer:"Bendahara",staff:"Staf",viewer:"Viewer"
+};
 export const ADMIN_ROLES:Role[] = ["owner","principal","vice_principal"];
 export const modules:FeatureModule[] = [
   {key:"overview",label:"Beranda",section:"Utama",description:"Ringkasan sekolah.",features:["Ringkasan aktivitas","Universal AI Orchestrator","Status langganan"]},
