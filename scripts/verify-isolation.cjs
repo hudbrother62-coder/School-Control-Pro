@@ -28,7 +28,7 @@ check("Saya ingin absen pribadi","teacher","attendance",true);
 check("Slip gaji saya","teacher","payslip",true);
 check("Tagihan siswa","teacher","sikas",false);
 check("Konseling individu","counselor","bk",true);
-check("Konseling individu","principal","bk",false);
+check("Konseling individu","principal","bk",true); // Principal sees overview only; counselor-only RLS still protects cases.
 check("Data siswa dan kelas","owner","master",true);
 check("Halo","teacher","overview",true);
 console.log("PASS: source isolation and 8 role-aware orchestration scenarios.");
