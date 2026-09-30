@@ -18,7 +18,7 @@ import FinancePanel from "@/components/FinancePanel";
 import PayrollPanel from "@/components/PayrollPanel";
 import BKPanel from "@/components/BKPanel";
 import AcademicAdvanced from "@/components/AcademicAdvanced";
-import DisciplinePanel from "@/components/DisciplinePanel";
+import DisciplinePanel from "@/components/DisciplinePanel";\nimport DisciplineReportTemplate from "@/components/DisciplineReportTemplate";
 import DashboardOverview from "@/components/DashboardOverview";
 import PaymentWall from "@/components/PaymentWall";
 import BillingPanel from "@/components/BillingPanel";
