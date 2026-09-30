@@ -42,6 +42,12 @@ export default function DashboardOverview({schoolId,userId,role,focus}:{schoolId
  const maxClass=Math.max(1,...classData.map(x=>x.count)),maxAttend=Math.max(1,staff.length,...week.map(x=>x.present));
  const openTasks=tasks.filter(x=>!["done","completed","verified"].includes(x.status));
  const overdue=openTasks.filter(x=>x.due_at&&new Date(x.due_at).getTime()<Date.now()).length;
+ const taskStatus=[
+  {label:"Belum mulai",count:tasks.filter(x=>["todo","pending","open","planned"].includes(x.status)).length},
+  {label:"Berjalan",count:tasks.filter(x=>["in_progress","progress","active","doing"].includes(x.status)).length},
+  {label:"Terlambat",count:overdue}
+ ];
+ const maxTask=Math.max(1,...taskStatus.map(x=>x.count));
  const showSummary=!focus||mode.includes("ringkasan"),showAnalytics=!focus||mode.includes("analitik"),showAgenda=!focus||mode.includes("agenda")||mode.includes("deadline");
  return <>
   {showSummary&&<><div className="grid dashboard-kpis">
@@ -55,8 +61,9 @@ export default function DashboardOverview({schoolId,userId,role,focus}:{schoolId
     <div className="vertical-chart">{week.map(x=><div className="vbar-col" key={x.key}><div className="vbar-track"><i style={{height:(x.present/maxAttend*100)+"%"}}/><em style={{height:(x.late/maxAttend*100)+"%"}}/></div><b>{x.present}</b><small>{x.label}</small></div>)}</div>
     <div className="chart-legend"><span><i/>Hadir</span><span><i className="late"/>Terlambat</span></div>
    </section>
-   <section className="panel"><div className="sectionhead"><div><h2>Distribusi Siswa per Kelas</h2><p className="muted">Membantu melihat kepadatan kelas dari Data Induk.</p></div><span className="pill">Akademik</span></div>
-    <div className="horizontal-chart">{classData.map(x=><div className="hbar-row" key={x.name}><span>{x.name}</span><div><i style={{width:(x.count/maxClass*100)+"%"}}/></div><b>{x.count}</b></div>)}{!classData.length&&<div className="empty">Belum ada data kelas.</div>}</div>
+   <section className="panel"><div className="sectionhead"><div><h2>Status Program & Deadline</h2><p className="muted">Grafik prioritas untuk pekerjaan sekolah yang perlu tindakan manajemen.</p></div><span className="pill">Prioritas</span></div>
+    <div className="horizontal-chart">{taskStatus.map(x=><div className="hbar-row" key={x.label}><span>{x.label}</span><div><i style={{width:(x.count/maxTask*100)+"%"}}/></div><b>{x.count}</b></div>)}</div>
+    <div className="chart-note">Distribusi siswa tetap tersedia sebagai konteks akademik: {classData.slice(0,4).map(x=>x.name+" "+x.count).join(" · ")||"belum ada data kelas"}.</div>
    </section>
   </div>}
   {showAgenda&&<div className="dashboard-charts">
