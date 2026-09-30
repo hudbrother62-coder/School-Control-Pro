@@ -120,10 +120,10 @@ export default function Home(){
  {(!featureFocus||["Profil sekolah","Memori sekolah"].includes(featureFocus))&&<SchoolProfile schoolId={schoolId} role={role} focus={featureFocus}/>}
  {(!featureFocus||["Langganan","Riwayat pembayaran"].includes(featureFocus))&&<BillingPanel schoolId={schoolId} isOwner={role==="owner"} busy={loading} onCheckout={plan=>void checkout(plan)} focus={featureFocus}/>}
  </>}
- {module==="guru_ai"&&<><AIWorkbench module="guru_ai" schoolId={schoolId} focus={featureFocus}/><DocumentCenter schoolId={schoolId} userId={user.id} role={role} teacherOnly/></>}
+ {module==="guru_ai"&&<><AIWorkbench module="guru_ai" schoolId={schoolId} focus={featureFocus}/>{(!featureFocus||featureFocus!=="Riwayat draf")&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} teacherOnly focus={featureFocus}/>}</>}
   {module==="kepsek_ai"&&<>
  {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP"].includes(featureFocus))&&<AIWorkbench module="kepsek_ai" schoolId={schoolId} focus={featureFocus}/>}
- {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Pusat dokumen","Persetujuan dokumen"].includes(featureFocus))&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role}/>}
+ {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Pusat dokumen","Persetujuan dokumen"].includes(featureFocus))&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
  {(!featureFocus||featureFocus==="Supervisi guru")&&<Supervision schoolId={schoolId} role={role} staff={staff} userId={user.id}/>}
  {!featureFocus&&<SchoolProfile schoolId={schoolId} role={role}/>}
  </>}
