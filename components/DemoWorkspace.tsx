@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
-import {LayoutDashboard,Database,BookOpenCheck,Sparkles,ClipboardCheck,HeartHandshake,ListChecks,WalletCards,BriefcaseBusiness,Settings,LogOut,CheckCircle2,AlertTriangle,FileText,Clock3,BarChart3,Search,ChevronRight,GraduationCap,ReceiptText} from "lucide-react";
+import {LayoutDashboard,Database,BookOpenCheck,Sparkles,ClipboardCheck,HeartHandshake,ListChecks,WalletCards,BriefcaseBusiness,Settings,LogOut,CheckCircle2,AlertTriangle,FileText,Clock3,BarChart3,Search,ChevronRight,GraduationCap,ReceiptText,Sun,Moon} from "lucide-react";
 import "./demo.css";
 
 const menu=[
