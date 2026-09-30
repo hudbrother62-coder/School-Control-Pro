@@ -7,7 +7,7 @@ type BKRecord={id:string;case_id:string|null;student_id:string;kind:string;domai
 type Attendance={student_id:string;attendance_date:string;mark:string;lesson_key:string};
 const kinds=[["need","Pemetaan kebutuhan"],["counseling","Konseling individu"],["group","Konseling kelompok"],["classical","Layanan klasikal"],["rpl","RPL layanan"],["program","Program BK"],["agenda","Agenda"],["followup","Tindak lanjut"],["visit","Kunjungan rumah"],["referral","Rujukan"],["career","Perencanaan karier"],["document","Dokumen"]];
 const date=()=>{const p=new Intl.DateTimeFormat("en-US",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:"Asia/Jakarta"}).formatToParts(new Date());const g=(x:string)=>p.find(y=>y.type===x)?.value||"";return g("year")+"-"+g("month")+"-"+g("day")};
-export default function BKPanel({schoolId,userId}:{schoolId:string;userId:string}){
+export default function BKPanel({schoolId,userId,focus}:{schoolId:string;userId:string;focus?:string}){
  const db=useMemo(()=>browserDb(),[]);const [students,setStudents]=useState<Student[]>([]),[cases,setCases]=useState<Case[]>([]),[records,setRecords]=useState<BKRecord[]>([]),[att,setAtt]=useState<Attendance[]>([]);
  const [tab,setTab]=useState("cases"),[studentId,setStudentId]=useState(""),[caseId,setCaseId]=useState(""),[domain,setDomain]=useState("Pribadi"),[kind,setKind]=useState("need"),[topic,setTopic]=useState(""),[notes,setNotes]=useState(""),[followDate,setFollowDate]=useState(""),[day,setDay]=useState(date());
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
@@ -19,6 +19,7 @@ export default function BKPanel({schoolId,userId}:{schoolId:string;userId:string
  db.from("sc_student_attendance").select("student_id,attendance_date,mark,lesson_key").eq("school_id",schoolId).order("attendance_date",{ascending:false}).limit(100)
  ]);setStudents((s.data||[]) as Student[]);setCases((c.data||[]) as Case[]);setRecords((r.data||[]) as BKRecord[]);setAtt((a.data||[]) as Attendance[]);if(c.error)setError(c.error.message);else if(r.error)setError(r.error.message)}
  useEffect(()=>{void load()},[db,schoolId]);
+ useEffect(()=>{const f=(focus||"").toLowerCase();if(f.includes("tindak lanjut"))setTab("followup");else if(f.includes("riwayat"))setTab("history");else if(f.includes("kasus"))setTab("cases");else if(f)setTab("service")},[focus]);
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Layanan BK tersimpan secara privat.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
  async function insert(table:string,row:Record<string,unknown>){if(!db)throw Error("Database tidak terhubung");const {error}=await db.from(table).insert({...row,school_id:schoolId});if(error)throw error}
  async function updateCase(c:Case,status:string){if(!db)return;await run(async()=>{const {error}=await db.rpc("sc_update_bk_case",{p_school:schoolId,p_case:c.id,p_status:status,p_follow_up:c.follow_up_date});if(error)throw error})}
