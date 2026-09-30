@@ -3,7 +3,7 @@ const path=require("node:path");
 const assert=require("node:assert/strict");
 const ts=require("typescript");
 const base=path.resolve(__dirname,"..");
-const forbidden=["vtcdopzlgitqhvxqmtuy","ypekuhwyjvyyzvedncqh","sb_publishable_","service_role=eyJ"];
+// Public Supabase publishable keys are intentionally safe for browser use. Block legacy project refs and service-role material only.\nconst forbidden=["vtcdopzlgitqhvxqmtuy","ypekuhwyjvyyzvedncqh","service_role=eyJ","SUPABASE_SERVICE_ROLE_KEY="];
 for(const folder of ["app","components","lib","supabase"]){
  const walk=(dir)=>{for(const x of fs.readdirSync(dir,{withFileTypes:true})){
   const p=path.join(dir,x.name);
