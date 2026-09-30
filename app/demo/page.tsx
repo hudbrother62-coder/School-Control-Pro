@@ -1,1 +1,1 @@
-import Demo from "@/components/DemoWorkspace";export const metadata={title:"Demo School Control",robots:{index:false,follow:false}};export default function Page(){return <Demo/>}
+import Demo from "@/components/DemoWorkspace";export const metadata={title:"School Control Workspace",robots:{index:false,follow:false}};export default function Page(){return <Demo/>}
