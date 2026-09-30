@@ -110,8 +110,8 @@ export default function Home(){
   {module==="disiplin"&&<DisciplinePanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
   {module==="command"&&<CommandBoard schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
   {module==="sikas"&&<FinancePanel schoolId={schoolId} userId={user.id} focus={featureFocus}/>}
-  {module==="gajian"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff}/>}
-  {module==="payslip"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} selfOnly/>}
+  {module==="gajian"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} focus={featureFocus}/>}
+  {module==="payslip"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} selfOnly focus={featureFocus}/>}
   {module==="bk"&&<><section className="panel"><h2>Ruang Konseling Privat</h2><p>Catatan siswa dibatasi kepada konselor yang ditugaskan. Manajemen hanya menerima angka agregat, tidak isi percakapan atau identitas kasus.</p></section>{role==="counselor"?<BKPanel schoolId={schoolId} userId={user.id} focus={featureFocus}/>:<section className="panel"><h3>Layanan BK tersedia</h3><p>Fitur kasus, konseling, RPL, kunjungan rumah dan tindak lanjut hanya dapat digunakan oleh konselor yang diundang dengan peran BK. Sebagai pemilik sekolah, Anda dapat menambahkan konselor melalui Pengaturan Sekolah.</p></section>}</>}
   </div></main>
   {openMenu&&<div className="mobiledrawer"><div className="panel"><div className="flow" style={{justifyContent:"space-between"}}><strong>Semua fitur</strong><button className="iconbutton" onClick={()=>setOpenMenu(false)}>Tutup</button></div><Nav mobile/></div></div>}
