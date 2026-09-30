@@ -7,7 +7,7 @@ export type FeatureModule={key:ModuleKey;label:string;section:string;description
 export const ADMIN_ROLES:Role[] = ["owner","principal","vice_principal"];
 export const modules:FeatureModule[] = [
   {key:"overview",label:"Beranda",section:"Utama",description:"Ringkasan sekolah dan pengarah pekerjaan lintas fitur.",features:["Ringkasan aktivitas","Universal AI Orchestrator","Status langganan"]},
-  {key:"master",label:"Data Induk",section:"Utama",description:"Satu sumber identitas seluruh sistem.",features:["Profil sekolah","Guru & tenaga kependidikan","Siswa","Kelas","Mata pelajaran","Penugasan guru","Import/export data"]},
+  {key:"master",label:"Data Induk",section:"Utama",description:"Satu sumber identitas seluruh sistem.",features:["Siswa","Kelas","Guru & tenaga kependidikan","Mata pelajaran","Penugasan guru","Import/export data"]},
   {key:"guru_ai",label:"Perangkat Ajar AI",section:"Pembelajaran",description:"Penyusunan perangkat dan bahan pembelajaran dengan AI.",features:["Modul ajar","RPP/rencana pembelajaran","LKPD","Bahan ajar","Soal & asesmen","Riwayat draf"],roles:["owner","principal","vice_principal","teacher"]},
   {key:"buku_kerja",label:"Pembelajaran & Penilaian",section:"Pembelajaran",description:"Administrasi kelas dan pembelajaran harian.",features:["Presensi siswa","Nilai","Jurnal mengajar","Agenda","Rekap bulanan","Laporan kelas"],roles:["owner","principal","vice_principal","teacher"]},
   {key:"disiplin",label:"Disiplin & Prestasi",section:"Kesiswaan",description:"Catatan perilaku, prestasi, pembinaan dan tindak lanjut.",features:["Pelanggaran","Prestasi","Pembinaan","Tindak lanjut","Filter kelas","Rekap & ekspor"],roles:["owner","principal","vice_principal","teacher","counselor"]},
