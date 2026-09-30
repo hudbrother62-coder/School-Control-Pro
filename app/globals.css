@@ -34,3 +34,38 @@
 @media(max-width:560px){.check-grid{grid-template-columns:1fr}.modalcard{padding:16px}.vertical-chart{height:190px;gap:5px}.vbar-track{padding:0 12%}}
 
 .report-preview{margin-top:18px;border:1px solid var(--border);background:var(--surface);border-radius:14px;padding:24px;min-height:390px}.report-head{display:grid;grid-template-columns:82px 1fr;gap:16px;align-items:center;text-align:center;border-bottom:3px solid var(--text);padding-bottom:14px}.report-head img,.report-logo-placeholder{width:70px;height:70px;object-fit:contain;margin:auto}.report-logo-placeholder{border:1px dashed var(--border);display:grid;place-items:center;font-size:9px;color:var(--muted)}.report-head b{display:block;font-size:19px}.report-head span{display:block;color:var(--muted);font-size:11px;margin-top:4px}.report-preview>h3{text-align:center;margin:28px 0 4px}.report-preview>p{text-align:center;color:var(--muted);font-size:11px}.report-sample{margin-top:24px;border:1px solid var(--border);border-radius:10px;padding:35px 16px;text-align:center;color:var(--muted);font-size:11px}.report-sign{width:230px;margin:38px 0 0 auto;text-align:center;font-size:11px}.report-sign span,.report-sign b{display:block}.report-sign b{margin-top:45px}
+
+
+/* Modal-first data entry */
+.data-modal-backdrop{backdrop-filter:blur(5px)}
+.data-modal-card{padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:94vh}
+.data-modal-card.wide{width:min(980px,100%)}
+.data-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px 18px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--surface),var(--bg));position:sticky;top:0;z-index:4}
+.data-modal-head>div>span{font-size:9px;letter-spacing:.15em;font-weight:850;color:var(--accent)}
+.data-modal-head h2{font-size:21px;margin:5px 0 0;letter-spacing:-.025em}
+.data-modal-head p{font-size:11px;color:var(--muted);line-height:1.55;margin:6px 0 0;max-width:680px}
+.data-modal-body{padding:22px 24px 24px;overflow:auto}
+.modal-section{padding:4px 0 21px;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.modal-section:last-of-type{border-bottom:0}
+.modal-section h3{font-size:13px;margin:0 0 12px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin:22px -24px -24px;padding:15px 24px;border-top:1px solid var(--border);background:var(--surface);position:sticky;bottom:-24px;z-index:3}
+.modal-quick-actions{margin:16px 0}
+.attendance-modal-list{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:12px;padding:0 14px}
+.attendance-modal-list .entry select{min-width:145px}
+
+/* Calendar interaction refresh */
+.calendar-grid{align-items:stretch}
+.calendar-cell{padding:0;display:block;position:relative;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.calendar-cell:hover{transform:translateY(-1px);box-shadow:0 7px 18px #0000000a}
+.calendar-cell.selected{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent),0 8px 22px #0000000a}
+.calendar-date-button{width:100%;min-height:34px;border:0;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:space-between;padding:8px 9px 3px;text-align:left;cursor:pointer}
+.calendar-date-button b{font-size:12px}
+.calendar-date-button span{font-size:8px;color:var(--muted);font-weight:700}
+.calendar-events{display:grid;gap:4px;padding:3px 7px 8px}
+.calendar-event-chip{width:100%;border:0;background:var(--accent-soft);color:var(--accent);padding:5px 6px;border-radius:6px;text-align:left;font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.calendar-event-chip:hover{filter:brightness(.97)}
+.calendar-events>small{font-size:8px;color:var(--muted);padding:1px 4px}
+.calendar-selected-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:15px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--bg)}
+.calendar-selected-summary>div{display:grid;gap:3px}.calendar-selected-summary span{font-size:8px;letter-spacing:.12em;font-weight:850;color:var(--accent)}.calendar-selected-summary strong{font-size:13px}.calendar-selected-summary small{color:var(--muted);font-size:10px}
+body[data-theme=dark] .data-modal-head{background:linear-gradient(180deg,var(--surface),#111d2d)}
+@media(max-width:740px){.data-modal-backdrop{padding:0;align-items:end}.data-modal-card,.data-modal-card.wide{width:100%;max-height:92vh;border-radius:19px 19px 0 0;border-bottom:0}.data-modal-head{padding:18px}.data-modal-body{padding:18px}.modal-actions{margin:20px -18px -18px;padding:13px 18px;bottom:-18px}.calendar-cell{min-height:72px}.calendar-events{padding:2px 4px 5px}.calendar-event-chip{font-size:7.5px;padding:4px}.calendar-date-button{padding:6px}.calendar-date-button span{display:none}.calendar-selected-summary{align-items:stretch;flex-direction:column}.calendar-selected-summary .button{width:100%}}
