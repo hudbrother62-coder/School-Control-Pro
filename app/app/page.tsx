@@ -130,7 +130,7 @@ export default function Home(){
  {!featureFocus&&<SchoolProfile schoolId={schoolId} role={role}/>}
  </>}
  {module==="buku_kerja"&&<>{(!featureFocus||(!featureFocus.toLowerCase().includes("rekap")&&!featureFocus.toLowerCase().includes("laporan")))&&<SchoolData mode="academic" schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>} {(featureFocus.toLowerCase().includes("rekap")||featureFocus.toLowerCase().includes("laporan"))&&<AcademicAdvanced schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}</>}
-  {module==="disiplin"&&<DisciplinePanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
+  {module==="disiplin"&&(featureFocus.toLowerCase().includes("template")?<DisciplineReportTemplate schoolId={schoolId}/>:<DisciplinePanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>)}
   {module==="command"&&<CommandBoard schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
   {module==="sikas"&&<FinancePanel schoolId={schoolId} userId={user.id} focus={featureFocus}/>}
   {module==="gajian"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} focus={featureFocus}/>}
