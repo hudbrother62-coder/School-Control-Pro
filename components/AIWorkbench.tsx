@@ -55,8 +55,9 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
   return [...fromDb,...fallback.filter(x=>!fromDb.some(d=>d.value.toLowerCase()===x.value.toLowerCase()))];
  },[classes,project.level]);
  const subjectOptions:SmartOption[]=useMemo(()=>{
-  const key=project.level+" "+project.grade.replace(/\D/g,"");
-  const names=[...subjects.map(s=>s.name),...(subjectDefaults[key]||[])];
+  const digits=project.grade.replace(/\D/g,""),key=project.level+" "+digits;
+  const byLevel=Object.entries(subjectDefaults).filter(([k])=>k.startsWith(project.level+" ")).flatMap(([,v])=>v);
+  const names=[...subjects.map(s=>s.name),...(subjectDefaults[key]||[]),...byLevel];
   return [...new Set(names)].map(name=>({value:name,label:name,subtitle:subjects.find(s=>s.name===name)?.code||undefined}));
  },[subjects,project.level,project.grade]);
 
