@@ -54,6 +54,13 @@ for(const required of ["CP / TP / ATP yang diketahui","Kompetensi awal / prasyar
 const calendar=fs.readFileSync(path.join(base,"components/SchoolCalendar.tsx"),"utf8");
 assert(calendar.includes('count>0&&<i aria-label={count+" agenda"}'),"Calendar dates with agenda must show an indicator.");
 assert(calendar.includes("REKAP BULANAN")&&calendar.includes("agenda-grade-group"),"Calendar must keep separated monthly agenda recaps.");
+const reportModule=modules.modules.find(x=>x.key==="reports");
+assert(reportModule&&reportModule.features.includes("Arsip Laporan"),"Pusat Laporan must be exposed as a first-class navigation module.");
+assert(dashboard.includes('className="module-tabs"'),"Every module must expose its subfeatures in the visible workspace header.");
+const dashboardOverview=fs.readFileSync(path.join(base,"components/DashboardOverview.tsx"),"utf8");
+assert(dashboardOverview.includes("COMMAND CENTER SEKOLAH")&&dashboardOverview.includes("Pusat Laporan"),"Dashboard must render the operational command center and direct report access.");
+const reportCenter=fs.readFileSync(path.join(base,"components/ReportCenter.tsx"),"utf8");
+for(const required of ["Laporan Akademik","Laporan Disiplin & Prestasi","Laporan Keuangan","Laporan SDM & Payroll","Standar dokumen sekolah Indonesia"])assert(reportCenter.includes(required),"Report Center missing: "+required);
 const reportEngine=fs.readFileSync(path.join(base,"lib/report-engine.ts"),"utf8");
 assert(reportEngine.includes("show_logo")&&reportEngine.includes("classification_code")&&reportEngine.includes("signer_title"),"Report engine must honor shared school template settings.");
 const disciplineTemplate=fs.readFileSync(path.join(base,"components/DisciplineReportTemplate.tsx"),"utf8");
@@ -62,5 +69,5 @@ const disciplineParity=fs.readFileSync(path.join(base,"components/DisciplineLega
 assert(disciplineParity.includes('focus==="Rekap & Laporan"')&&disciplineParity.includes("rekap_disiplin_prestasi"),"Discipline recap must use the official report engine.");
 const financeParity=fs.readFileSync(path.join(base,"components/FinanceLegacyParity.tsx"),"utf8");
 assert(financeParity.includes('focus==="Laporan"')&&financeParity.includes("rekap_piutang_siswa")&&financeParity.includes("rekap_pembayaran_siswa"),"Finance report center must include period, receivable, and payment reports.");
-console.log("PASS: isolation, role-aware orchestration, dashboard parity, CRUD, agenda, school-level, and Guru AI regression checks.");
+console.log("PASS: isolation, navigation visibility, command center, report center, CRUD, agenda, school-level, Guru AI, and official report regression checks.");
 "use client";
