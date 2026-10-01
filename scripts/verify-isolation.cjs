@@ -69,5 +69,9 @@ const disciplineParity=fs.readFileSync(path.join(base,"components/DisciplineLega
 assert(disciplineParity.includes('focus==="Rekap & Laporan"')&&disciplineParity.includes("rekap_disiplin_prestasi"),"Discipline recap must use the official report engine.");
 const financeParity=fs.readFileSync(path.join(base,"components/FinanceLegacyParity.tsx"),"utf8");
 assert(financeParity.includes('focus==="Laporan"')&&financeParity.includes("rekap_piutang_siswa")&&financeParity.includes("rekap_pembayaran_siswa"),"Finance report center must include period, receivable, and payment reports.");
+const demoWorkspace=fs.readFileSync(path.join(base,"components/DemoWorkspace.tsx"),"utf8");
+assert(demoWorkspace.includes("DemoReportPanel")&&demoWorkspace.includes("downloadOfficialDocx")&&demoWorkspace.includes("downloadOfficialExcel"),"Demo workspace must use the same report export engine.");
+for(const label of ["Laporan Lengkap","Rekap & Laporan","Laporan BK","Laporan Program","Buku Kas Umum","Realisasi Anggaran","Laporan HR","Arsip Laporan"])assert(demoWorkspace.includes(label),"Demo report navigation missing: "+label);
+assert(demoWorkspace.includes("settings::Branding")&&demoWorkspace.includes("classificationCode")&&demoWorkspace.includes("principalNip"),"Demo branding must drive official report identity.");
 console.log("PASS: isolation, navigation visibility, command center, report center, CRUD, agenda, school-level, Guru AI, and official report regression checks.");
 "use client";
