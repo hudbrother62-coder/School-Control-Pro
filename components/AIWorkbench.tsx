@@ -7,6 +7,7 @@ import {aiTemplates,type AiModule} from "@/lib/education-templates";
 import {subjectDefaults,teacherSystemStandard,teacherToolConfig} from "@/lib/teacher-ai-config";
 
 type Draft={id:string;template_key:string|null;title:string;content:string;created_at:string};
+type AIProject={id:string;name:string;module:string;context:Record<string,unknown>;status:string;updated_at:string};
 type SchoolClass={id:string;name:string;grade:string|null;academic_year:string};
 type Subject={id:string;name:string;code:string|null};
 type ProjectContext={
@@ -24,6 +25,7 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
  const [template,setTemplate]=useState(""),[context,setContext]=useState(""),[output,setOutput]=useState(""),[title,setTitle]=useState(""),[drafts,setDrafts]=useState<Draft[]>([]);
  const [project,setProject]=useState<ProjectContext>(emptyProject),[toolData,setToolData]=useState<Record<string,string>>({});
  const [classes,setClasses]=useState<SchoolClass[]>([]),[subjects,setSubjects]=useState<Subject[]>([]),[teacherName,setTeacherName]=useState("");
+ const [projects,setProjects]=useState<AIProject[]>([]),[projectId,setProjectId]=useState("");
  const [error,setError]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false);
  const focusText=(focus||"").toLowerCase(),historyOnly=focusText.includes("riwayat"),projectOnly=module==="guru_ai"&&focusText.includes("proyek");
  const config=aiTemplates[module].find(t=>t.key===template);
@@ -31,7 +33,12 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
 
  async function load(){
   if(!db)return;
-  const {data:d}=await db.from("sc_ai_drafts").select("id,template_key,title,content,created_at").eq("school_id",schoolId).eq("module_key",module).order("created_at",{ascending:false}).limit(40);setDrafts((d||[]) as Draft[]);
+  const [{data:d},{data:p}]=await Promise.all([
+   db.from("sc_ai_drafts").select("id,template_key,title,content,created_at").eq("school_id",schoolId).eq("module_key",module).order("created_at",{ascending:false}).limit(40),
+   db.from("sc_ai_projects").select("id,name,module,context,status,updated_at").eq("school_id",schoolId).eq("module",module).eq("status","active").order("updated_at",{ascending:false})
+  ]);
+  setDrafts((d||[]) as Draft[]);setProjects((p||[]) as AIProject[]);
+  if(!projectId&&p?.[0]){setProjectId(p[0].id);if(module==="guru_ai"&&p[0].context&&Object.keys(p[0].context).length)setProject(x=>({...x,...(p[0].context as Partial<ProjectContext>)}))}
   if(module==="guru_ai"){
    const [{data:c},{data:s},{data:{user}}]=await Promise.all([
     db.from("sc_classes").select("id,name,grade,academic_year").eq("school_id",schoolId).order("name"),
@@ -46,7 +53,19 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
  useEffect(()=>{if(!focus)return;const f=focus.toLowerCase();const found=aiTemplates[module].find(t=>t.label.toLowerCase()===f||t.label.toLowerCase().includes(f)||f.includes(t.label.toLowerCase()));if(found)setTemplate(found.key)},[focus,module]);
  useEffect(()=>{setToolData({});setContext("")},[template]);
  function setField<K extends keyof ProjectContext>(k:K,v:ProjectContext[K]){setProject(p=>({...p,[k]:v}))}
- function saveProject(){localStorage.setItem("school-control-teaching-project-"+schoolId,JSON.stringify(project));setOk("Konteks pembelajaran tersimpan. Seluruh generator akan memakai data yang sama.")}
+ async function saveProject(){
+  localStorage.setItem("school-control-teaching-project-"+schoolId,JSON.stringify(project));
+  if(db&&projectId){
+   const {error}=await db.from("sc_ai_projects").update({context:project,updated_at:new Date().toISOString()}).eq("id",projectId).eq("school_id",schoolId);
+   if(error){setError(error.message);return}
+  }
+  setOk(projectId?"Konteks pembelajaran tersimpan ke proyek aktif.":"Konteks lokal tersimpan. Buat/pilih proyek agar versi output terhubung.");
+ }
+ function selectProject(id:string){
+  setProjectId(id);
+  const p=projects.find(x=>x.id===id);
+  if(module==="guru_ai"&&p?.context&&Object.keys(p.context).length)setProject(x=>({...x,...(p.context as Partial<ProjectContext>)}));
+ }
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
 
  const classOptions:SmartOption[]=useMemo(()=>{
@@ -91,10 +110,10 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
  async function generate(){if(!db||!config)return;await run(async()=>{
   if(module==="guru_ai"&&(!project.level||!project.grade||!project.subject||!project.topic))throw Error("Lengkapi jenjang, kelas, mata pelajaran, dan topik terlebih dahulu.");
   const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Masuk kembali untuk menjalankan AI.");
-  const response=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({school_id:schoolId,module,prompt:config.prompt+"\n\n"+projectText()})});
+  const personalKey=localStorage.getItem("school-control-personal-gemini-key")||"",oauth=localStorage.getItem("school-control-personal-gemini-oauth")||"",model=localStorage.getItem("school-control-gemini-model")||"gemini-2.5-flash",fallback=localStorage.getItem("school-control-gemini-fallback")||"gemini-2.5-flash-lite";const response=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token,...(personalKey.trim()?{"x-user-gemini-key":personalKey.trim()}:{}),...(oauth.trim()?{"x-user-gemini-oauth":oauth.trim()}:{})},body:JSON.stringify({school_id:schoolId,module,model,fallback_model:fallback,prompt:config.prompt+"\n\n"+projectText()})});
   const j=await response.json();if(!response.ok)throw Error(j.error||"AI belum tersedia.");setOutput(j.text||"");setTitle(config.label+(project.topic?" · "+project.topic:""));setOk("Draf selesai dibuat. Tinjau standar output sebelum disimpan.");
  })}
- async function store(){if(!db)return;await run(async()=>{const {error}=await db.rpc("sc_store_ai_draft",{p_school:schoolId,p_module:module,p_template:template,p_title:title,p_prompt:projectText(),p_content:output});if(error)throw error;await load();setOk("Draf disimpan ke riwayat.")})}
+ async function store(){if(!db)return;await run(async()=>{const promptText=projectText();const {error}=await db.rpc("sc_store_ai_draft",{p_school:schoolId,p_module:module,p_template:template,p_title:title,p_prompt:promptText,p_content:output});if(error)throw error;if(projectId){const {data:existing,error:ve}=await db.from("sc_ai_outputs").select("version").eq("school_id",schoolId).eq("project_id",projectId).eq("tool_key",template).order("version",{ascending:false}).limit(1);if(ve)throw ve;const version=Number(existing?.[0]?.version||0)+1;const {error:oe}=await db.from("sc_ai_outputs").insert({school_id:schoolId,project_id:projectId,tool_key:template,title,prompt:promptText,content:output,version});if(oe)throw oe;await db.from("sc_ai_projects").update({updated_at:new Date().toISOString(),...(module==="guru_ai"?{context:project}:{})}).eq("id",projectId);setOk("Draf disimpan sebagai versi "+version+" pada proyek aktif.")}else setOk("Draf disimpan ke riwayat. Pilih proyek agar output juga memiliki versioning.") ;await load()})}
  async function removeDraft(id:string){if(!db||!confirm("Hapus draf AI ini?"))return;await run(async()=>{const {error}=await db.rpc("sc_delete_auxiliary",{p_school:schoolId,p_entity:"ai_draft",p_id:id});if(error)throw error;await load();setOk("Draf dihapus.")})}
 
  const showProject=module==="guru_ai"&&(!focus||projectOnly);
@@ -117,13 +136,13 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
     <label className="field full">Target pemahaman / hasil akhir<textarea rows={4} value={project.target} onChange={e=>setField("target",e.target.value)} placeholder="Apa yang harus mampu dilakukan siswa setelah rangkaian pembelajaran?"/></label>
     <label className="field full">Instruksi tambahan proyek<textarea rows={4} value={project.instructions} onChange={e=>setField("instructions",e.target.value)} placeholder="Gaya bahasa, konteks lokal, format khusus, hal yang harus dihindari…"/></label>
    </div>
-   <div className="flow" style={{marginTop:14}}><button className="button" onClick={saveProject}><Save size={15}/> Simpan Konteks Proyek</button></div>
+   <div className="fields" style={{marginTop:14}}><label className="field full">Proyek database<select value={projectId} onChange={e=>selectProject(e.target.value)}><option value="">Belum dipilih</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div><div className="flow" style={{marginTop:14}}><button className="button" onClick={()=>void saveProject()}><Save size={15}/> Simpan Konteks Proyek</button></div>
   </section>}
 
   {showGenerator&&<section className="panel teacher-generator">
    <div className="sectionhead"><div><h2>{module==="guru_ai"?(config?.label||"Generator Perangkat Ajar"):"Asisten Perencanaan Sekolah"}</h2><p className="muted">{module==="guru_ai"?"Setiap alat memiliki input dan standar output sendiri; konteks proyek tetap dipakai otomatis.":"Pilih dokumen, berikan konteks faktual sekolah, lalu tinjau hasil sebelum dipakai."}</p></div><span className="pill">{module==="guru_ai"?"Perangkat Ajar":"Manajemen"}</span></div>
    {!focus&&<label className="field full">Jenis generator<select value={template} onChange={e=>setTemplate(e.target.value)}><option value="">Pilih jenis</option>{aiTemplates[module].map(t=><option key={t.key} value={t.key}>{t.label}</option>)}</select></label>}
-   {module==="guru_ai"&&<div className="project-summary"><b>{project.name||"Proyek belum diberi nama"}</b><span>{[project.level,project.grade&&"Kelas "+project.grade,project.subject,project.topic].filter(Boolean).join(" · ")||"Lengkapi Project Builder terlebih dahulu."}</span></div>}
+   {projects.length>0&&<label className="field full" style={{marginBottom:12}}>Proyek aktif<select value={projectId} onChange={e=>selectProject(e.target.value)}><option value="">Tanpa proyek</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>}{module==="guru_ai"&&<div className="project-summary"><b>{project.name||"Proyek belum diberi nama"}</b><span>{[project.level,project.grade&&"Kelas "+project.grade,project.subject,project.topic].filter(Boolean).join(" · ")||"Lengkapi Project Builder terlebih dahulu."}</span></div>}
    {module==="guru_ai"&&teacherConfig&&<>
     <div className="tool-question-grid">{teacherConfig.fields.map(f=><label className={"field "+(f.type==="textarea"?"full":"")} key={f.key}>{f.label}{f.type==="select"?<select value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))}><option value="">Pilih</option>{f.options?.map(o=><option key={o}>{o}</option>)}</select>:f.type==="textarea"?<textarea rows={4} value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))} placeholder={f.placeholder}/>:<input type={f.type||"text"} value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))} placeholder={f.placeholder}/>}</label>)}</div>
     <div className="output-standard"><div><BookOpenCheck size={18}/><span><b>Standar output {config?.label}</b><small>AI diarahkan menghasilkan bagian berikut secara lengkap.</small></span></div><div className="standard-grid">{teacherConfig.standard.map(s=><span key={s}><CheckCircle2 size={14}/>{s}</span>)}</div></div>
