@@ -1,0 +1,7 @@
+-- Applied in Supabase: add agenda attendance windows, geofenced location, and hardened check-in/out.
+-- Source of truth is the live migration 20261001175602. This repository marker documents that production schema includes:
+-- sc_calendar_events.attendance_required, attendance_location_id, checkin_open_minutes, checkin_close_minutes
+-- sc_save_calendar_event_v3(...)
+-- sc_event_check_in(...) with server-time window + GPS radius validation
+-- sc_event_check_out(...) with server-time + GPS radius validation
+-- Execute through Supabase migration history rather than replaying this marker manually.
