@@ -67,6 +67,54 @@ function Dashboard({feature}:{feature:string}){
  return <><div className="demo-grid"><div className="demo-stat"><small>Siswa Aktif</small><strong>486</strong><span>18 kelas</span></div><div className="demo-stat"><small>Guru & Staf</small><strong>42</strong><span>39 hadir hari ini</span></div><div className="demo-stat"><small>Kehadiran Hari Ini</small><strong>93%</strong><span>3 perlu verifikasi</span></div><div className="demo-stat"><small>Tugas Aktif</small><strong>8</strong><span>2 melewati tenggat</span></div></div><div className="demo-panels"><section><h3>Fokus Hari Ini</h3>{["39 SDM sudah presensi","2 tugas melewati tenggat","3 agenda sekolah hari ini"].map(x=><div className="demo-row" key={x}><CheckCircle2 size={16}/><b>{x}</b><small>Realtime</small></div>)}</section><section><h3>Agenda Terdekat</h3>{["Rapat Kurikulum · 09.00","Supervisi VIII A · besok","Pelatihan Guru · 4 Okt"].map(x=><div className="demo-row" key={x}><CalendarDays size={16}/><b>{x}</b><small>Terjadwal</small></div>)}</section></div></>;
 }
 
+
+const reportSourceKeys:Partial<Record<Key,string[]>>={
+ academic:["academic::Presensi Siswa","academic::Lembar Nilai","academic::Jurnal Mengajar"],
+ student:["student::Pelanggaran","student::Prestasi","student::Pembinaan"],
+ counseling:["counseling::Konseling Individu","counseling::Konseling Kelompok","counseling::Layanan Klasikal","counseling::Kunjungan Rumah","counseling::Rujukan","counseling::Karier"],
+ execution:["execution::Program Kerja","execution::Tugas","execution::Kendala","execution::Hasil Rapat","execution::Bukti Kegiatan"],
+ finance:["finance::Pemasukan","finance::Pengeluaran","finance::Anggaran","finance::Tagihan Siswa","finance::Pembayaran"],
+ payroll:["payroll::Draft Payroll","payroll::Komponen Gaji","payroll::Tunjangan","payroll::Potongan"]
+};
+function demoReportFeature(active:Key,feature:string){
+ return (active==="academic"&&["Rekap Bulanan","Laporan Kelas","Laporan Lengkap"].includes(feature))
+  ||(active==="student"&&["Rekap & Laporan","Template Laporan"].includes(feature))
+  ||(active==="counseling"&&feature==="Laporan BK")
+  ||(active==="execution"&&feature==="Laporan Program")
+  ||(active==="finance"&&["Buku Kas Umum","Realisasi Anggaran","Laporan"].includes(feature))
+  ||(active==="payroll"&&["Rekap Payroll","Laporan HR"].includes(feature));
+}
+function demoReportTitle(active:Key,feature:string){
+ if(active==="academic")return feature==="Laporan Kelas"?"Laporan Kelas":"Laporan Buku Kerja Guru";
+ if(active==="student")return "Laporan Disiplin & Prestasi Siswa";
+ if(active==="counseling")return "Laporan Layanan Bimbingan dan Konseling";
+ if(active==="execution")return "Laporan Program Kerja dan Progres Sekolah";
+ if(active==="finance")return feature==="Buku Kas Umum"?"Buku Kas Umum":feature==="Realisasi Anggaran"?"Laporan Realisasi Anggaran":"Laporan Keuangan Sekolah";
+ return feature==="Laporan HR"?"Laporan SDM dan Operasional":"Rekap Payroll Sekolah";
+}
+function demoReportRows(active:Key,saved:Record<string,Saved[]>){
+ return (reportSourceKeys[active]||[]).flatMap(k=>(saved[k]||[]).map(x=>({source:k.split("::")[1],...x.fields})));
+}
+function demoIdentity(saved:Record<string,Saved[]>){
+ const b=saved["settings::Branding"]?.[0]?.fields||{};
+ return {school:b.schoolName||"SMP Negeri Demo School Control",npsn:b.npsn||"20500001",address:b.address||"Jl. Pendidikan No. 1, Surabaya",city:b.city||"Surabaya",principal:b.principal||"Drs. Budi Santoso",nip:b.principalNip||"197805122005011008",phone:b.phone||"(031) 555-0101",email:b.email||"sekolah.demo@example.sch.id",signer:b.signerTitle||"Kepala Sekolah",classification:b.classification||"Internal"};
+}
+function makeReportHtml(title:string,identity:ReturnType<typeof demoIdentity>,rows:Record<string,string>[]){
+ const clean=(v:unknown)=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+ const cols=["source","date","student","employee","title","category","status","amount","notes"].filter(k=>rows.some(r=>r[k]));
+ const head=cols.map(k=>"<th>"+clean(k.replaceAll("_"," "))+"</th>").join("");
+ const body=rows.length?rows.slice(0,100).map(r=>"<tr>"+cols.map(k=>"<td>"+clean(r[k]||"—")+"</td>").join("")+"</tr>").join(""):"<tr><td colspan='"+Math.max(1,cols.length)+"'>Belum ada data demo. Isi data pada modul sumber untuk melihat laporan terisi.</td></tr>";
+ return "<!doctype html><html><head><meta charset='utf-8'><title>"+clean(title)+"</title><style>@page{size:A4 landscape;margin:14mm}body{font:11px Arial;color:#111827}.kop{text-align:center;border-bottom:4px double #111;padding-bottom:10px}.kop h1{font-size:18px;margin:0}.meta{text-align:center;margin:20px 0}.draft{position:fixed;top:42%;left:28%;font-size:64px;font-weight:800;color:rgba(0,0,0,.06);transform:rotate(-28deg)}table{width:100%;border-collapse:collapse}th,td{border:1px solid #9ca3af;padding:5px;text-align:left}th{background:#f1f5f9}.sign{margin:40px 0 0 auto;width:260px;text-align:center}</style></head><body><div class='draft'>DEMO</div><div class='kop'><h1>"+clean(identity.school)+"</h1><p>NPSN "+clean(identity.npsn)+" · "+clean(identity.address)+" · "+clean(identity.phone)+" · "+clean(identity.email)+"</p></div><div class='meta'><h2>"+clean(title.toUpperCase())+"</h2><p>Nomor: DEMO/0001/2026 · Klasifikasi: "+clean(identity.classification)+" · Tahun Pelajaran 2026/2027</p></div><table><thead><tr>"+head+"</tr></thead><tbody>"+body+"</tbody></table><div class='sign'><p>"+clean(identity.city)+", ................</p><p>"+clean(identity.signer)+"</p><br><br><b>"+clean(identity.principal)+"</b><div>NIP. "+clean(identity.nip)+"</div></div></body></html>";
+}
+function DemoReportView({active,feature,saved,onArchive}:{active:Key;feature:string;saved:Record<string,Saved[]>;onArchive:(row:Saved)=>void}){
+ const title=demoReportTitle(active,feature),identity=demoIdentity(saved),rows=demoReportRows(active,saved);
+ function archive(format:string){onArchive({id:crypto.randomUUID(),fields:{title,number:"DEMO/0001/2026",format,date:new Date().toLocaleString("id-ID")}})}
+ function preview(print=false){const w=window.open("","_blank","width=1100,height=800");if(!w)return;w.document.open();w.document.write(makeReportHtml(title,identity,rows));w.document.close();if(print)setTimeout(()=>{w.focus();w.print()},200)}
+ async function excel(){const exportRows=rows.length?rows:[{Keterangan:"Belum ada data demo"}];await downloadExcel("demo-"+title.toLowerCase().replaceAll(" ","-")+".xlsx",[{name:"Laporan",rows:exportRows}]);archive("XLSX")}
+ function word(){const blob=new Blob([makeReportHtml(title,identity,rows)],{type:"application/msword"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="demo-"+title.toLowerCase().replaceAll(" ","-")+".doc";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);archive("WORD")}
+ return <section><div className="demo-section-title"><div><h3>{title}</h3><p>Preview dokumen standar sekolah Indonesia pada mode demo. Data diambil dari modul sumber tanpa input ulang.</p></div><span className="demo-badge">Report Engine Demo</span></div><div className="demo-grid"><div className="demo-stat"><small>Data sumber</small><strong>{rows.length}</strong><span>baris demo</span></div><div className="demo-stat"><small>Format</small><strong style={{fontSize:18}}>A4</strong><span>kop + pengesahan</span></div><div className="demo-stat"><small>Nomor</small><strong style={{fontSize:16}}>DEMO/0001</strong><span>simulasi</span></div><div className="demo-stat"><small>Arsip</small><strong>{(saved["reports::__archive__"]||[]).length}</strong><span>ekspor demo</span></div></div><div className="demo-toolbar-live" style={{marginTop:16}}><button onClick={()=>preview(false)}><Search size={15}/> Preview A4</button><button onClick={()=>void excel()}><Download size={15}/> Excel</button><button onClick={word}><Download size={15}/> Word</button><button className="demo-primary" onClick={()=>{preview(true);archive("PDF")}}><Download size={15}/> PDF / Cetak</button></div><div className="banner" style={{marginTop:14}}><strong>{identity.school}</strong><p className="hint">NPSN {identity.npsn} · {identity.signer}: {identity.principal} · NIP {identity.nip}. Identitas contoh dapat diubah di Pengaturan Sekolah → Branding.</p></div></section>;
+}
+
 function CalendarPreview({items,onPick,onEdit}:{items:Saved[];onPick:(d:string)=>void;onEdit:(x:Saved)=>void}){
  const now=new Date(),first=new Date(now.getFullYear(),now.getMonth(),1),offset=(first.getDay()+6)%7;
  const cells=Array.from({length:42},(_,i)=>new Date(now.getFullYear(),now.getMonth(),i-offset+1));
