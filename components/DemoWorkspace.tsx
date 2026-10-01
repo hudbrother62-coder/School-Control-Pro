@@ -1,23 +1,26 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
-import {LayoutDashboard,Database,BookOpenCheck,Sparkles,ClipboardCheck,HeartHandshake,ListChecks,WalletCards,BriefcaseBusiness,Settings,LogOut,Clock3,BarChart3,Search,ChevronRight,GraduationCap,Sun,Moon,CalendarDays,KeyRound,Plus,Pencil,Trash2,MapPin,Download,Upload,AlertTriangle,CheckCircle2} from "lucide-react";
+import {LayoutDashboard,Database,BookOpenCheck,Sparkles,ClipboardCheck,HeartHandshake,ListChecks,WalletCards,BriefcaseBusiness,Settings,LogOut,Clock3,BarChart3,Search,ChevronRight,GraduationCap,Sun,Moon,CalendarDays,KeyRound,Plus,Pencil,Trash2,MapPin,Download,Upload,AlertTriangle,CheckCircle2,FileBarChart,FileText} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
+import ReportCenter from "@/components/ReportCenter";
+import {downloadExcel} from "@/lib/excel";
 import "./demo.css";
 
 const menu=[
  ["overview","Beranda",LayoutDashboard,["Ringkasan Operasional","Analitik Sekolah","Agenda & Deadline"]],
  ["master","Data Induk",Database,["Siswa","Kelas","Guru","Tenaga Kependidikan","Mata Pelajaran","Penugasan Guru","Import Excel Keseluruhan"]],
  ["calendar","Agenda Sekolah",CalendarDays,["Kalender Sekolah","Agenda Pribadi","Agenda Pengguna","Kehadiran Agenda"]],
+ ["reports","Pusat Laporan",FileBarChart,["Ringkasan Laporan","Akademik","Kehadiran","Disiplin","BK","Program & Tugas","Keuangan","SDM & Payroll","Supervisi","Arsip Laporan"]],
  ["teaching","Perangkat Ajar AI",Sparkles,["Proyek Pembelajaran","Modul Ajar","RPP","LKPD","Asesmen Soal","Strategi Pembelajaran","Bahan Ajar","Rubrik Penilaian","Panduan Presentasi","Peta Konsep","Ngobrol AI","Riwayat Draf"]],
- ["academic","Pembelajaran & Penilaian",BookOpenCheck,["Presensi Siswa","Lembar Nilai","Jurnal Mengajar","Agenda Mengajar","Rekap Bulanan","Laporan Kelas","Import/Export Excel"]],
- ["student","Disiplin & Prestasi",ClipboardCheck,["Pelanggaran","Prestasi","Pembinaan","Tindak Lanjut","Rekap & Laporan","Template Laporan"]],
- ["counseling","Bimbingan Konseling",HeartHandshake,["Pemetaan Kebutuhan","Kasus","Konseling Individu","Konseling Kelompok","Layanan Klasikal","RPL","Kunjungan Rumah","Rujukan","Karier","Riwayat Siswa","Tindak Lanjut"]],
+ ["academic","Pembelajaran & Penilaian",BookOpenCheck,["Presensi Siswa","Lembar Nilai","Jurnal Mengajar","Agenda Mengajar","Rekap Bulanan","Laporan Kelas","Laporan Lengkap","Import/Export Excel"]],
+ ["student","Disiplin & Prestasi",ClipboardCheck,["Pelanggaran","Prestasi","Pembinaan","Tindak Lanjut","Rekap & Laporan","Surat & Dokumen","Template Laporan"]],
+ ["counseling","Bimbingan Konseling",HeartHandshake,["Pemetaan Kebutuhan","Kasus","Konseling Individu","Konseling Kelompok","Layanan Klasikal","RPL","Kunjungan Rumah","Rujukan","Karier","Riwayat Siswa","Tindak Lanjut","Laporan BK"]],
  ["planning","Perencanaan & Supervisi",GraduationCap,["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Supervisi Guru","Pusat Dokumen","Persetujuan Dokumen"]],
- ["execution","Program, Tugas & Agenda",ListChecks,["Program Kerja","PIC","Tugas","Deadline","Progres","Kendala","Hasil Rapat","Agenda","Bukti Kegiatan"]],
+ ["execution","Program, Tugas & Agenda",ListChecks,["Program Kerja","PIC","Tugas","Deadline","Progres","Kendala","Hasil Rapat","Agenda","Bukti Kegiatan","Laporan Program"]],
  ["attendance","Presensi Realtime",Clock3,["Check-in/Check-out","Jadwal/Shift","Riwayat Kehadiran","Koreksi Beralasan","Izin","Cuti"]],
  ["performance","Kinerja & Pengembangan",BarChart3,["Kehadiran","Partisipasi Program","Pelatihan","Bukti Capaian","Evaluasi","Tanggapan Guru"]],
- ["finance","Keuangan & Tagihan",WalletCards,["Dashboard Keuangan","Kas/Rekening","Pemasukan","Pengeluaran","Anggaran","Tagihan Siswa","Pembayaran","Kuitansi","Laporan","Import/Export"]],
- ["payroll","Payroll & Slip",BriefcaseBusiness,["Komponen Gaji","Tunjangan","Potongan","Draft Payroll","Review","Approval","Kunci Periode","Rekap Payroll","Slip Saya"]],
+ ["finance","Keuangan & Tagihan",WalletCards,["Dashboard Keuangan","Kas/Rekening","Pemasukan","Pengeluaran","Anggaran","Realisasi Anggaran","Tagihan Siswa","Pembayaran","Kuitansi","Buku Kas Umum","Laporan","Import/Export"]],
+ ["payroll","Payroll & Slip",BriefcaseBusiness,["Komponen Gaji","Tunjangan","Potongan","Draft Payroll","Review","Approval","Kunci Periode","Rekap Payroll","Laporan HR","Slip Saya"]],
  ["access","Akses & Peran",KeyRound,["Tambah Pengguna","Anggota Tim","Struktur Peran","Hak Akses Fitur"]],
  ["settings","Pengaturan Sekolah",Settings,["Profil Sekolah","Identitas & Kontak","Lokasi Sekolah","Akademik","Branding","Memori Sekolah","Langganan","Riwayat Pembayaran"]]
 ] as const;
@@ -50,6 +53,7 @@ function fieldsFor(active:Key,feature:string):Field[]{
  if(active==="finance")return [{key:"title",label:"Data keuangan"},{key:"detail",label:"Kategori / Akun"},{key:"amount",label:"Nominal",type:"number"}];
  if(active==="payroll")return [{key:"employee",label:"Pegawai"},{key:"period",label:"Periode"},{key:"base",label:"Gaji pokok",type:"number"},{key:"allowance",label:"Tunjangan",type:"number"},{key:"deduction",label:"Potongan",type:"number"},{key:"bank",label:"Bank / Rekening"}];
  if(active==="access")return [{key:"name",label:"Nama / Email"},{key:"role",label:"Peran",type:"select",options:["Kepala Sekolah","Wakil Kepala Sekolah","Guru","Guru BK","Bendahara","SDM / HR","Staf","Viewer"]},{key:"notes",label:"Catatan akses",type:"textarea",wide:true}];
+ if(active==="settings"&&feature==="Branding")return [{key:"schoolName",label:"Nama sekolah",wide:true},{key:"npsn",label:"NPSN"},{key:"address",label:"Alamat sekolah",wide:true},{key:"city",label:"Kabupaten / Kota"},{key:"principal",label:"Nama kepala sekolah"},{key:"principalNip",label:"NIP kepala sekolah"},{key:"phone",label:"Telepon"},{key:"email",label:"Email sekolah"},{key:"signerTitle",label:"Jabatan penandatangan"},{key:"classification",label:"Kode klasifikasi dokumen"}];
  if(active==="settings")return [{key:"name",label:"Nama / Nilai pengaturan"},{key:"category",label:"Kategori"},{key:"notes",label:"Keterangan",type:"textarea",wide:true}];
  return [{key:"title",label:"Judul"},{key:"detail",label:"Detail"},{key:"notes",label:"Keterangan",type:"textarea",wide:true}];
 }
