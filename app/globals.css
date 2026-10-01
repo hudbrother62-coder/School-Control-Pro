@@ -104,3 +104,31 @@ body[data-theme=dark] .data-modal-head{background:linear-gradient(180deg,var(--s
 
 @media(max-width:1050px){.agenda-layout,.attendance-layout-pro{grid-template-columns:1fr}.mini-calendar-panel,.attendance-calendar-pro{position:static}.attendance-toolbar{grid-template-columns:1fr 1fr}.journal-filters{grid-template-columns:1fr 1fr}.guide-flow-pro>div:last-child{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:700px){.tool-question-grid,.standard-grid,.journal-detail-grid,.guide-body-pro{grid-template-columns:1fr}.agenda-card{grid-template-columns:50px minmax(0,1fr)}.agenda-card>.pill{grid-column:2}.attendance-toolbar,.attendance-summary-pro,.journal-filters{grid-template-columns:1fr}.attendance-summary-pro{grid-template-columns:repeat(2,1fr)}.table-caption{align-items:flex-start;flex-direction:column}.guide-hero-pro{align-items:flex-start;flex-direction:column;padding:18px}.guide-hero-pro h2{font-size:23px}.guide-role-pro{width:100%}.guide-flow-pro>div:last-child{grid-template-columns:1fr 1fr}.guide-body-pro section:nth-child(2){grid-row:auto}.discipline-toolbar{flex-direction:column}.smart-popover{position:fixed;left:12px;right:12px;top:auto;bottom:12px;max-height:60vh}}
+
+
+/* Global interaction, validation, and transition standard */
+@keyframes sc-enter{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.panel,.card,.entry,.agenda-card,.journal-card-pro,.banner,.data-table tbody tr{
+ transition:transform .16s ease,border-color .16s ease,background-color .16s ease,box-shadow .16s ease,opacity .16s ease
+}
+.panel,.banner{animation:sc-enter .2s ease both}
+input,select,textarea,.button,.iconbutton,.smart-trigger{
+ transition:border-color .16s ease,box-shadow .16s ease,background-color .16s ease,color .16s ease,transform .12s ease,opacity .16s ease
+}
+input:focus-visible,select:focus-visible,textarea:focus-visible,.smart-trigger:focus-visible{
+ outline:none;border-color:var(--accent)!important;box-shadow:0 0 0 3px rgba(47,107,255,.14)
+}
+input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"],
+.field.invalid input,.field.invalid select,.field.invalid textarea{
+ border-color:#d84b4b!important;box-shadow:0 0 0 3px rgba(216,75,75,.11)
+}
+.field.valid input,.field.valid select,.field.valid textarea{
+ border-color:#169b6b!important;box-shadow:0 0 0 3px rgba(22,155,107,.09)
+}
+.button:not(:disabled):active,.iconbutton:not(:disabled):active,.smart-trigger:not(:disabled):active{transform:translateY(1px) scale(.99)}
+.button:disabled,.iconbutton:disabled{cursor:not-allowed;opacity:.56}
+.banner.success,.banner.error{animation:sc-enter .18s ease both}
+dialog[open],.modal-backdrop,.smart-popover{animation:sc-enter .16s ease both}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
