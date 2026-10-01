@@ -5,7 +5,7 @@ import {canAccess,modules,type ModuleKey,type Role} from "@/lib/modules";
 type ReportRoute={title:string;caption:string;module:ModuleKey;feature:string;icon:typeof FileBarChart;formats:string};
 
 export default function ReportCenter({role,focus,onRoute}:{schoolId:string;role:Role;focus?:string;onRoute:(module:ModuleKey,feature?:string)=>void}){
- const reportRoutes:ReportRoute[]=[
+ const reportRoutes=([
   {title:"Laporan Akademik",caption:"Nilai, jurnal, presensi siswa dan rekap kelas.",module:"buku_kerja",feature:"Laporan Lengkap",icon:GraduationCap,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan Kehadiran",caption:"Kehadiran siswa/kelas dan riwayat periode.",module:"buku_kerja",feature:"Laporan Kelas",icon:ClipboardCheck,formats:"PDF · XLSX"},
   {title:"Laporan Disiplin & Prestasi",caption:"Pelanggaran, prestasi, pembinaan dan tindak lanjut.",module:"disiplin",feature:"Template Laporan",icon:ShieldAlert,formats:"PDF · DOCX · XLSX"},
@@ -14,7 +14,7 @@ export default function ReportCenter({role,focus,onRoute}:{schoolId:string;role:
   {title:"Laporan Keuangan",caption:"BKU, kas, anggaran, realisasi, tagihan dan transaksi.",module:"sikas",feature:"Laporan",icon:Coins,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan SDM & Payroll",caption:"Kehadiran, pengajuan, payroll dan kompensasi.",module:"gajian",feature:"Laporan HR",icon:UsersRound,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan Supervisi",caption:"Instrumen, hasil supervisi dan tindak lanjut guru.",module:"kepsek_ai",feature:"Supervisi guru",icon:BriefcaseBusiness,formats:"PDF · DOCX"}
- ].filter(x=>{const m=modules.find(m=>m.key===x.module);return !!m&&canAccess(m,role)});
+ ] satisfies ReportRoute[]).filter(x=>{const m=modules.find(m=>m.key===x.module);return !!m&&canAccess(m,role)});
 
  const standardItems=["Kop & identitas sekolah","NPSN dan tahun pelajaran","Nomor dokumen","Periode laporan","Tanda tangan kepala sekolah","Status draft / terbit","Arsip revisi","Format cetak A4"];
 

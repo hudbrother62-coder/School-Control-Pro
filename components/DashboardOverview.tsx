@@ -54,7 +54,7 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
  ];
  const maxTask=Math.max(1,...taskStatus.map(x=>x.count));
  const showSummary=!focus||mode.includes("ringkasan"),showAnalytics=!focus||mode.includes("analitik"),showAgenda=!focus||mode.includes("agenda")||mode.includes("deadline");
- const actions:RouteAction[]=[
+ const actions=([
   {label:"Data Siswa",caption:"Kelola siswa, kelas, guru dan import Excel",module:"master",feature:"Siswa",icon:Users},
   {label:"Presensi Siswa",caption:"Absensi harian, riwayat dan rekap kelas",module:"buku_kerja",feature:"Presensi Siswa",icon:GraduationCap},
   {label:"Agenda Sekolah",caption:"Kalender, indikator agenda dan rekap bulanan",module:"calendar",feature:"Kalender Sekolah",icon:CalendarDays},
@@ -62,7 +62,7 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
   {label:"Program Kerja",caption:"PIC, tugas, deadline, bukti dan laporan",module:"command",feature:"Program Kerja",icon:ListChecks},
   {label:"Pusat Laporan",caption:"Laporan standar sekolah Indonesia dan arsip",module:"reports",feature:"Ringkasan Laporan",icon:BookOpen},
   {label:"Keuangan",caption:"Kas, anggaran, tagihan dan laporan resmi",module:"sikas",feature:"Dashboard Keuangan",icon:WalletCards}
- ].filter(a=>{const m=modules.find(x=>x.key===a.module);return !!m&&canAccess(m,role)});
+ ] satisfies RouteAction[]).filter(a=>{const m=modules.find(x=>x.key===a.module);return !!m&&canAccess(m,role)});
 
  return <>
   {showSummary&&<>
