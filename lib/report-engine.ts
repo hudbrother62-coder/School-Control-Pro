@@ -1,0 +1,170 @@
+"use client";
+
+import {downloadExcel,type SheetRows} from "@/lib/excel";
+
+export type ReportIdentity={
+ name:string;npsn:string|null;address:string|null;academic_year:string|null;education_level:string|null;
+ principal_name:string|null;principal_nip:string|null;phone:string|null;email:string|null;website:string|null;
+ province:string|null;city:string|null;postal_code:string|null;logo_url:string|null;signature_url:string|null;
+ stamp_url:string|null;report_settings:Record<string,unknown>|null
+};
+export type ReportMetric={label:string;value:string;note?:string};
+export type ReportSection={title:string;columns:string[];rows:Array<Array<string|number|null|undefined>>};
+export type ReportSignature={role:string;name?:string|null;identifier?:string|null};
+export type OfficialReportModel={
+ moduleKey:string;documentType:string;prefix:string;title:string;subtitle?:string;periodLabel?:string;
+ periodStart?:string|null;periodEnd?:string|null;metrics?:ReportMetric[];notes?:string[];sections:ReportSection[];
+ signatures?:ReportSignature[];orientation?:"portrait"|"landscape";confidentiality?:"internal"|"restricted"|"confidential";
+ status?:"draft"|"review"|"approved"|"issued";footer?:string
+};
+export type IssuedReport={id:string;document_number:string;issued_at:string};
+
+const esc=(v:unknown)=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]||c));
+const safe=(v:string)=>v.replace(/[^a-zA-Z0-9 _.-]/g,"_").slice(0,100);
+const dateId=(v?:string|null)=>v?new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date(v+"T12:00:00")):"";
+const currentDate=()=>new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
+
+export async function loadReportIdentity(db:any,schoolId:string):Promise<ReportIdentity>{
+ const {data,error}=await db.from("sc_schools").select("name,npsn,address,academic_year,education_level,principal_name,principal_nip,phone,email,website,province,city,postal_code,logo_url,signature_url,stamp_url,report_settings").eq("id",schoolId).single();
+ if(error)throw error;
+ return data as ReportIdentity;
+}
+
+export function defaultSignatures(identity:ReportIdentity,preparedBy?:string):ReportSignature[]{
+ return [
+  {role:"Disusun oleh",name:preparedBy||null},
+  {role:"Mengetahui / Menyetujui",name:identity.principal_name||"Kepala Sekolah",identifier:identity.principal_nip?("NIP. "+identity.principal_nip):null}
+ ];
+}
+
+export async function issueReport(db:any,schoolId:string,model:OfficialReportModel):Promise<IssuedReport>{
+ const snapshot={...model,generated_at:new Date().toISOString()};
+ const {data,error}=await db.rpc("sc_issue_report_document",{
+  p_school:schoolId,p_module:model.moduleKey,p_type:model.documentType,p_title:model.title,p_snapshot:snapshot,
+  p_prefix:model.prefix,p_period_start:model.periodStart||null,p_period_end:model.periodEnd||null
+ });
+ if(error)throw error;
+ const row=Array.isArray(data)?data[0]:data;
+ return row as IssuedReport;
+}
+
+function schoolContact(i:ReportIdentity){
+ return [
+  i.npsn?"NPSN "+i.npsn:"",
+  i.phone?"Telp. "+i.phone:"",
+  i.email||"",
+  i.website||""
+ ].filter(Boolean).join(" · ");
+}
+function schoolAddress(i:ReportIdentity){
+ return [i.address,i.city,i.province,i.postal_code].filter(Boolean).join(", ");
+}
+function signaturesHtml(identity:ReportIdentity,items:ReportSignature[]){
+ const settings=identity.report_settings||{};
+ const showSignature=settings.show_signature!==false;
+ const showStamp=settings.show_stamp===true;
+ return `<div class="signatures">${items.map((s,idx)=>`<div class="signature"><span>${esc(s.role)}</span><b>${idx===items.length-1&&items.length>1?esc(identity.city||"................")+", "+esc(currentDate()):"&nbsp;"}</b><div class="sign-assets">${idx===items.length-1&&showStamp&&identity.stamp_url?`<img class="stamp" src="${esc(identity.stamp_url)}" alt="">`:""}${idx===items.length-1&&showSignature&&identity.signature_url?`<img src="${esc(identity.signature_url)}" alt="">`:""}</div><strong>${esc(s.name||"........................")}</strong>${s.identifier?`<small>${esc(s.identifier)}</small>`:""}</div>`).join("")}</div>`;
+}
+
+export function officialReportHtml(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
+ const landscape=model.orientation==="landscape";
+ const draft=!documentNumber||model.status==="draft";
+ const metrics=(model.metrics||[]).map(m=>`<div class="metric"><span>${esc(m.label)}</span><strong>${esc(m.value)}</strong>${m.note?`<small>${esc(m.note)}</small>`:""}</div>`).join("");
+ const notes=(model.notes||[]).filter(Boolean);
+ const sections=model.sections.map(sec=>`<section><h2>${esc(sec.title)}</h2><div class="tablewrap"><table><thead><tr>${sec.columns.map(c=>`<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${sec.rows.length?sec.rows.map(row=>`<tr>${sec.columns.map((_,i)=>`<td>${esc(row[i]??"—")}</td>`).join("")}</tr>`).join(""):`<tr><td colspan="${Math.max(1,sec.columns.length)}">Belum ada data pada periode ini.</td></tr>`}</tbody></table></div></section>`).join("");
+ const signatures=model.signatures?.length?model.signatures:defaultSignatures(identity);
+ const confidentiality=model.confidentiality==="confidential"?"RAHASIA":model.confidentiality==="restricted"?"TERBATAS":"INTERNAL SEKOLAH";
+ return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc(model.title)}</title><style>
+ @page{size:A4 ${landscape?"landscape":"portrait"};margin:15mm 14mm 16mm}
+ *{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:10.5px;line-height:1.45;margin:0;background:white}
+ .watermark{position:fixed;inset:42% 0 auto;text-align:center;font-size:58px;font-weight:800;color:rgba(120,120,120,.08);transform:rotate(-28deg);pointer-events:none;z-index:0}
+ .kop{display:grid;grid-template-columns:88px 1fr 88px;align-items:center;text-align:center;padding-bottom:9px;border-bottom:4px double #111;margin-bottom:18px;position:relative;z-index:1}
+ .kop img{max-width:72px;max-height:72px;object-fit:contain}.kop h1{font-size:17px;margin:0 0 3px;text-transform:uppercase}.kop p{margin:2px 0;font-size:9.5px}.kop small{font-size:8.5px}
+ .meta{text-align:center;margin-bottom:18px}.meta h2{font-size:16px;margin:0;text-transform:uppercase}.meta p{margin:4px 0}.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;text-align:left;margin:12px auto 0;max-width:680px;font-size:9px}
+ .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:0 0 16px}.metric{border:1px solid #cfd6df;padding:8px}.metric span,.metric small{display:block;color:#596579}.metric strong{display:block;font-size:14px;margin:3px 0}
+ .notes{border-left:3px solid #334155;background:#f8fafc;padding:9px 11px;margin:0 0 16px}.notes h3{font-size:10px;margin:0 0 5px}.notes ul{margin:0;padding-left:17px}
+ section{margin:0 0 16px;break-inside:auto;position:relative;z-index:1}section h2{font-size:11px;margin:0 0 6px;text-transform:uppercase}.tablewrap{overflow:visible}table{width:100%;border-collapse:collapse;font-size:8.5px}th,td{border:1px solid #9ca3af;padding:5px;vertical-align:top}th{background:#f1f5f9;font-weight:700;text-align:left}tr{break-inside:avoid}
+ .signatures{display:grid;grid-template-columns:repeat(${Math.max(1,signatures.length)},1fr);gap:35px;margin-top:34px;text-align:center;break-inside:avoid}.signature{min-height:118px;display:flex;flex-direction:column;align-items:center}.signature span{margin-bottom:5px}.signature b{font-weight:400;min-height:18px}.signature strong{margin-top:auto;text-decoration:underline}.signature small{margin-top:2px}.sign-assets{height:62px;position:relative;display:flex;align-items:center;justify-content:center}.sign-assets img{max-width:100px;max-height:58px}.sign-assets .stamp{position:absolute;opacity:.78;transform:translateX(24px);max-width:68px}
+ .footer{margin-top:22px;border-top:1px solid #d1d5db;padding-top:6px;display:flex;justify-content:space-between;color:#64748b;font-size:8px}.classification{font-weight:700;letter-spacing:.06em}
+ @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.screen-only{display:none}}
+ </style></head><body>${draft?'<div class="watermark">DRAFT</div>':""}
+ <header class="kop"><div>${identity.logo_url?`<img src="${esc(identity.logo_url)}" alt="Logo sekolah">`:""}</div><div><h1>${esc(identity.name||"NAMA SEKOLAH")}</h1><p>${esc(schoolAddress(identity)||"Alamat sekolah belum dilengkapi")}</p><small>${esc(schoolContact(identity))}</small></div><div></div></header>
+ <div class="meta"><h2>${esc(model.title)}</h2>${model.subtitle?`<p>${esc(model.subtitle)}</p>`:""}<div class="meta-grid"><span><b>Nomor:</b> ${esc(documentNumber||"DRAFT / BELUM DITERBITKAN")}</span><span><b>Klasifikasi:</b> ${esc(confidentiality)}</span>${model.periodLabel?`<span><b>Periode:</b> ${esc(model.periodLabel)}</span>`:""}<span><b>Tahun Pelajaran:</b> ${esc(identity.academic_year||"—")}</span></div></div>
+ ${metrics?`<div class="metrics">${metrics}</div>`:""}${notes.length?`<div class="notes"><h3>Catatan / Keterangan</h3><ul>${notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></div>`:""}${sections}
+ ${signaturesHtml(identity,signatures)}
+ <footer class="footer"><span>${esc(model.footer||"School Control · Dokumen sekolah")}</span><span class="classification">${esc(confidentiality)}</span></footer>
+ </body></html>`;
+}
+
+export function previewOfficialReport(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
+ const w=window.open("","_blank","width=1100,height=800");
+ if(!w)throw Error("Popup diblokir browser. Izinkan popup untuk preview laporan.");
+ w.document.open();w.document.write(officialReportHtml(identity,model,documentNumber));w.document.close();
+ return w;
+}
+
+export function printOfficialReport(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
+ const w=previewOfficialReport(identity,model,documentNumber);
+ setTimeout(()=>{w.focus();w.print()},250);
+}
+
+function toSheets(model:OfficialReportModel):{name:string;rows:SheetRows}[]{
+ const summary:SheetRows=[
+  {Bagian:"Judul",Nilai:model.title},
+  {Bagian:"Periode",Nilai:model.periodLabel||""},
+  ...(model.metrics||[]).map(x=>({Bagian:x.label,Nilai:x.value})),
+  ...(model.notes||[]).map((x,i)=>({Bagian:"Catatan "+(i+1),Nilai:x}))
+ ];
+ return [{name:"Ringkasan",rows:summary},...model.sections.map(s=>({name:s.title.slice(0,31),rows:s.rows.map(row=>Object.fromEntries(s.columns.map((c,i)=>[c,row[i]??""])))}))];
+}
+
+export async function downloadOfficialExcel(model:OfficialReportModel,documentNumber?:string){
+ await downloadExcel(safe(model.title+(documentNumber?" "+documentNumber.replaceAll("/","-"):""))+".xlsx",toSheets(model));
+}
+
+async function maybeImage(url:string|null|undefined){
+ if(!url)return null;
+ try{const res=await fetch(url);if(!res.ok)return null;const data=new Uint8Array(await res.arrayBuffer());const type=(res.headers.get("content-type")||"").includes("jpeg")?"jpg":"png";return {data,type}}catch{return null}
+}
+
+export async function downloadOfficialDocx(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
+ const d:any=await import("docx");
+ const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,AlignmentType,HeadingLevel,ImageRun,PageOrientation,Footer,PageNumber}=d;
+ const logo=await maybeImage(identity.logo_url);
+ const signature=await maybeImage(identity.signature_url);
+ const children:any[]=[];
+ const address=schoolAddress(identity),contact=schoolContact(identity);
+ if(logo)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:logo.data,transformation:{width:65,height:65},type:logo.type})]}));
+ children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:identity.name||"NAMA SEKOLAH",bold:true,size:30})]}));
+ if(address)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:address,size:18})]}));
+ if(contact)children.push(new Paragraph({alignment:AlignmentType.CENTER,border:{bottom:{style:"double",size:8,color:"111111"}},spacing:{after:260},children:[new TextRun({text:contact,size:17})]}));
+ children.push(new Paragraph({heading:HeadingLevel.HEADING_1,alignment:AlignmentType.CENTER,children:[new TextRun({text:model.title.toUpperCase(),bold:true})]}));
+ if(model.subtitle)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(model.subtitle)]}));
+ children.push(new Paragraph({spacing:{before:120,after:160},children:[new TextRun({text:"Nomor: "+(documentNumber||"DRAFT / BELUM DITERBITKAN"),bold:true}),new TextRun("   |   Tahun Pelajaran: "+(identity.academic_year||"—"))]}));
+ for(const m of model.metrics||[])children.push(new Paragraph({children:[new TextRun({text:m.label+": ",bold:true}),new TextRun(m.value+(m.note?" · "+m.note:""))]}));
+ if(model.notes?.length){children.push(new Paragraph({heading:HeadingLevel.HEADING_2,children:[new TextRun("Catatan / Keterangan")]}));for(const n of model.notes)children.push(new Paragraph({bullet:{level:0},children:[new TextRun(n)]}))}
+ for(const sec of model.sections){
+  children.push(new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:220,after:80},children:[new TextRun(sec.title)]}));
+  const rows=[new TableRow({tableHeader:true,children:sec.columns.map(c=>new TableCell({children:[new Paragraph({children:[new TextRun({text:c,bold:true})]})]}))}),...sec.rows.map(row=>new TableRow({children:sec.columns.map((_,i)=>new TableCell({children:[new Paragraph(String(row[i]??"—"))]}))}))];
+  children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows}));
+ }
+ const signs=model.signatures?.length?model.signatures:defaultSignatures(identity);
+ children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[new TableRow({children:signs.map((s,idx)=>new TableCell({borders:{top:{style:"nil"},bottom:{style:"nil"},left:{style:"nil"},right:{style:"nil"},insideHorizontal:{style:"nil"},insideVertical:{style:"nil"}},children:[
+  new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(s.role)]}),
+  new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:80},children:idx===signs.length-1&&signature?[new ImageRun({data:signature.data,transformation:{width:90,height:55},type:signature.type})]:[new TextRun("\n\n")]}),
+  new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:s.name||"........................",bold:true,underline:{}})]}),
+  ...(s.identifier?[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(s.identifier)]})]:[])
+ ]}))})]}));
+ const footer=new Footer({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun(model.title.slice(0,70)+" · Halaman "),new TextRun({children:[PageNumber.CURRENT]})]})]});
+ const doc=new Document({creator:"School Control",title:model.title,sections:[{properties:{page:{size:{orientation:model.orientation==="landscape"?PageOrientation.LANDSCAPE:PageOrientation.PORTRAIT},margin:{top:850,right:800,bottom:850,left:800}}},footers:{default:footer},children}]});
+ const blob=await Packer.toBlob(doc);
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=safe(model.title+(documentNumber?" "+documentNumber.replaceAll("/","-"):""))+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
+export async function issueAndExport(db:any,schoolId:string,identity:ReportIdentity,model:OfficialReportModel,format:"pdf"|"docx"|"xlsx"){
+ const issued=await issueReport(db,schoolId,model);
+ if(format==="pdf")printOfficialReport(identity,{...model,status:"issued"},issued.document_number);
+ if(format==="docx")await downloadOfficialDocx(identity,{...model,status:"issued"},issued.document_number);
+ if(format==="xlsx")await downloadOfficialExcel({...model,status:"issued"},issued.document_number);
+ return issued;
+}
