@@ -28,7 +28,9 @@ export default function WorkspaceTools({schoolId,role,onRoute}:{schoolId:string;
    db.from("sc_discipline_actions").select("id,sanction_name_snapshot,due_date,status").eq("school_id",schoolId).neq("status","completed").not("due_date","is",null).order("due_date").limit(30),
    ["owner","principal","vice_principal","hr","supervisor"].includes(role)?db.from("sc_hr_requests").select("id,kind,from_at,status").eq("school_id",schoolId).eq("status","pending").order("from_at").limit(30):Promise.resolve({data:[]}),
    ["owner","principal","vice_principal"].includes(role)?db.from("sc_documents").select("id,title,status,updated_at").eq("school_id",schoolId).in("status",["draft","review"]).order("updated_at",{ascending:false}).limit(30):Promise.resolve({data:[]}),
-   ["owner","principal","vice_principal","teacher"].includes(role)?db.from("sc_supervisions").select("id,scheduled_on,status,instrument").eq("school_id",schoolId).gte("scheduled_on",today()).lte("scheduled_on",end).neq("status","final").order("scheduled_on").limit(30):Promise.resolve({data:[]})
+   ["owner","principal","vice_principal","teacher"].includes(role)?db.from("sc_supervisions").select("id,scheduled_on,status,instrument").eq("school_id",schoolId).gte("scheduled_on",today()).lte("scheduled_on",end).neq("status","final").order("scheduled_on").limit(30):Promise.resolve({data:[]}),
+   canBk?db.from("sc_bk_cases").select("id,category,status,follow_up_date").eq("school_id",schoolId).neq("status","closed").not("follow_up_date","is",null).lte("follow_up_date",end).order("follow_up_date").limit(30):Promise.resolve({data:[]}),
+   db.from("sc_workflow_steps").select("id,run_id,title,status,blocked_reason,updated_at").eq("school_id",schoolId).in("status",["blocked","active"]).order("updated_at",{ascending:false}).limit(30)
   ]);
   const val=(i:number)=>calls[i].status==="fulfilled"?((calls[i] as PromiseFulfilledResult<any>).value.data||[]):[];
   for(const x of val(0))out.push({id:"cal-"+x.id,title:x.title,meta:"Agenda · "+x.category,module:"calendar",feature:"Kalender Sekolah",due:x.event_date});
@@ -38,7 +40,9 @@ export default function WorkspaceTools({schoolId,role,onRoute}:{schoolId:string;
   for(const x of val(4))out.push({id:"hr-"+x.id,title:"Pengajuan "+x.kind,meta:"Menunggu approval",module:"gajian",feature:"Pengajuan SDM",due:String(x.from_at||today()).slice(0,10)});
   for(const x of val(5))out.push({id:"doc-"+x.id,title:x.title,meta:"Dokumen menunggu proses · "+x.status,module:"kepsek_ai",feature:"Workflow Dokumen",due:String(x.updated_at||today()).slice(0,10)});
   for(const x of val(6))out.push({id:"sup-"+x.id,title:"Supervisi "+x.instrument,meta:"Jadwal supervisi · "+x.status,module:"kepsek_ai",feature:"Supervisi guru",due:x.scheduled_on});
-  setNotices(out.sort((a,b)=>a.due.localeCompare(b.due)).slice(0,80));
+  for(const x of val(7))out.push({id:"bk-"+x.id,title:"Tindak lanjut BK · "+x.category,meta:"Privat Guru BK · "+x.status,module:"bk",feature:"Tindak Lanjut",due:x.follow_up_date});
+  for(const x of val(8))out.push({id:"wf-"+x.id,title:x.title,meta:x.status==="blocked"?"Workflow tertahan · "+(x.blocked_reason||"perlu data"):"Langkah workflow aktif",module:"orchestrator",feature:"Workflow Aktif",due:today()});
+  setNotices(out.sort((a,b)=>a.due.localeCompare(b.due)).slice(0,100));
  }
 
  async function loadActivity(){
