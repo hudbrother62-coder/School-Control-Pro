@@ -62,7 +62,8 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
   {label:"Program Kerja",caption:"PIC, tugas, deadline, bukti dan laporan",module:"command",feature:"Program Kerja",icon:ListChecks},
   {label:"Pusat Laporan",caption:"Laporan standar sekolah Indonesia dan arsip",module:"reports",feature:"Ringkasan Laporan",icon:BookOpen},
   {label:"Keuangan",caption:"Kas, anggaran, tagihan dan laporan resmi",module:"sikas",feature:"Dashboard Keuangan",icon:WalletCards}
- ];\n const actions=actionCatalog.filter(a=>{const m=modules.find(x=>x.key===a.module);return !!m&&canAccess(m,role)});
+ ];
+ const actions=actionCatalog.filter(a=>{const m=modules.find(x=>x.key===a.module);return !!m&&canAccess(m,role)});
 
  return <>
   {showSummary&&<>
