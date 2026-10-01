@@ -68,6 +68,8 @@ function signaturesHtml(identity:ReportIdentity,items:ReportSignature[]){
 
 export function officialReportHtml(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
  const landscape=model.orientation==="landscape";
+ const settings=identity.report_settings||{};
+ const minimal=settings.layout==="minimal";
  const draft=!documentNumber||model.status==="draft";
  const metrics=(model.metrics||[]).map(m=>`<div class="metric"><span>${esc(m.label)}</span><strong>${esc(m.value)}</strong>${m.note?`<small>${esc(m.note)}</small>`:""}</div>`).join("");
  const notes=(model.notes||[]).filter(Boolean);
@@ -79,7 +81,7 @@ export function officialReportHtml(identity:ReportIdentity,model:OfficialReportM
  *{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#111827;font-size:10.5px;line-height:1.45;margin:0;background:white}
  .watermark{position:fixed;inset:42% 0 auto;text-align:center;font-size:58px;font-weight:800;color:rgba(120,120,120,.08);transform:rotate(-28deg);pointer-events:none;z-index:0}
  .kop{display:grid;grid-template-columns:88px 1fr 88px;align-items:center;text-align:center;padding-bottom:9px;border-bottom:4px double #111;margin-bottom:18px;position:relative;z-index:1}
- .kop img{max-width:72px;max-height:72px;object-fit:contain}.kop h1{font-size:17px;margin:0 0 3px;text-transform:uppercase}.kop p{margin:2px 0;font-size:9.5px}.kop small{font-size:8.5px}
+ .kop img{max-width:72px;max-height:72px;object-fit:contain}.kop h1{font-size:17px;margin:0 0 3px;text-transform:uppercase}.kop p{margin:2px 0;font-size:9.5px}.kop small{font-size:8.5px}.kop.minimal{border-bottom:1px solid #cbd5e1;text-align:left}.kop.minimal h1{text-transform:none}.kop.minimal>div:nth-child(2){text-align:left}
  .meta{text-align:center;margin-bottom:18px}.meta h2{font-size:16px;margin:0;text-transform:uppercase}.meta p{margin:4px 0}.meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;text-align:left;margin:12px auto 0;max-width:680px;font-size:9px}
  .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin:0 0 16px}.metric{border:1px solid #cfd6df;padding:8px}.metric span,.metric small{display:block;color:#596579}.metric strong{display:block;font-size:14px;margin:3px 0}
  .notes{border-left:3px solid #334155;background:#f8fafc;padding:9px 11px;margin:0 0 16px}.notes h3{font-size:10px;margin:0 0 5px}.notes ul{margin:0;padding-left:17px}
@@ -88,7 +90,7 @@ export function officialReportHtml(identity:ReportIdentity,model:OfficialReportM
  .footer{margin-top:22px;border-top:1px solid #d1d5db;padding-top:6px;display:flex;justify-content:space-between;color:#64748b;font-size:8px}.classification{font-weight:700;letter-spacing:.06em}
  @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.screen-only{display:none}}
  </style></head><body>${draft?'<div class="watermark">DRAFT</div>':""}
- <header class="kop"><div>${identity.logo_url?`<img src="${esc(identity.logo_url)}" alt="Logo sekolah">`:""}</div><div><h1>${esc(identity.name||"NAMA SEKOLAH")}</h1><p>${esc(schoolAddress(identity)||"Alamat sekolah belum dilengkapi")}</p><small>${esc(schoolContact(identity))}</small></div><div></div></header>
+ <header class="kop ${minimal?"minimal":""}"><div>${identity.logo_url?`<img src="${esc(identity.logo_url)}" alt="Logo sekolah">`:""}</div><div><h1>${esc(identity.name||"NAMA SEKOLAH")}</h1><p>${esc(schoolAddress(identity)||"Alamat sekolah belum dilengkapi")}</p><small>${esc(schoolContact(identity))}</small></div><div></div></header>
  <div class="meta"><h2>${esc(model.title)}</h2>${model.subtitle?`<p>${esc(model.subtitle)}</p>`:""}<div class="meta-grid"><span><b>Nomor:</b> ${esc(documentNumber||"DRAFT / BELUM DITERBITKAN")}</span><span><b>Klasifikasi:</b> ${esc(confidentiality)}</span>${model.periodLabel?`<span><b>Periode:</b> ${esc(model.periodLabel)}</span>`:""}<span><b>Tahun Pelajaran:</b> ${esc(identity.academic_year||"—")}</span></div></div>
  ${metrics?`<div class="metrics">${metrics}</div>`:""}${notes.length?`<div class="notes"><h3>Catatan / Keterangan</h3><ul>${notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></div>`:""}${sections}
  ${signaturesHtml(identity,signatures)}
