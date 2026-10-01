@@ -1,5 +1,6 @@
 import {NextRequest,NextResponse} from "next/server";
 import {createClient} from "@supabase/supabase-js";
+import {teacherSystemStandard} from "@/lib/teacher-ai-config";
 
 export const runtime="nodejs";
 const headers={"Cache-Control":"no-store"};
@@ -16,7 +17,7 @@ export async function POST(req:NextRequest){
   const schoolId=typeof payload.school_id==="string"?payload.school_id:"";
   const module=payload.module;
   const prompt=typeof payload.prompt==="string"?payload.prompt.trim():"";
-  if(!["guru_ai","kepsek_ai"].includes(module)||prompt.length<10||prompt.length>6000)return NextResponse.json({error:"Instruksi tidak valid (10–6000 karakter)."}, {status:400,headers});
+  if(!["guru_ai","kepsek_ai"].includes(module)||prompt.length<10||prompt.length>18000)return NextResponse.json({error:"Instruksi tidak valid (10–18000 karakter)."}, {status:400,headers});
   const {data:membership}=await db.from("sc_members").select("role").eq("school_id",schoolId).eq("user_id",user.id).maybeSingle();
   if(!membership)return NextResponse.json({error:"Tidak memiliki akses sekolah."},{status:403,headers});
   if(module==="kepsek_ai"&&!["owner","principal","vice_principal"].includes(membership.role))return NextResponse.json({error:"Menu khusus manajemen sekolah."},{status:403,headers});
@@ -29,8 +30,9 @@ export async function POST(req:NextRequest){
   const {error:budgetError}=await db.rpc("sc_consume_ai_budget",{p_school:schoolId,p_module:module});
   if(budgetError)return NextResponse.json({error:budgetError.message}, {status:429,headers});
   const model=process.env.GEMINI_MODEL||"gemini-2.5-flash";
-  const instruction="Anda adalah asisten administrasi pendidikan Indonesia dalam School Control. Bantu menyusun DRAF yang dapat ditinjau pengguna. Jangan mengarang data kehadiran, data siswa, sumber resmi, regulasi atau dokumen sekolah. Jika data belum diberikan, minta pengguna melengkapi. Jangan meminta atau memproses rahasia konseling BK. Jangan mengklaim sinkronisasi dengan ARKAS, e-Kinerja, atau sistem pemerintah. Gunakan Bahasa Indonesia rapi.";
-  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({system_instruction:{parts:[{text:instruction}]},contents:[{role:"user",parts:[{text:"Sekolah: "+(school?.name||"Tidak tersedia")+". Tahun ajaran: "+(school?.academic_year||"Tidak diketahui")+". NPSN: "+(school?.npsn||"Belum diisi")+". Memori sekolah umum terverifikasi:\n"+memory+"\nModul: "+module+". Permintaan: "+prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:2048}}),signal:AbortSignal.timeout(28000),cache:"no-store"});
+  const baseInstruction="Anda adalah asisten administrasi pendidikan Indonesia dalam School Control. Bantu menyusun DRAF yang dapat ditinjau pengguna. Jangan mengarang data kehadiran, data siswa, sumber resmi, regulasi atau dokumen sekolah. Jika data belum diberikan, tandai data yang perlu dilengkapi atau diverifikasi. Jangan meminta atau memproses rahasia konseling BK. Jangan mengklaim sinkronisasi dengan ARKAS, e-Kinerja, atau sistem pemerintah. Gunakan Bahasa Indonesia rapi.";
+  const instruction=module==="guru_ai"?baseInstruction+"\n\n"+teacherSystemStandard:baseInstruction;
+  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({system_instruction:{parts:[{text:instruction}]},contents:[{role:"user",parts:[{text:"Sekolah: "+(school?.name||"Tidak tersedia")+". Tahun ajaran: "+(school?.academic_year||"Tidak diketahui")+". NPSN: "+(school?.npsn||"Belum diisi")+". Memori sekolah umum terverifikasi:\n"+memory+"\nModul: "+module+". Permintaan: "+prompt}]}],generationConfig:{temperature:0.35,maxOutputTokens:8192}}),signal:AbortSignal.timeout(28000),cache:"no-store"});
   if(!response.ok){return NextResponse.json({error:response.status===429?"Kuota penyedia AI sedang terbatas. Coba lagi nanti.":"Layanan AI sedang tidak tersedia."},{status:503,headers});}
   const result=await response.json();
   const text=(result?.candidates?.[0]?.content?.parts||[]).map((x:{text?:string})=>x.text||"").join("\n").trim();
