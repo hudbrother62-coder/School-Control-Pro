@@ -161,6 +161,34 @@ export async function downloadOfficialDocx(identity:ReportIdentity,model:Officia
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=safe(model.title+(documentNumber?" "+documentNumber.replaceAll("/","-"):""))+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 
+export function narrativeDocumentHtml(identity:ReportIdentity,doc:{title:string;kind:string;content:string;status:string;revision:number}){
+ const safeContent=esc(doc.content).replace(/\n/g,"<br>");
+ return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc(doc.title)}</title><style>@page{size:A4 portrait;margin:18mm}body{font:12pt Arial;line-height:1.6;color:#111827;margin:0}.kop{text-align:center;border-bottom:4px double #111;padding-bottom:10px;margin-bottom:22px}.kop img{max-height:70px}.kop h1{font-size:17pt;margin:2px}.kop p{font-size:9pt;margin:2px}.title{text-align:center;margin:22px 0}.title h2{font-size:15pt;text-transform:uppercase}.meta{font-size:9pt;color:#475569}.body{white-space:normal;text-align:justify}.sign{margin-left:auto;width:260px;text-align:center;margin-top:45px}.sign img{max-width:95px;max-height:60px}.footer{margin-top:35px;border-top:1px solid #cbd5e1;padding-top:6px;font-size:8pt;color:#64748b}</style></head><body><header class="kop">${identity.logo_url?`<img src="${esc(identity.logo_url)}" alt="">`:""}<h1>${esc(identity.name)}</h1><p>${esc(schoolAddress(identity))}</p><p>${esc(schoolContact(identity))}</p></header><div class="title"><h2>${esc(doc.title)}</h2><div class="meta">${esc(doc.kind)} · Revisi ${doc.revision} · ${esc(doc.status)}</div></div><main class="body">${safeContent}</main><div class="sign"><p>${esc(identity.city||"................")}, ${esc(currentDate())}</p><p>Kepala Sekolah</p>${identity.signature_url?`<img src="${esc(identity.signature_url)}" alt="">`:"<br><br><br>"}<strong>${esc(identity.principal_name||"........................")}</strong>${identity.principal_nip?`<div>NIP. ${esc(identity.principal_nip)}</div>`:""}</div><footer class="footer">School Control · Dokumen sekolah</footer></body></html>`;
+}
+
+export function printNarrativeDocument(identity:ReportIdentity,doc:{title:string;kind:string;content:string;status:string;revision:number}){
+ const w=window.open("","_blank","width=1000,height=800");if(!w)throw Error("Popup diblokir browser.");
+ w.document.open();w.document.write(narrativeDocumentHtml(identity,doc));w.document.close();setTimeout(()=>{w.focus();w.print()},250);
+}
+
+export async function downloadNarrativeDocx(identity:ReportIdentity,doc:{title:string;kind:string;content:string;status:string;revision:number}){
+ const d:any=await import("docx");const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,Footer,PageNumber,ImageRun}=d;
+ const logo=await maybeImage(identity.logo_url),signature=await maybeImage(identity.signature_url);const children:any[]=[];
+ if(logo)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:logo.data,transformation:{width:65,height:65},type:logo.type})]}));
+ children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:identity.name||"NAMA SEKOLAH",bold:true,size:30})]}));
+ children.push(new Paragraph({alignment:AlignmentType.CENTER,border:{bottom:{style:"double",size:8,color:"111111"}},spacing:{after:260},children:[new TextRun({text:[schoolAddress(identity),schoolContact(identity)].filter(Boolean).join(" · "),size:17})]}));
+ children.push(new Paragraph({heading:HeadingLevel.HEADING_1,alignment:AlignmentType.CENTER,children:[new TextRun({text:doc.title.toUpperCase(),bold:true})]}));
+ children.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:220},children:[new TextRun(doc.kind+" · Revisi "+doc.revision+" · "+doc.status)]}));
+ for(const block of doc.content.split(/\n{2,}/)){const text=block.trim();if(!text)continue;const isHeading=/^(BAB|BAGIAN|LAMPIRAN|[A-Z][A-Z\s/&-]{5,})/.test(text)&&text.length<120;children.push(new Paragraph({heading:isHeading?HeadingLevel.HEADING_2:undefined,alignment:isHeading?AlignmentType.LEFT:AlignmentType.JUSTIFIED,spacing:{after:120},children:[new TextRun({text,bold:isHeading})]}))}
+ children.push(new Paragraph({alignment:AlignmentType.RIGHT,spacing:{before:300},children:[new TextRun((identity.city||"................")+", "+currentDate())]}));
+ children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:"Kepala Sekolah",bold:true})]}));
+ if(signature)children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new ImageRun({data:signature.data,transformation:{width:90,height:55},type:signature.type})]})); else children.push(new Paragraph("\n\n"));
+ children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:identity.principal_name||"........................",bold:true,underline:{}})]}));
+ if(identity.principal_nip)children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun("NIP. "+identity.principal_nip)]}));
+ const footer=new Footer({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun(doc.title.slice(0,70)+" · Halaman "),new TextRun({children:[PageNumber.CURRENT]})]})]});
+ const out=new Document({creator:"School Control",title:doc.title,sections:[{footers:{default:footer},children}]});const blob=await Packer.toBlob(out),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=safe(doc.title)+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
 export async function issueAndExport(db:any,schoolId:string,identity:ReportIdentity,model:OfficialReportModel,format:"pdf"|"docx"|"xlsx"){
  const issued=await issueReport(db,schoolId,model,identity);
  if(format==="pdf")printOfficialReport(identity,{...model,status:"issued"},issued.document_number);
