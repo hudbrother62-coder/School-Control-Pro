@@ -31,9 +31,11 @@ export async function loadReportIdentity(db:any,schoolId:string):Promise<ReportI
 }
 
 export function defaultSignatures(identity:ReportIdentity,preparedBy?:string):ReportSignature[]{
+ const settings=identity.report_settings||{};
+ const signerTitle=String(settings.signer_title||"Kepala Sekolah");
  return [
   {role:"Disusun oleh",name:preparedBy||null},
-  {role:"Mengetahui / Menyetujui",name:identity.principal_name||"Kepala Sekolah",identifier:identity.principal_nip?("NIP. "+identity.principal_nip):null}
+  {role:"Mengetahui / Menyetujui · "+signerTitle,name:identity.principal_name||signerTitle,identifier:identity.principal_nip?("NIP. "+identity.principal_nip):null}
  ];
 }
 
@@ -49,11 +51,12 @@ export async function issueReport(db:any,schoolId:string,model:OfficialReportMod
 }
 
 function schoolContact(i:ReportIdentity){
+ const s=i.report_settings||{};
  return [
-  i.npsn?"NPSN "+i.npsn:"",
-  i.phone?"Telp. "+i.phone:"",
-  i.email||"",
-  i.website||""
+  s.show_npsn!==false&&i.npsn?"NPSN "+i.npsn:"",
+  s.show_phone!==false&&i.phone?"Telp. "+i.phone:"",
+  s.show_email!==false?i.email||"":"",
+  s.show_website===true?i.website||"":""
  ].filter(Boolean).join(" · ");
 }
 function schoolAddress(i:ReportIdentity){
@@ -88,8 +91,8 @@ export function officialReportHtml(identity:ReportIdentity,model:OfficialReportM
  .footer{margin-top:22px;border-top:1px solid #d1d5db;padding-top:6px;display:flex;justify-content:space-between;color:#64748b;font-size:8px}.classification{font-weight:700;letter-spacing:.06em}
  @media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}.screen-only{display:none}}
  </style></head><body>${draft?'<div class="watermark">DRAFT</div>':""}
- <header class="kop"><div>${identity.logo_url?`<img src="${esc(identity.logo_url)}" alt="Logo sekolah">`:""}</div><div><h1>${esc(identity.name||"NAMA SEKOLAH")}</h1><p>${esc(schoolAddress(identity)||"Alamat sekolah belum dilengkapi")}</p><small>${esc(schoolContact(identity))}</small></div><div></div></header>
- <div class="meta"><h2>${esc(model.title)}</h2>${model.subtitle?`<p>${esc(model.subtitle)}</p>`:""}<div class="meta-grid"><span><b>Nomor:</b> ${esc(documentNumber||"DRAFT / BELUM DITERBITKAN")}</span><span><b>Klasifikasi:</b> ${esc(confidentiality)}</span>${model.periodLabel?`<span><b>Periode:</b> ${esc(model.periodLabel)}</span>`:""}<span><b>Tahun Pelajaran:</b> ${esc(identity.academic_year||"—")}</span></div></div>
+ <header class="kop"><div>${(identity.report_settings||{}).show_logo!==false&&identity.logo_url?`<img src="${esc(identity.logo_url)}" alt="Logo sekolah">`:""}</div><div><h1>${esc(identity.name||"NAMA SEKOLAH")}</h1><p>${esc(schoolAddress(identity)||"Alamat sekolah belum dilengkapi")}</p><small>${esc(schoolContact(identity))}</small></div><div></div></header>
+ <div class="meta"><h2>${esc(model.title)}</h2>${model.subtitle?`<p>${esc(model.subtitle)}</p>`:""}<div class="meta-grid"><span><b>Nomor:</b> ${esc(documentNumber||"DRAFT / BELUM DITERBITKAN")}</span><span><b>Klasifikasi:</b> ${esc(confidentiality)}${(identity.report_settings||{}).classification_code?" · "+esc((identity.report_settings||{}).classification_code):""}</span>${model.periodLabel?`<span><b>Periode:</b> ${esc(model.periodLabel)}</span>`:""}<span><b>Tahun Pelajaran:</b> ${esc(identity.academic_year||"—")}</span></div></div>
  ${metrics?`<div class="metrics">${metrics}</div>`:""}${notes.length?`<div class="notes"><h3>Catatan / Keterangan</h3><ul>${notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></div>`:""}${sections}
  ${signaturesHtml(identity,signatures)}
  <footer class="footer"><span>${esc(model.footer||"School Control · Dokumen sekolah")}</span><span class="classification">${esc(confidentiality)}</span></footer>
@@ -130,8 +133,9 @@ async function maybeImage(url:string|null|undefined){
 export async function downloadOfficialDocx(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
  const d:any=await import("docx");
  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,AlignmentType,HeadingLevel,ImageRun,PageOrientation,Footer,PageNumber}=d;
- const logo=await maybeImage(identity.logo_url);
- const signature=await maybeImage(identity.signature_url);
+ const settings=identity.report_settings||{};
+ const logo=settings.show_logo===false?null:await maybeImage(identity.logo_url);
+ const signature=settings.show_signature===false?null:await maybeImage(identity.signature_url);
  const children:any[]=[];
  const address=schoolAddress(identity),contact=schoolContact(identity);
  if(logo)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:logo.data,transformation:{width:65,height:65},type:logo.type})]}));
@@ -173,7 +177,7 @@ export function printNarrativeDocument(identity:ReportIdentity,doc:{title:string
 
 export async function downloadNarrativeDocx(identity:ReportIdentity,doc:{title:string;kind:string;content:string;status:string;revision:number}){
  const d:any=await import("docx");const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,Footer,PageNumber,ImageRun}=d;
- const logo=await maybeImage(identity.logo_url),signature=await maybeImage(identity.signature_url);const children:any[]=[];
+ const settings=identity.report_settings||{},logo=settings.show_logo===false?null:await maybeImage(identity.logo_url),signature=settings.show_signature===false?null:await maybeImage(identity.signature_url);const children:any[]=[];
  if(logo)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:logo.data,transformation:{width:65,height:65},type:logo.type})]}));
  children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:identity.name||"NAMA SEKOLAH",bold:true,size:30})]}));
  children.push(new Paragraph({alignment:AlignmentType.CENTER,border:{bottom:{style:"double",size:8,color:"111111"}},spacing:{after:260},children:[new TextRun({text:[schoolAddress(identity),schoolContact(identity)].filter(Boolean).join(" · "),size:17})]}));
