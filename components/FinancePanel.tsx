@@ -46,7 +46,8 @@ export default function FinancePanel({schoolId,userId,focus}:{schoolId:string;us
  const chooseAccount=<label className="field">Kas / Rekening<select required value={accountId} onChange={e=>setAccountId(e.target.value)}><option value="">Pilih kas</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name} · {a.kind}</option>)}</select></label>;
  const bill=bills.find(b=>b.id===billId),paid=bill?payments.filter(p=>p.bill_id===bill.id).reduce((a,p)=>a+Number(p.amount),0):0;
  const studentName=(id:string)=>students.find(s=>s.id===id)?.name||"Siswa tidak aktif";
- const activeTx=tx.filter(t=>t.status!=="void");\n const exportLedger=()=>saveCsv("laporan-kas-school-control.csv",csvExport(["Tanggal","Jenis","Kategori","Kas","Nominal","Keterangan"],activeTx.map(t=>[t.occurred_at,t.kind,t.category,accounts.find(a=>a.id===t.account_id)?.name,Number(t.amount),t.description])));
+ const activeTx=tx.filter(t=>t.status!=="void");
+ const exportLedger=()=>saveCsv("laporan-kas-school-control.csv",csvExport(["Tanggal","Jenis","Kategori","Kas","Nominal","Keterangan"],activeTx.map(t=>[t.occurred_at,t.kind,t.category,accounts.find(a=>a.id===t.account_id)?.name,Number(t.amount),t.description])));
  const billPaid=(id:string)=>payments.filter(p=>p.bill_id===id).reduce((n,p)=>n+Number(p.amount),0);
  const budgetRealization=budgets.map(b=>{const spent=activeTx.filter(t=>t.kind==="expense"&&(b.activity_name?t.activity_name===b.activity_name:t.category===b.category)).reduce((n,t)=>n+Number(t.amount),0);return {...b,spent,remaining:Number(b.amount)-spent,percent:Number(b.amount)>0?Math.round(spent/Number(b.amount)*1000)/10:0}});
  function financeReportModel():OfficialReportModel{
