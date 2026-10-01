@@ -14,7 +14,7 @@ export default function WorkspaceTools({schoolId,role,onRoute}:{schoolId:string;
  const db=useMemo(()=>browserDb(),[]);
  const [open,setOpen]=useState<"search"|"notice"|"activity"|null>(null);
  const [q,setQ]=useState(""),[hits,setHits]=useState<Hit[]>([]),[notices,setNotices]=useState<Notice[]>([]),[activity,setActivity]=useState<Activity[]>([]),[busy,setBusy]=useState(false);
- const canFinance=["owner","principal","treasurer","staff"].includes(role);
+ const canFinance=["owner","principal","treasurer","finance_staff"].includes(role);
  const canBk=role==="counselor";
  const canAudit=["owner","principal"].includes(role);
 
@@ -26,7 +26,7 @@ export default function WorkspaceTools({schoolId,role,onRoute}:{schoolId:string;
    db.from("sc_program_tasks").select("id,title,due_at,status").eq("school_id",schoolId).neq("status","done").not("due_at","is",null).order("due_at").limit(30),
    canFinance?db.from("sc_student_bills").select("id,title,due_on,amount_due").eq("school_id",schoolId).neq("status","paid").lte("due_on",end).order("due_on").limit(30):Promise.resolve({data:[]}),
    db.from("sc_discipline_actions").select("id,sanction_name_snapshot,due_date,status").eq("school_id",schoolId).neq("status","completed").not("due_date","is",null).order("due_date").limit(30),
-   ["owner","principal","vice_principal","hr"].includes(role)?db.from("sc_hr_requests").select("id,kind,from_at,status").eq("school_id",schoolId).eq("status","pending").order("from_at").limit(30):Promise.resolve({data:[]}),
+   ["owner","principal","vice_principal","hr","supervisor"].includes(role)?db.from("sc_hr_requests").select("id,kind,from_at,status").eq("school_id",schoolId).eq("status","pending").order("from_at").limit(30):Promise.resolve({data:[]}),
    ["owner","principal","vice_principal"].includes(role)?db.from("sc_documents").select("id,title,status,updated_at").eq("school_id",schoolId).in("status",["draft","review"]).order("updated_at",{ascending:false}).limit(30):Promise.resolve({data:[]}),
    ["owner","principal","vice_principal","teacher"].includes(role)?db.from("sc_supervisions").select("id,scheduled_on,status,instrument").eq("school_id",schoolId).gte("scheduled_on",today()).lte("scheduled_on",end).neq("status","final").order("scheduled_on").limit(30):Promise.resolve({data:[]})
   ]);
