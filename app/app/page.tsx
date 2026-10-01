@@ -149,7 +149,10 @@ export default function Home(){
   {module==="kepsek_ai"&&<>
  {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP"].includes(featureFocus))&&<AIWorkbench module="kepsek_ai" schoolId={schoolId} focus={featureFocus}/>}
  {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Pusat dokumen","Persetujuan dokumen"].includes(featureFocus))&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
+ {featureFocus==="Proyek Manajemen"&&<AIProjectManager schoolId={schoolId} module="kepsek_ai" mode="projects"/>}
  {featureFocus==="Asisten Kepsek"&&<AIProjectManager schoolId={schoolId} module="kepsek_ai" mode="chat"/>}
+ {featureFocus==="Riwayat AI"&&<AIProjectManager schoolId={schoolId} module="kepsek_ai" mode="outputs"/>}
+ {featureFocus==="Koneksi AI"&&<AIProjectManager schoolId={schoolId} module="kepsek_ai" mode="connection"/>}
  {["Kinerja Kepala Sekolah","Workflow Dokumen","Sumber Dokumen","Pustaka Format"].includes(featureFocus)&&<ManagementLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
  {(!featureFocus||featureFocus==="Supervisi guru")&&<Supervision schoolId={schoolId} role={role} staff={staff} userId={user.id}/>}
  {!featureFocus&&<SchoolProfile schoolId={schoolId} role={role}/>}
