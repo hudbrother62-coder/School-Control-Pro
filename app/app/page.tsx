@@ -37,6 +37,7 @@ import HRLegacyParity from "@/components/HRLegacyParity";
 import FinanceLegacyParity from "@/components/FinanceLegacyParity";
 import CommandLegacyParity from "@/components/CommandLegacyParity";
 import WorkspaceTools from "@/components/WorkspaceTools";
+import SupervisorLegacyParity from "@/components/SupervisorLegacyParity";
 import {modules,canAccess,isAdmin,ROLE_LABELS,type School,type Role,type ModuleKey,type Membership,type Staff} from "@/lib/modules";
 
 type SchoolAccess={school:School;role:Role};
@@ -161,7 +162,7 @@ export default function Home(){
   {module==="disiplin"&&(["Analitik Disiplin","Arsip Siswa","Import Riwayat","Surat & Dokumen"].includes(featureFocus)?<DisciplineLegacyParity schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>:featureFocus.toLowerCase().includes("template")?<DisciplineReportTemplate schoolId={schoolId}/>:<DisciplinePanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>)}
   {module==="command"&&(["Verifikasi Bukti","Tindak Lanjut Rapat","Laporan Program"].includes(featureFocus)?<CommandLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>:<CommandBoard schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>)}
   {module==="sikas"&&(["Bukti Transaksi","Realisasi Anggaran","Riwayat Pembayaran","WhatsApp Tagihan","Buku Kas Umum","Tim Keuangan"].includes(featureFocus)?<FinanceLegacyParity schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>:<FinancePanel schoolId={schoolId} userId={user.id} focus={featureFocus}/>)}
-  {module==="gajian"&&(["Pengajuan SDM","Lembur","Kasbon","Reimburse","Jadwal Kerja","Lokasi Presensi","Komponen Dinamis","Rekrutmen","Kunjungan Lapangan","Pelacakan Lokasi","Laporan HR"].includes(featureFocus)?<HRLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>:<PayrollPanel schoolId={schoolId} role={role} staff={staff} focus={featureFocus}/>)}
+  {module==="gajian"&&(["Tim SDM","Tim Saya","Kehadiran Tim","Approval Tim","Rekap Tim"].includes(featureFocus)?<SupervisorLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>:["Pengajuan SDM","Lembur","Kasbon","Reimburse","Jadwal Kerja","Lokasi Presensi","Komponen Dinamis","Rekrutmen","Kunjungan Lapangan","Pelacakan Lokasi","Laporan HR"].includes(featureFocus)?<HRLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>:<PayrollPanel schoolId={schoolId} role={role} staff={staff} focus={featureFocus}/>)}
   {module==="payslip"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} selfOnly focus={featureFocus}/>}
   {module==="bk"&&<BKPanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
   </div></main>
