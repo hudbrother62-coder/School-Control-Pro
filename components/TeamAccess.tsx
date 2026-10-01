@@ -3,7 +3,7 @@ import {useEffect,useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
 import {ROLE_LABELS,type Role} from "@/lib/modules";
 type Row={user_id:string;email:string|null;role:string;staff_name:string|null};
-const roles=["principal","vice_principal","teacher","counselor","hr","treasurer","staff","viewer"];
+const roles=["principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff","viewer"];
 export default function TeamAccess({schoolId,role}:{schoolId:string;role:Role}){
  const db=useMemo(()=>browserDb(),[]);const [rows,setRows]=useState<Row[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
  async function load(){if(!db)return;const {data,error}=await db.rpc("sc_team_directory",{p_school:schoolId});if(error)setError(error.message);else setRows((data||[]) as Row[])}
