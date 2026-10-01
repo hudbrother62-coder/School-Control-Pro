@@ -18,6 +18,7 @@ import FinancePanel from "@/components/FinancePanel";
 import PayrollPanel from "@/components/PayrollPanel";
 import BKPanel from "@/components/BKPanel";
 import AcademicAdvanced from "@/components/AcademicAdvanced";
+import TeachingJournal from "@/components/TeachingJournal";
 import DisciplinePanel from "@/components/DisciplinePanel";
 import DisciplineReportTemplate from "@/components/DisciplineReportTemplate";
 import DashboardOverview from "@/components/DashboardOverview";
@@ -130,7 +131,7 @@ export default function Home(){
  {(!featureFocus||featureFocus==="Supervisi guru")&&<Supervision schoolId={schoolId} role={role} staff={staff} userId={user.id}/>}
  {!featureFocus&&<SchoolProfile schoolId={schoolId} role={role}/>}
  </>}
- {module==="buku_kerja"&&<>{["Lembar Nilai","Jurnal Mengajar","Agenda Mengajar","Import/Export Excel"].includes(featureFocus)&&<SchoolData mode="academic" schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>} {["Presensi Siswa","Rekap Bulanan","Laporan Kelas"].includes(featureFocus)&&<AcademicAdvanced schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}</>}
+ {module==="buku_kerja"&&<>{["Lembar Nilai","Agenda Mengajar","Import/Export Excel"].includes(featureFocus)&&<SchoolData mode="academic" schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>} {featureFocus==="Jurnal Mengajar"&&<TeachingJournal schoolId={schoolId} userId={user.id} role={role}/>} {["Presensi Siswa","Rekap Bulanan","Laporan Kelas"].includes(featureFocus)&&<AcademicAdvanced schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}</>}
   {module==="disiplin"&&(featureFocus.toLowerCase().includes("template")?<DisciplineReportTemplate schoolId={schoolId}/>:<DisciplinePanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>)}
   {module==="command"&&<CommandBoard schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
   {module==="sikas"&&<FinancePanel schoolId={schoolId} userId={user.id} focus={featureFocus}/>}
