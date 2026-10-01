@@ -1,10 +1,11 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
-import {CalendarDays,ChevronLeft,ChevronRight,Clock3,MapPin,Plus,Users} from "lucide-react";
+import {CalendarDays,ChevronLeft,ChevronRight,Clock3,Download,MapPin,Plus,Upload,Users} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
 import SmartSelect from "@/components/SmartSelect";
 import {browserDb} from "@/lib/supabase";
 import {isAdmin,type Role} from "@/lib/modules";
+import {downloadExcel,readExcel,type SheetRows} from "@/lib/excel";
 
 type EventRow={id:string;title:string;event_date:string;category:string;notes:string|null;created_by:string;scope:string;start_time:string|null;end_time:string|null;location:string|null;owner_user_id:string|null;audience_type:string;audience_grade:string|null;audience_class_id:string|null;attendance_required:boolean;attendance_location_id:string|null;checkin_open_minutes:number;checkin_close_minutes:number};
 type Participant={event_id:string;user_id:string};
@@ -27,7 +28,7 @@ export default function SchoolCalendar({schoolId,userId,role,compact=false,focus
  const [title,setTitle]=useState(""),[day,setDay]=useState(ymd(new Date())),[start,setStart]=useState("07:00"),[end,setEnd]=useState(""),[category,setCategory]=useState("school"),[notes,setNotes]=useState(""),[location,setLocation]=useState(""),[scope,setScope]=useState<"school"|"personal">("school"),[selected,setSelected]=useState<string[]>([]);
  const [audienceType,setAudienceType]=useState("school"),[audienceGrade,setAudienceGrade]=useState(""),[audienceClass,setAudienceClass]=useState("");
  const [attendanceRequired,setAttendanceRequired]=useState(false),[attendanceLocation,setAttendanceLocation]=useState(""),[checkinOpen,setCheckinOpen]=useState(30),[checkinClose,setCheckinClose]=useState(60);
- const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[importRows,setImportRows]=useState<SheetRows>([]),[importFile,setImportFile]=useState("");
  const focusText=(focus||"").toLowerCase();
  const mode=focusText.includes("pribadi")?"personal":focusText.includes("pengguna")?"users":focusText.includes("kehadiran")?"attendance":focusText.includes("rekap")?"recap":"school";
  const canWrite=role!=="viewer";
@@ -68,6 +69,26 @@ export default function SchoolCalendar({schoolId,userId,role,compact=false,focus
  async function remove(x:EventRow){if(!db||!confirm("Hapus agenda ini?"))return;await run(async()=>{const {error}=await db.rpc("sc_delete_calendar_event",{p_school:schoolId,p_event:x.id});if(error)throw error;setOk("Agenda dihapus.")})}
  function position():Promise<{lat:number|null;lng:number|null;accuracy:number|null}>{return new Promise(resolve=>{if(!navigator.geolocation){resolve({lat:null,lng:null,accuracy:null});return}navigator.geolocation.getCurrentPosition(p=>resolve({lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy}),()=>resolve({lat:null,lng:null,accuracy:null}),{enableHighAccuracy:true,timeout:7000,maximumAge:30000})})}
  async function clock(x:EventRow,action:"in"|"out"){if(!db)return;await run(async()=>{const p=await position();const fn=action==="in"?"sc_event_check_in":"sc_event_check_out";const {error}=await db.rpc(fn,{p_school:schoolId,p_event:x.id,p_lat:p.lat,p_lng:p.lng,p_accuracy:p.accuracy});if(error)throw error;setOk(action==="in"?"Kehadiran agenda tercatat.":"Check-out agenda tercatat.")})}
+ async function agendaTemplate(){await downloadExcel("template-agenda-sekolah.xlsx",[
+  {name:"AGENDA",rows:[{Judul:"Rapat Koordinasi",Tanggal:ymd(new Date()),Jam_Mulai:"08:00",Jam_Selesai:"09:30",Kategori:"meeting",Sasaran:"school",Tingkat:"",Kelas:"",Lokasi_Agenda:"Ruang Rapat",Wajib_Presensi:"ya",Lokasi_Presensi:"Kampus Utama",Buka_Checkin_Menit:30,Tutup_Checkin_Menit:60,Keterangan:"Hapus baris contoh sebelum import"}]},
+  {name:"Panduan",rows:[
+   {Kolom:"Kategori",Ketentuan:"school, teaching, meeting, training, program, other"},
+   {Kolom:"Sasaran",Ketentuan:"school, grade, class. Agenda pengguna tertentu dibuat lewat form agar akun peserta tidak salah."},
+   {Kolom:"Tingkat/Kelas",Ketentuan:"Wajib bila Sasaran grade/class; nama kelas harus sama dengan Data Induk."},
+   {Kolom:"Presensi",Ketentuan:"Wajib_Presensi ya/tidak. Lokasi_Presensi harus sama dengan Lokasi Presensi aktif; kosongkan untuk validasi waktu saja."}
+  ]}
+ ])}
+ async function readAgendaImport(file?:File){if(!file)return;setError("");try{if(file.size>8_000_000)throw Error("File maksimal 8 MB.");const rr=await readExcel(file);if(rr.length>2000)throw Error("Maksimal 2.000 agenda per import.");setImportRows(rr);setImportFile(file.name);setOk(file.name+" siap diimport · "+rr.length+" baris.")}catch(e){setError(e instanceof Error?e.message:String(e));setImportRows([]);setImportFile("")}}
+ async function commitAgendaImport(){if(!db||!canWrite||!importRows.length)return;await run(async()=>{let imported=0,skipped=0;for(const raw of importRows){
+  const t=String(raw.Judul||raw.Agenda||"").trim(),d=String(raw.Tanggal||"").slice(0,10),s=String(raw.Jam_Mulai||"").trim(),en=String(raw.Jam_Selesai||"").trim(),cat=String(raw.Kategori||"school").trim().toLowerCase(),aud=String(raw.Sasaran||"school").trim().toLowerCase(),grade=String(raw.Tingkat||"").trim(),classText=String(raw.Kelas||"").trim(),locText=String(raw.Lokasi_Agenda||"").trim(),att=["ya","yes","true","1"].includes(String(raw.Wajib_Presensi||"").trim().toLowerCase()),attLocText=String(raw.Lokasi_Presensi||"").trim(),open=Number(raw.Buka_Checkin_Menit??30),close=Number(raw.Tutup_Checkin_Menit??60);
+  const klass=aud==="class"?classes.find(x=>x.name.trim().toLowerCase()===classText.toLowerCase()):undefined,attLoc=attLocText?locations.find(x=>x.name.trim().toLowerCase()===attLocText.toLowerCase()):undefined;
+  const validTime=(v:string)=>!v||/^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+  if(t.length<3||!/^\d{4}-\d{2}-\d{2}$/.test(d)||!validTime(s)||!validTime(en)||(s&&en&&en<s)||!["school","teaching","meeting","training","program","other"].includes(cat)||!["school","grade","class"].includes(aud)||(aud==="grade"&&!grade)||(aud==="class"&&!klass)||(att&&!s)||(attLocText&&!attLoc)||!Number.isInteger(open)||open<0||open>720||!Number.isInteger(close)||close<0||close>1440){skipped++;continue}
+  const {error:e}=await db.rpc("sc_save_calendar_event_v3",{p_school:schoolId,p_event:null,p_title:t,p_date:d,p_start:s||null,p_end:en||null,p_category:cat,p_notes:String(raw.Keterangan||raw.Catatan||"").trim(),p_location:locText,p_scope:"school",p_participants:[],p_audience_type:aud,p_audience_grade:aud==="grade"?grade:null,p_audience_class:aud==="class"?klass?.id||null:null,p_attendance_required:att,p_attendance_location:att&&attLoc?attLoc.id:null,p_checkin_open_minutes:open,p_checkin_close_minutes:close});if(e){skipped++;continue}imported++;
+ }
+ await db.from("sc_import_history").insert({school_id:schoolId,module_key:"calendar",import_kind:"school_agenda",file_name:importFile||"import.xlsx",row_count:importRows.length,imported_count:imported,skipped_count:skipped,details:{target:"sc_calendar_events"}});
+ setImportRows([]);setImportFile("");setOk("Import agenda selesai: "+imported+" masuk, "+skipped+" dilewati karena format/master data tidak cocok.")})}
+ async function exportAgenda(){await downloadExcel("agenda-sekolah-"+monthKey(cursor)+".xlsx",[{name:"AGENDA",rows:currentMonth.map(x=>({Judul:x.title,Tanggal:x.event_date,Jam_Mulai:(x.start_time||"").slice(0,5),Jam_Selesai:(x.end_time||"").slice(0,5),Kategori:x.category,Sasaran:x.audience_type,Tingkat:x.audience_grade||"",Kelas:className(x.audience_class_id),Lokasi_Agenda:x.location||"",Wajib_Presensi:x.attendance_required?"ya":"tidak",Lokasi_Presensi:locations.find(l=>l.id===x.attendance_location_id)?.name||"",Buka_Checkin_Menit:x.checkin_open_minutes,Tutup_Checkin_Menit:x.checkin_close_minutes,Keterangan:x.notes||""}))}])}
 
  const ownedBy=(x:EventRow,uid:string)=>x.owner_user_id===uid||x.audience_type==="school"||participants.some(p=>p.event_id===x.id&&p.user_id===uid);
  const visible=rows.filter(x=>mode==="personal"?x.owner_user_id===userId:mode==="users"?ownedBy(x,targetUser):mode==="attendance"?ownedBy(x,userId):x.scope==="school");
@@ -107,7 +128,7 @@ export default function SchoolCalendar({schoolId,userId,role,compact=false,focus
 
    <div className="agenda-workspace">
     {mode!=="recap"&&<section className="panel">
-     <div className="sectionhead"><div><span className="eyebrow">AGENDA HARI TERPILIH</span><h2>{human(selectedDay)}</h2><p className="muted">{selectedRows.length?selectedRows.length+" agenda pada tanggal ini.":"Belum ada agenda pada tanggal ini."}</p></div>{canWrite&&mode!=="users"&&<button className="button" onClick={()=>openNew(selectedDay)}><Plus size={15}/> Tambah Agenda</button>}</div>
+     <div className="sectionhead"><div><span className="eyebrow">AGENDA HARI TERPILIH</span><h2>{human(selectedDay)}</h2><p className="muted">{selectedRows.length?selectedRows.length+" agenda pada tanggal ini.":"Belum ada agenda pada tanggal ini."}</p></div>{canWrite&&mode!=="users"&&<div className="flow"><button className="button secondary" onClick={()=>void agendaTemplate()}><Download size={14}/> Template Excel</button><label className="button secondary"><Upload size={14}/> Import Excel<input hidden type="file" accept=".xlsx,.xls,.csv" onChange={e=>void readAgendaImport(e.target.files?.[0])}/></label><button className="button secondary" onClick={()=>void exportAgenda()}><Download size={14}/> Export Bulan</button><button className="button" onClick={()=>openNew(selectedDay)}><Plus size={15}/> Tambah Agenda</button></div>}</div>{importRows.length>0&&<div className="banner"><strong>{importFile} · {importRows.length} baris siap</strong><div className="flow" style={{marginTop:8}}><button className="button" disabled={busy} onClick={()=>void commitAgendaImport()}>Proses Import</button><button className="button secondary" onClick={()=>{setImportRows([]);setImportFile("")}}>Batal</button></div></div>}
      <div className="agenda-day-list">{selectedRows.map(x=><article className="agenda-card" key={x.id} onClick={()=>openEdit(x)}><div className="agenda-time"><b>{x.start_time?x.start_time.slice(0,5):"—"}</b><small>{x.end_time?x.end_time.slice(0,5):""}</small></div><div><strong>{x.title}</strong><small>{groupOf(x)} · {x.category}</small>{x.location&&<small><MapPin size={11}/> {x.location}</small>}{x.attendance_required&&<small><Clock3 size={11}/> Presensi agenda aktif</small>}</div><span className="pill">{participants.filter(p=>p.event_id===x.id).length} peserta</span></article>)}{!selectedRows.length&&<div className="empty">Tanggal ini masih kosong. Tidak ada tanda pada kalender sampai agenda ditambahkan.</div>}</div>
     </section>}
 
