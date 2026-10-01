@@ -33,7 +33,7 @@ export default function SchoolProfile({schoolId,role,focus}:{schoolId:string;rol
  async function run(fn:()=>Promise<void>){setError("");setOk("");setBusy(true);try{await fn();await load();setOk("Pengaturan sekolah tersimpan.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
  async function rpc(fn:string,args:Record<string,unknown>){if(!db)throw Error("Database belum siap.");const {error}=await db.rpc(fn,args);if(error)throw error}
  function set<K extends keyof Profile>(k:K,v:Profile[K]){setProfile(p=>({...p,[k]:v}))}
- const input=(k:Exclude<keyof Profile,"report_settings">,label:string,placeholder="")=><label className="field">{label}<input value={String(profile[k]||"")} onChange={e=>set(k,e.target.value as never)} placeholder={placeholder} disabled={!admin}/></label>;
+ const input=(k:Exclude<keyof Profile,"report_settings">,label:string,placeholder="")=><label className="field">{label}<input value={String(profile[k]||"")} onChange={e=>setProfile(p=>({...p,[k]:e.target.value}))} placeholder={placeholder} disabled={!admin}/></label>;
  const setting=(k:string,fallback:unknown)=>profile.report_settings?.[k]??fallback;
  const setSetting=(k:string,v:unknown)=>setProfile(p=>({...p,report_settings:{...(p.report_settings||{}),[k]:v}}));
  const save=<button className="button" disabled={!admin||busy||profile.name.trim().length<3} onClick={()=>void run(()=>rpc("sc_edit_school_details",{p_school:schoolId,p_payload:profile}))}>Simpan Pengaturan</button>;
