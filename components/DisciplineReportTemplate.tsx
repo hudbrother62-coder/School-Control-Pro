@@ -1,14 +1,50 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
+import {Eye,Save} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
-type School={name:string;address:string|null;principal_name:string|null;logo_url:string|null};
-type Template={title:string;subtitle:string;city:string;signerTitle:string;footer:string;showLogo:boolean};
-const base:Template={title:"LAPORAN DISIPLIN & PRESTASI SISWA",subtitle:"Rekap kejadian, pembinaan, tindak lanjut dan prestasi",city:"",signerTitle:"Kepala Sekolah",footer:"Dokumen ini dihasilkan dari School Control.",showLogo:true};
+import {loadReportIdentity,previewOfficialReport,type OfficialReportModel,type ReportIdentity} from "@/lib/report-engine";
+
+type Form={
+ title:string;subtitle:string;signerTitle:string;letterCity:string;footer:string;classificationCode:string;
+ showLogo:boolean;showNpsn:boolean;showPhone:boolean;showEmail:boolean;showWebsite:boolean;showSignature:boolean;showStamp:boolean;
+ layout:"formal"|"minimal"
+};
+const blank:Form={title:"LAPORAN DISIPLIN & PRESTASI SISWA",subtitle:"Rekap kejadian, pembinaan, tindak lanjut dan prestasi",signerTitle:"Kepala Sekolah",letterCity:"",footer:"School Control · Dokumen kesiswaan",classificationCode:"",showLogo:true,showNpsn:true,showPhone:true,showEmail:true,showWebsite:false,showSignature:true,showStamp:false,layout:"formal"};
+
 export default function DisciplineReportTemplate({schoolId}:{schoolId:string}){
- const db=useMemo(()=>browserDb(),[]),[school,setSchool]=useState<School>({name:"Sekolah",address:null,principal_name:null,logo_url:null}),[form,setForm]=useState<Template>(base),[ok,setOk]=useState("");
- useEffect(()=>{if(!db)return;(async()=>{const {data}=await db.from("sc_schools").select("name,address,principal_name,logo_url").eq("id",schoolId).maybeSingle();if(data)setSchool(data as School);try{const saved=localStorage.getItem("sc-discipline-report-template-"+schoolId);if(saved)setForm({...base,...JSON.parse(saved)})}catch{}})()},[db,schoolId]);
- function set<K extends keyof Template>(k:K,v:Template[K]){setForm(x=>({...x,[k]:v}))}
- function save(){localStorage.setItem("sc-discipline-report-template-"+schoolId,JSON.stringify(form));setOk("Template laporan tersimpan di perangkat ini. Identitas sekolah tetap diambil dari Pengaturan Sekolah.")}
- function printPreview(){const w=window.open("","_blank");if(!w)return;const logo=form.showLogo&&school.logo_url?"<img src='"+school.logo_url.replace(/'/g,"")+"' style='max-height:75px;max-width:90px'/>":"";w.document.write("<!doctype html><html><head><meta charset='utf-8'><title>Template Laporan</title><style>body{font:13px Arial;margin:36px;color:#111}.head{display:grid;grid-template-columns:100px 1fr 100px;align-items:center;text-align:center;border-bottom:3px solid #111;padding-bottom:12px}.head h1{font-size:19px;margin:0}.head p{margin:4px}.title{text-align:center;margin:28px 0}.box{border:1px solid #999;padding:16px;margin:12px 0}.sign{margin-left:auto;width:260px;margin-top:45px;text-align:center}.footer{margin-top:55px;border-top:1px solid #bbb;padding-top:8px;font-size:10px;color:#666}</style></head><body><div class='head'><div>"+logo+"</div><div><h1>"+school.name+"</h1><p>"+(school.address||"Alamat sekolah")+"</p></div><div></div></div><div class='title'><h2>"+form.title+"</h2><p>"+form.subtitle+"</p></div><div class='box'><b>Contoh isi laporan</b><p>Nama siswa, kelas, tanggal kejadian/prestasi, kategori, tindak lanjut, bukti dan status penyelesaian akan ditampilkan pada bagian ini.</p></div><div class='sign'><p>"+(form.city||"................")+", ................</p><p>"+form.signerTitle+"</p><br/><br/><b>"+(school.principal_name||"Nama Penandatangan")+"</b></div><div class='footer'>"+form.footer+"</div></body></html>");w.document.close();w.focus();w.print()}
- return <section className="panel"><div className="sectionhead"><div><h2>Template Laporan Disiplin & Prestasi</h2><p className="muted">Atur kop, judul, penandatangan dan footer. Logo, nama dan alamat sekolah mengambil data dari Pengaturan Sekolah → Branding / Profil.</p></div></div><div className="fields"><label className="field full">Judul Laporan<input value={form.title} onChange={e=>set("title",e.target.value)}/></label><label className="field full">Subjudul<input value={form.subtitle} onChange={e=>set("subtitle",e.target.value)}/></label><label className="field">Kota Penandatangan<input value={form.city} onChange={e=>set("city",e.target.value)} placeholder="Surabaya"/></label><label className="field">Jabatan Penandatangan<input value={form.signerTitle} onChange={e=>set("signerTitle",e.target.value)}/></label><label className="field full">Footer<input value={form.footer} onChange={e=>set("footer",e.target.value)}/></label><label className="field"><span>Tampilkan logo sekolah</span><input type="checkbox" checked={form.showLogo} onChange={e=>set("showLogo",e.target.checked)}/></label></div><div className="report-preview"><div className="report-head">{form.showLogo&&school.logo_url?<img src={school.logo_url} alt="Logo"/>:<div className="report-logo-placeholder">LOGO</div>}<div><b>{school.name}</b><span>{school.address||"Alamat sekolah belum diisi"}</span></div></div><h3>{form.title}</h3><p>{form.subtitle}</p><div className="report-sample">Area tabel laporan: siswa · kelas · jenis kejadian/prestasi · tindak lanjut · bukti · status</div><div className="report-sign"><span>{form.signerTitle}</span><b>{school.principal_name||"Nama penandatangan belum diisi"}</b></div></div><div className="flow" style={{marginTop:14}}><button className="button" onClick={save}>Simpan Template</button><button className="button secondary" onClick={printPreview}>Preview / Cetak</button></div>{ok&&<div className="banner success">{ok}</div>}</section>;
+ const db=useMemo(()=>browserDb(),[]);
+ const [identity,setIdentity]=useState<ReportIdentity|null>(null),[form,setForm]=useState<Form>(blank),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ async function load(){if(!db)return;try{const i=await loadReportIdentity(db,schoolId),s=i.report_settings||{};setIdentity(i);setForm({
+  title:String(s.discipline_title||blank.title),subtitle:String(s.discipline_subtitle||blank.subtitle),signerTitle:String(s.signer_title||blank.signerTitle),letterCity:String(s.letter_city||i.city||""),
+  footer:String(s.discipline_footer||blank.footer),classificationCode:String(s.classification_code||""),showLogo:s.show_logo!==false,showNpsn:s.show_npsn!==false,showPhone:s.show_phone!==false,
+  showEmail:s.show_email!==false,showWebsite:s.show_website===true,showSignature:s.show_signature!==false,showStamp:s.show_stamp===true,layout:s.layout==="minimal"?"minimal":"formal"
+ })}catch(e){setError(e instanceof Error?e.message:String(e))}}
+ useEffect(()=>{void load()},[db,schoolId]);
+ function set<K extends keyof Form>(k:K,v:Form[K]){setForm(x=>({...x,[k]:v}))}
+ async function save(){if(!db)return;setBusy(true);setError("");setOk("");try{
+  const patch={discipline_title:form.title,discipline_subtitle:form.subtitle,discipline_footer:form.footer,signer_title:form.signerTitle,letter_city:form.letterCity,classification_code:form.classificationCode,
+   show_logo:form.showLogo,show_npsn:form.showNpsn,show_phone:form.showPhone,show_email:form.showEmail,show_website:form.showWebsite,show_signature:form.showSignature,show_stamp:form.showStamp,layout:form.layout};
+  const {error}=await db.rpc("sc_update_report_settings",{p_school:schoolId,p_patch:patch});if(error)throw error;
+  await load();setOk("Template dokumen tersimpan di database sekolah dan berlaku lintas perangkat.");
+ }catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ function preview(){if(!identity)return;const i={...identity,report_settings:{...(identity.report_settings||{}),signer_title:form.signerTitle,letter_city:form.letterCity,classification_code:form.classificationCode,show_logo:form.showLogo,show_npsn:form.showNpsn,show_phone:form.showPhone,show_email:form.showEmail,show_website:form.showWebsite,show_signature:form.showSignature,show_stamp:form.showStamp,layout:form.layout}};const model:OfficialReportModel={moduleKey:"disiplin",documentType:"template_preview",prefix:"DIS",title:form.title,subtitle:form.subtitle,orientation:"portrait",confidentiality:"restricted",status:"draft",footer:form.footer,metrics:[{label:"Nama siswa",value:"Contoh Peserta Didik"},{label:"NIS",value:"12345"},{label:"Kelas",value:"VIII A"},{label:"Catatan terkait",value:"3"}],sections:[{title:"Contoh Rekap",columns:["Tanggal","Jenis/Kejadian","Kategori","Poin","Tindak Lanjut"],rows:[["01-10-2026","Contoh catatan","Kedisiplinan",10,"Pembinaan dan pemantauan"]]}],signatures:[{role:"Mengetahui / Menetapkan · "+form.signerTitle,name:i.principal_name||form.signerTitle,identifier:i.principal_nip?"NIP. "+i.principal_nip:null}]};previewOfficialReport(i,model)}
+ return <section className="panel"><div className="sectionhead"><div><h2>Template Dokumen Disiplin & Prestasi</h2><p className="muted">Template sekarang tersimpan pada workspace sekolah, bukan browser lokal. Pengaturan kop dan pengesahan dipakai oleh Report Engine bersama.</p></div></div>
+ <div className="fields">
+  <label className="field full">Judul default<input value={form.title} onChange={e=>set("title",e.target.value)}/></label>
+  <label className="field full">Subjudul<input value={form.subtitle} onChange={e=>set("subtitle",e.target.value)}/></label>
+  <label className="field">Jabatan penandatangan<input value={form.signerTitle} onChange={e=>set("signerTitle",e.target.value)}/></label>
+  <label className="field">Kota pada dokumen<input value={form.letterCity} onChange={e=>set("letterCity",e.target.value)}/></label>
+  <label className="field">Kode klasifikasi<input value={form.classificationCode} onChange={e=>set("classificationCode",e.target.value)} placeholder="Opsional, sesuai tata naskah sekolah/dinas"/></label>
+  <label className="field">Gaya dokumen<select value={form.layout} onChange={e=>set("layout",e.target.value as Form["layout"])}><option value="formal">Formal Indonesia</option><option value="minimal">Formal Minimal</option></select></label>
+  <label className="field full">Footer<input value={form.footer} onChange={e=>set("footer",e.target.value)}/></label>
+ </div>
+ <div className="report-template-options">
+  {([
+   ["showLogo","Logo sekolah"],["showNpsn","NPSN"],["showPhone","Telepon"],["showEmail","Email"],["showWebsite","Website"],["showSignature","Scan tanda tangan"],["showStamp","Stempel sekolah"]
+  ] as const).map(([key,label])=><label className="field" key={key}><span>{label}</span><input type="checkbox" checked={form[key]} onChange={e=>set(key,e.target.checked)}/></label>)}
+ </div>
+ <div className="banner"><strong>Sumber identitas dokumen</strong><p className="hint">Logo, nama sekolah, alamat, NPSN, NIP kepala sekolah, tanda tangan dan stempel diambil dari Pengaturan Sekolah → Branding. Template ini mengatur bagaimana elemen tersebut ditampilkan.</p></div>
+ <div className="flow" style={{marginTop:14}}><button className="button secondary" disabled={!identity} onClick={preview}><Eye size={15}/> Preview A4 Draft</button><button className="button" disabled={busy||form.title.trim().length<3} onClick={()=>void save()}><Save size={15}/>{busy?"Menyimpan…":"Simpan Template"}</button></div>
+ {error&&<div className="banner error" role="alert">{error}</div>}{ok&&<div className="banner success" role="status">{ok}</div>}
+ </section>;
 }
