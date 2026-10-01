@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
-import {LayoutDashboard,Database,BookOpenCheck,Sparkles,ClipboardCheck,HeartHandshake,ListChecks,WalletCards,BriefcaseBusiness,Settings,LogOut,Clock3,BarChart3,Search,ChevronRight,GraduationCap,Sun,Moon,CalendarDays,KeyRound,Plus,Pencil,Trash2,MapPin,Download,Upload,AlertTriangle,CheckCircle2} from "lucide-react";
+import {LayoutDashboard,Database,BookOpenCheck,Sparkles,ClipboardCheck,HeartHandshake,ListChecks,WalletCards,BriefcaseBusiness,Settings,LogOut,Clock3,BarChart3,Search,ChevronRight,GraduationCap,Sun,Moon,CalendarDays,KeyRound,Plus,Pencil,Trash2,MapPin,Download,Upload,AlertTriangle,CheckCircle2,FileText} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
 import {downloadOfficialDocx,downloadOfficialExcel,previewOfficialReport,printOfficialReport,type OfficialReportModel,type ReportIdentity} from "@/lib/report-engine";
 import "./demo.css";
