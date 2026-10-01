@@ -3,6 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import {Check,Download,MapPin,Plus,Save,Trash2,Upload,Users} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import {downloadExcel} from "@/lib/excel";
+import {downloadCsv,downloadWord,printPdf,reportTable} from "@/lib/report-export";
 import type {Role,Staff} from "@/lib/modules";
 
 type Req={id:string;user_id:string;kind:string;from_at:string|null;to_at:string|null;amount:number;reason:string;status:string;decision_note:string|null;created_at:string};
@@ -66,6 +67,20 @@ export default function HRLegacyParity({schoolId,userId,role,staff,focus}:{schoo
  async function sendPoint(t:Track){if(!db)return;await run(async()=>{const p=await position();if(!p)throw Error("GPS tidak tersedia.");const {error}=await db.from("sc_tracking_points").insert({school_id:schoolId,session_id:t.id,user_id:userId,latitude:p.lat,longitude:p.lng,accuracy:p.accuracy});if(error)throw error;setOk("Titik lokasi tersimpan.")})}
  async function stopTrack(t:Track){if(!db)return;await run(async()=>{const {error}=await db.from("sc_tracking_sessions").update({status:"completed",ended_at:new Date().toISOString()}).eq("id",t.id);if(error)throw error;setOk("Tracking selesai.")})}
  async function report(){await downloadExcel("laporan-hr-school-control.xlsx",[{name:"Pengajuan",rows:requests.map(r=>({Nama:staffName(r.user_id),Jenis:requestLabels[r.kind]||r.kind,Mulai:r.from_at,Selesai:r.to_at,Nominal:r.amount,Alasan:r.reason,Status:r.status}))},{name:"Jadwal",rows:schedules.map(s=>({Nama:s.name,Mulai:s.start_time,Selesai:s.end_time,Toleransi:s.late_tolerance_minutes}))},{name:"Lokasi",rows:locations.map(l=>({Nama:l.name,Alamat:l.address,Latitude:l.latitude,Longitude:l.longitude,Radius:l.radius_meters}))},{name:"Rekrutmen",rows:candidates.map(c=>({Nama:c.name,Lowongan:openings.find(o=>o.id===c.opening_id)?.title||"",Tahap:c.stage,Email:c.email,Telepon:c.phone,Sumber:c.source}))},{name:"Kunjungan",rows:visits.map(v=>({Judul:v.title,Tempat:v.place_name,Jadwal:v.scheduled_at,Status:v.status}))}])}
+ async function portableReport(kind:"word"|"pdf"|"csv"){
+  const requestRows=requests.map(r=>[staffName(r.user_id),requestLabels[r.kind]||r.kind,r.from_at||"",r.to_at||"",r.amount,r.reason,r.status]);
+  const scheduleRows=schedules.map(s=>[s.name,s.start_time,s.end_time,s.late_tolerance_minutes,s.active?"Aktif":"Nonaktif"]);
+  const locationRows=locations.map(l=>[l.name,l.address||"",l.latitude??"",l.longitude??"",l.radius_meters]);
+  const candidateRows=candidates.map(x=>[x.name,openings.find(o=>o.id===x.opening_id)?.title||"",x.stage,x.email||"",x.phone||"",x.source||""]);
+  const visitRows=visits.map(v=>[v.title,v.place_name||"",v.scheduled_at,v.status,v.notes||""]);
+  const html="<h2>Pengajuan</h2>"+reportTable(["Nama","Jenis","Mulai","Selesai","Nominal","Alasan","Status"],requestRows)+"<h2>Jadwal Kerja</h2>"+reportTable(["Nama","Mulai","Selesai","Toleransi","Status"],scheduleRows)+"<h2>Lokasi Kerja</h2>"+reportTable(["Nama","Alamat","Latitude","Longitude","Radius"],locationRows)+"<h2>Rekrutmen</h2>"+reportTable(["Nama","Lowongan","Tahap","Email","Telepon","Sumber"],candidateRows)+"<h2>Kunjungan</h2>"+reportTable(["Judul","Tempat","Jadwal","Status","Catatan"],visitRows);
+  if(kind==="word")downloadWord("laporan-hr-school-control.doc","Laporan HR & Payroll",html);
+  else if(kind==="pdf")printPdf("Laporan HR & Payroll",html);
+  else downloadCsv("laporan-hr-school-control.csv",["Jenis","Kolom1","Kolom2","Kolom3","Kolom4","Kolom5","Kolom6","Kolom7"],[
+   ...requestRows.map(r=>["Pengajuan",...r]),...scheduleRows.map(r=>["Jadwal",...r]),...locationRows.map(r=>["Lokasi",...r]),...candidateRows.map(r=>["Rekrutmen",...r]),...visitRows.map(r=>["Kunjungan",...r])
+  ]);
+  setOk("Laporan "+kind.toUpperCase()+" berhasil dibuat.");
+ }
  const feedback=<>{error&&<div className="banner error">{error}</div>}{ok&&<div className="banner success">{ok}</div>}</>;
  const visibleReq=manager?requests:requests.filter(r=>r.user_id===userId);
 
@@ -83,5 +98,5 @@ export default function HRLegacyParity({schoolId,userId,role,staff,focus}:{schoo
 
  if(focus==="Pelacakan Lokasi")return <section className="panel"><div className="sectionhead"><div><h2>Pelacakan Lokasi Tugas</h2><p className="muted">Tracking hanya dimulai secara eksplisit. Saat aktif, browser mengirim titik GPS paling sering setiap 30 detik sampai tugas dihentikan.</p></div><MapPin/></div><div className="fields"><label className="field full">Tujuan tracking<input value={name} onChange={e=>setName(e.target.value)} placeholder="Contoh: Kunjungan dinas luar"/></label><button className="button" onClick={()=>void startTrack()}>Mulai Tracking</button></div>{tracks.filter(t=>manager||t.user_id===userId).map(t=><div className="entry" key={t.id}><div><strong>{t.purpose}</strong><small>{new Date(t.started_at).toLocaleString("id-ID")} · {t.status}</small></div>{t.user_id===userId&&t.status==="active"&&<div className="flow"><button className="button secondary" onClick={()=>void sendPoint(t)}>Kirim Titik</button><button className="button" onClick={()=>void stopTrack(t)}>Selesaikan</button></div>}</div>)}{feedback}</section>;
 
- return <section className="panel"><div className="sectionhead"><div><h2>Laporan HR & Payroll</h2><p className="muted">Gabungkan pengajuan, jadwal, lokasi, rekrutmen dan kunjungan dalam satu workbook.</p></div><Download/></div><button className="button" onClick={()=>void report()}><Download size={15}/> Export Excel Lengkap</button><div className="grid" style={{marginTop:18}}><div className="card"><label>Pengajuan</label><strong>{requests.length}</strong></div><div className="card"><label>Jadwal</label><strong>{schedules.length}</strong></div><div className="card"><label>Lokasi</label><strong>{locations.length}</strong></div><div className="card"><label>Kandidat</label><strong>{candidates.length}</strong></div></div>{feedback}</section>;
+ return <section className="panel"><div className="sectionhead"><div><h2>Laporan HR & Payroll</h2><p className="muted">Gabungkan pengajuan, jadwal, lokasi, rekrutmen dan kunjungan dari sumber data yang sama.</p></div><Download/></div><div className="flow"><button className="button" onClick={()=>void report()}><Download size={15}/> Excel</button><button className="button secondary" onClick={()=>portableReport("word")}><Download size={15}/> Word</button><button className="button secondary" onClick={()=>portableReport("csv")}><Download size={15}/> CSV</button><button className="button secondary" onClick={()=>portableReport("pdf")}><Download size={15}/> PDF / Cetak</button></div><div className="grid" style={{marginTop:18}}><div className="card"><label>Pengajuan</label><strong>{requests.length}</strong></div><div className="card"><label>Jadwal</label><strong>{schedules.length}</strong></div><div className="card"><label>Lokasi</label><strong>{locations.length}</strong></div><div className="card"><label>Kandidat</label><strong>{candidates.length}</strong></div></div>{feedback}</section>;
 }
