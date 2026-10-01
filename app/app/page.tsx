@@ -2,43 +2,46 @@
 
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import type {User} from "@supabase/supabase-js";
 import {LayoutDashboard,Users,Clock3,Activity,Sparkles,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,ChevronRight,Plus,RefreshCw,ReceiptText,CalendarDays,KeyRound,CircleHelp} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
-import StaffWorkflows from "@/components/StaffWorkflows";
-import SchoolData from "@/components/SchoolData";
-import MasterAdvanced from "@/components/MasterAdvanced";
-import MasterHubV2 from "@/components/MasterHubV2";
-import AIWorkbench from "@/components/AIWorkbench";
-import DocumentCenter from "@/components/DocumentCenter";
-import Supervision from "@/components/Supervision";
-import SchoolProfile from "@/components/SchoolProfile";
-import CommandBoard from "@/components/CommandBoard";
-import FinancePanel from "@/components/FinancePanel";
-import PayrollPanel from "@/components/PayrollPanel";
-import BKPanel from "@/components/BKPanel";
-import AcademicAdvanced from "@/components/AcademicAdvanced";
-import TeachingJournal from "@/components/TeachingJournal";
-import GradeBook from "@/components/GradeBook";
-import DisciplinePanel from "@/components/DisciplinePanel";
-import DisciplineReportTemplate from "@/components/DisciplineReportTemplate";
-import DashboardOverview from "@/components/DashboardOverview";
-import PaymentWall from "@/components/PaymentWall";
-import BillingPanel from "@/components/BillingPanel";
-import PerformanceReviews from "@/components/PerformanceReviews";
-import SchoolCalendar from "@/components/SchoolCalendar";
-import AccessPanel from "@/components/AccessPanel";
-import GuideCenter from "@/components/GuideCenter";
-import AIProjectManager from "@/components/AIProjectManager";
-import AcademicLegacyParity from "@/components/AcademicLegacyParity";
-import DisciplineLegacyParity from "@/components/DisciplineLegacyParity";
-import ManagementLegacyParity from "@/components/ManagementLegacyParity";
-import HRLegacyParity from "@/components/HRLegacyParity";
-import FinanceLegacyParity from "@/components/FinanceLegacyParity";
-import CommandLegacyParity from "@/components/CommandLegacyParity";
-import WorkspaceTools from "@/components/WorkspaceTools";
-import SupervisorLegacyParity from "@/components/SupervisorLegacyParity";
+import LiveClock from "@/components/LiveClock";
 import {modules,canAccess,isAdmin,ROLE_LABELS,type School,type Role,type ModuleKey,type Membership,type Staff} from "@/lib/modules";
+
+const PanelLoading=()=> <div className="panel" role="status" aria-live="polite">Memuat fitur…</div>;
+const StaffWorkflows=dynamic(()=>import("@/components/StaffWorkflows"),{loading:PanelLoading});
+const SchoolData=dynamic(()=>import("@/components/SchoolData"),{loading:PanelLoading});
+const MasterHubV2=dynamic(()=>import("@/components/MasterHubV2"),{loading:PanelLoading});
+const AIWorkbench=dynamic(()=>import("@/components/AIWorkbench"),{loading:PanelLoading});
+const DocumentCenter=dynamic(()=>import("@/components/DocumentCenter"),{loading:PanelLoading});
+const Supervision=dynamic(()=>import("@/components/Supervision"),{loading:PanelLoading});
+const SchoolProfile=dynamic(()=>import("@/components/SchoolProfile"),{loading:PanelLoading});
+const CommandBoard=dynamic(()=>import("@/components/CommandBoard"),{loading:PanelLoading});
+const FinancePanel=dynamic(()=>import("@/components/FinancePanel"),{loading:PanelLoading});
+const PayrollPanel=dynamic(()=>import("@/components/PayrollPanel"),{loading:PanelLoading});
+const BKPanel=dynamic(()=>import("@/components/BKPanel"),{loading:PanelLoading});
+const AcademicAdvanced=dynamic(()=>import("@/components/AcademicAdvanced"),{loading:PanelLoading});
+const TeachingJournal=dynamic(()=>import("@/components/TeachingJournal"),{loading:PanelLoading});
+const GradeBook=dynamic(()=>import("@/components/GradeBook"),{loading:PanelLoading});
+const DisciplinePanel=dynamic(()=>import("@/components/DisciplinePanel"),{loading:PanelLoading});
+const DisciplineReportTemplate=dynamic(()=>import("@/components/DisciplineReportTemplate"),{loading:PanelLoading});
+const DashboardOverview=dynamic(()=>import("@/components/DashboardOverview"),{loading:PanelLoading});
+const PaymentWall=dynamic(()=>import("@/components/PaymentWall"),{loading:PanelLoading});
+const BillingPanel=dynamic(()=>import("@/components/BillingPanel"),{loading:PanelLoading});
+const PerformanceReviews=dynamic(()=>import("@/components/PerformanceReviews"),{loading:PanelLoading});
+const SchoolCalendar=dynamic(()=>import("@/components/SchoolCalendar"),{loading:PanelLoading});
+const AccessPanel=dynamic(()=>import("@/components/AccessPanel"),{loading:PanelLoading});
+const GuideCenter=dynamic(()=>import("@/components/GuideCenter"),{loading:PanelLoading});
+const AIProjectManager=dynamic(()=>import("@/components/AIProjectManager"),{loading:PanelLoading});
+const AcademicLegacyParity=dynamic(()=>import("@/components/AcademicLegacyParity"),{loading:PanelLoading});
+const DisciplineLegacyParity=dynamic(()=>import("@/components/DisciplineLegacyParity"),{loading:PanelLoading});
+const ManagementLegacyParity=dynamic(()=>import("@/components/ManagementLegacyParity"),{loading:PanelLoading});
+const HRLegacyParity=dynamic(()=>import("@/components/HRLegacyParity"),{loading:PanelLoading});
+const FinanceLegacyParity=dynamic(()=>import("@/components/FinanceLegacyParity"),{loading:PanelLoading});
+const CommandLegacyParity=dynamic(()=>import("@/components/CommandLegacyParity"),{loading:PanelLoading});
+const WorkspaceTools=dynamic(()=>import("@/components/WorkspaceTools"),{loading:PanelLoading});
+const SupervisorLegacyParity=dynamic(()=>import("@/components/SupervisorLegacyParity"),{loading:PanelLoading});
 
 type SchoolAccess={school:School;role:Role};
 type Attendance={id:string;duty_date:string;check_in_at:string|null;check_out_at:string|null;status:string;source:string;user_id:string;notes:string|null};
@@ -57,7 +60,7 @@ export default function Home(){
  const [loading,setLoading]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState("");
  const [email,setEmail]=useState(""),[password,setPassword]=useState(""),[register,setRegister]=useState(false);
  const [newSchool,setNewSchool]=useState(""),[inviteCode,setInviteCode]=useState(""),[inviteRole,setInviteRole]=useState<Role>("teacher"),[inviteResult,setInviteResult]=useState("");
- const [theme,setTheme]=useState("light"),[openMenu,setOpenMenu]=useState(false),[expandedNav,setExpandedNav]=useState<ModuleKey|null>(null),[featureFocus,setFeatureFocus]=useState(""),[liveTime,setLiveTime]=useState(new Date());
+ const [theme,setTheme]=useState("light"),[openMenu,setOpenMenu]=useState(false),[expandedNav,setExpandedNav]=useState<ModuleKey|null>(null),[featureFocus,setFeatureFocus]=useState("");
  const [staff,setStaff]=useState<Staff[]>([]),[attendance,setAttendance]=useState<Attendance[]>([]),[records,setRecords]=useState<RecordItem[]>([]);
  const [recordTitle,setRecordTitle]=useState(""),[recordNotes,setRecordNotes]=useState(""),[summary,setSummary]=useState<Summary|null>(null),[performanceUser,setPerformanceUser]=useState("");const [ownAttendance,setOwnAttendance]=useState<Attendance|null>(null);
  const [aiPrompt,setAiPrompt]=useState(""),[aiAnswer,setAiAnswer]=useState(""),[subscription,setSubscription]=useState<{status:string;trial_ends_at:string;current_period_end:string|null}|null>(null),[subscriptionSchoolId,setSubscriptionSchoolId]=useState("");
@@ -65,7 +68,7 @@ export default function Home(){
  const access=schools.find(s=>s.school.id===schoolId); const role=access?.role||"viewer";
  const selected=modules.find(m=>m.key===module)||modules[0]; const visible=modules.filter(m=>canAccess(m,role));
  const isManager=isAdmin(role)||role==="hr";
- useEffect(()=>{setMounted(true);const t=localStorage.getItem("school-control-theme")||"light";setTheme(t);document.body.dataset.theme=t;const id=setInterval(()=>setLiveTime(new Date()),1000);return()=>clearInterval(id)},[]);
+ useEffect(()=>{setMounted(true);const t=localStorage.getItem("school-control-theme")||"light";setTheme(t);document.body.dataset.theme=t},[]);
  useEffect(()=>{if(!db)return;void db.auth.getUser().then(({data})=>setUser(data.user)); const {data:{subscription:sub}}=db.auth.onAuthStateChange((_event,session)=>setUser(session?.user||null));return ()=>sub.unsubscribe();},[db]);
  useEffect(()=>{if(!db||!user){setSchools([]);setSchoolId("");return;}let active=true;(async()=>{
  const {data:m,error:e}=await db.from("sc_members").select("school_id,role").eq("user_id",user.id);
@@ -118,7 +121,7 @@ export default function Home(){
   {module==="overview"&&<><DashboardOverview schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>{(!featureFocus||featureFocus==="Agenda & Deadline")&&<SchoolCalendar schoolId={schoolId} userId={user.id} role={role} compact/>}</>}
   {module==="master"&&<MasterHubV2 schoolId={schoolId} role={role} focus={featureFocus}/>}\n  {module==="calendar"&&<SchoolCalendar schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
   {module==="attendance"&&<>
- {(!featureFocus||featureFocus==="Check-in/check-out")&&<section className="panel"><div className="flow" style={{justifyContent:"space-between"}}><div><h2>Presensi Realtime</h2><strong className="live-clock">{liveTime.toLocaleTimeString("id-ID",{timeZone:access?.school.timezone||"Asia/Jakarta",hour:"2-digit",minute:"2-digit",second:"2-digit"})}</strong></div><span className="pill">{myAttendance?.status||"Belum presensi"}</span></div>{!myStaff?<div className="banner"><span>Profil presensi belum aktif.</span> <button className="button secondary" disabled={loading} onClick={()=>void selfStaff()}>Aktifkan Presensi</button></div>:<div className="grid" style={{gridTemplateColumns:"repeat(2,minmax(0,1fr))",marginBottom:16}}><div className="card"><label>Jam masuk</label><strong style={{fontSize:23}}>{myAttendance?.check_in_at?formatDate(myAttendance.check_in_at):"—"}</strong></div><div className="card"><label>Jam pulang</label><strong style={{fontSize:23}}>{myAttendance?.check_out_at?formatDate(myAttendance.check_out_at):"—"}</strong></div></div>}<div className="flow"><button className="button" disabled={loading||!myStaff||!!myAttendance?.check_in_at} onClick={()=>void clock("sc_check_in_geo")}>Absen Masuk</button><button className="button secondary" disabled={loading||!myAttendance?.check_in_at||!!myAttendance?.check_out_at} onClick={()=>void clock("sc_check_out_geo")}>Absen Pulang</button></div></section>}
+ {(!featureFocus||featureFocus==="Check-in/check-out")&&<section className="panel"><div className="flow" style={{justifyContent:"space-between"}}><div><h2>Presensi Realtime</h2><strong className="live-clock"><LiveClock timezone={access?.school.timezone||"Asia/Jakarta"}/></strong></div><span className="pill">{myAttendance?.status||"Belum presensi"}</span></div>{!myStaff?<div className="banner"><span>Profil presensi belum aktif.</span> <button className="button secondary" disabled={loading} onClick={()=>void selfStaff()}>Aktifkan Presensi</button></div>:<div className="grid" style={{gridTemplateColumns:"repeat(2,minmax(0,1fr))",marginBottom:16}}><div className="card"><label>Jam masuk</label><strong style={{fontSize:23}}>{myAttendance?.check_in_at?formatDate(myAttendance.check_in_at):"—"}</strong></div><div className="card"><label>Jam pulang</label><strong style={{fontSize:23}}>{myAttendance?.check_out_at?formatDate(myAttendance.check_out_at):"—"}</strong></div></div>}<div className="flow"><button className="button" disabled={loading||!myStaff||!!myAttendance?.check_in_at} onClick={()=>void clock("sc_check_in_geo")}>Absen Masuk</button><button className="button secondary" disabled={loading||!myAttendance?.check_in_at||!!myAttendance?.check_out_at} onClick={()=>void clock("sc_check_out_geo")}>Absen Pulang</button></div></section>}
  {(!featureFocus||featureFocus==="Riwayat kehadiran")&&<section className="panel"><h2>Riwayat Kehadiran {isManager?"Sekolah":"Pribadi"}</h2><div className="tablewrap"><table className="data-table"><thead><tr><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th></tr></thead><tbody>{attendance.map(a=><tr key={a.id}><td>{a.duty_date}</td><td>{formatDate(a.check_in_at)}</td><td>{formatDate(a.check_out_at)}</td><td><span className="pill">{a.status}</span></td></tr>)}</tbody></table>{!attendance.length&&<div className="empty">Belum ada presensi tercatat.</div>}</div></section>}
  {(!featureFocus||featureFocus==="Jadwal/shift")&&<StaffWorkflows kind="staff" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>}
  {(!featureFocus||featureFocus==="Koreksi beralasan")&&<StaffWorkflows kind="attendance" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>}
