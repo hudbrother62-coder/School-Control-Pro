@@ -42,6 +42,7 @@ const FinanceLegacyParity=dynamic(()=>import("@/components/FinanceLegacyParity")
 const CommandLegacyParity=dynamic(()=>import("@/components/CommandLegacyParity"),{loading:PanelLoading});
 const WorkspaceTools=dynamic(()=>import("@/components/WorkspaceTools"),{loading:PanelLoading});
 const SupervisorLegacyParity=dynamic(()=>import("@/components/SupervisorLegacyParity"),{loading:PanelLoading});
+const ReportArchive=dynamic(()=>import("@/components/ReportArchive"),{loading:PanelLoading});
 
 type SchoolAccess={school:School;role:Role};
 type Attendance={id:string;duty_date:string;check_in_at:string|null;check_out_at:string|null;status:string;source:string;user_id:string;notes:string|null};
@@ -151,7 +152,7 @@ export default function Home(){
  {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP"].includes(featureFocus))&&<AIWorkbench module="kepsek_ai" schoolId={schoolId} focus={featureFocus}/>}
  {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Pusat dokumen","Persetujuan dokumen"].includes(featureFocus))&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
  {featureFocus==="Asisten Kepsek"&&<AIProjectManager schoolId={schoolId} module="kepsek_ai" mode="chat"/>}
- {["Kinerja Kepala Sekolah","Workflow Dokumen","Sumber Dokumen","Pustaka Format"].includes(featureFocus)&&<ManagementLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
+ {["Kinerja Kepala Sekolah","Workflow Dokumen","Sumber Dokumen","Pustaka Format"].includes(featureFocus)&&<ManagementLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}\n {featureFocus==="Arsip Laporan"&&<ReportArchive schoolId={schoolId}/>}
  {(!featureFocus||featureFocus==="Supervisi guru")&&<Supervision schoolId={schoolId} role={role} staff={staff} userId={user.id}/>}
  {!featureFocus&&<SchoolProfile schoolId={schoolId} role={role}/>}
  </>}
