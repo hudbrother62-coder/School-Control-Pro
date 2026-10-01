@@ -47,7 +47,7 @@ function step(module:ModuleKey,feature:string,title:string,instruction:string,ro
 }
 
 export function planWorkflow(input:string,role:Role):WorkflowPlan{
- const text=input.toLocaleLowerCase("id-ID").normalize("NFKC").replace(/[^p{L}p{N}s-]/gu," ").replace(/s+/g," ").trim();
+ const text=input.toLocaleLowerCase("id-ID").normalize("NFKC").trim().split(" ").filter(Boolean).join(" ");
  if(!text)return {title:"Jelaskan pekerjaan",reason:"Tulis tujuan yang ingin diselesaikan.",steps:[]};
 
  if(has(text,"sering alpa","sering tidak hadir")&&has(text,"pembinaan","pelanggaran","surat panggilan")){
