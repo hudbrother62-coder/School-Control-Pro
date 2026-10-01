@@ -66,7 +66,7 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
    if(user){const {data:st}=await db.from("sc_staff").select("name").eq("school_id",schoolId).eq("user_id",user.id).maybeSingle();setTeacherName(st?.name||"")}
   }
   if(module==="kepsek_ai"){
-   const {data:school}=await db.from("sc_schools").select("name,npsn,school_type,education_level,accreditation,address,province,city,district,village,academic_year,semester,principal_name,vision,mission").eq("id",schoolId).maybeSingle();
+   const {data:school}=await db.from("sc_schools").select("name,npsn,school_type,education_level,accreditation,address,province,city,district,village,academic_year,semester,principal_name,motto,report_settings").eq("id",schoolId).maybeSingle();
    if(school)setSchoolFacts(Object.fromEntries(Object.entries(school).filter(([,v])=>v!==null&&String(v).trim()!=="").map(([k,v])=>[k,String(v)])));
   }
  }
