@@ -144,6 +144,13 @@ export default function DemoWorkspace(){
  const calendarFeature=active==="calendar";
  const attendanceFeature=active==="attendance"&&feature==="Check-in/Check-out";
  const filtered=rows.filter(x=>Object.values(x.fields).join(" ").toLowerCase().includes(query.toLowerCase()));
+ function routeReport(module:string,target?:string){
+  const map:Record<string,Key>={buku_kerja:"academic",disiplin:"student",bk:"counseling",command:"execution",sikas:"finance",gajian:"payroll",kepsek_ai:"planning"};
+  const k=map[module];if(!k)return;let targetFeature=target||menu.find(x=>x[0]===k)?.[3][0]||"";
+  if(k==="student"&&targetFeature==="Template Laporan")targetFeature="Rekap & Laporan";
+  chooseFeature(k,targetFeature);
+ }
+ function archiveReport(row:Saved){persist({...saved,"reports::__archive__":[row,...(saved["reports::__archive__"]||[])]})}
  return <div className="demo-shell"><aside><div className="demo-brand"><img src="/school-control-mark.svg" width={38} height={38} alt=""/><span><b>School Control</b><small>Demo · akses setara paket aktif</small></span></div><nav>{menu.map(([k,label,Icon,features])=><div className="demo-navitem" key={k}><button className={active===k?"active":""} onClick={()=>choose(k)}><Icon size={18}/>{label}<ChevronRight className={expanded===k?"open":""} size={15}/></button>{expanded===k&&<div className="demo-navchildren">{features.map(x=><button key={x} className={active===k&&feature===x?"selected":""} onClick={()=>chooseFeature(k,x)}>{x}</button>)}</div>}</div>)}</nav><button className="demo-exit" onClick={logout}><LogOut size={17}/> Keluar</button></aside>
  <main><header><div><span className="demo-kicker">SCHOOL CONTROL / DEMO AKSES PENUH</span><h1>{feature}</h1><p>{current[1]} · input sekarang memakai popup seperti akun produksi.</p></div><div className="demo-head-actions"><button className="demo-theme" onClick={toggleTheme}>{theme==="light"?<Moon size={16}/>:<Sun size={16}/>} {theme==="light"?"Gelap":"Terang"}</button><label className="demo-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Cari data halaman ini"/></label></div></header><div className="demo-content">
   {active==="overview"?<Dashboard feature={feature}/>:<>
