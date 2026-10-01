@@ -37,8 +37,8 @@ export function defaultSignatures(identity:ReportIdentity,preparedBy?:string):Re
  ];
 }
 
-export async function issueReport(db:any,schoolId:string,model:OfficialReportModel):Promise<IssuedReport>{
- const snapshot={...model,generated_at:new Date().toISOString()};
+export async function issueReport(db:any,schoolId:string,model:OfficialReportModel,identity?:ReportIdentity):Promise<IssuedReport>{
+ const snapshot={model,identity:identity||null,generated_at:new Date().toISOString()};
  const {data,error}=await db.rpc("sc_issue_report_document",{
   p_school:schoolId,p_module:model.moduleKey,p_type:model.documentType,p_title:model.title,p_snapshot:snapshot,
   p_prefix:model.prefix,p_period_start:model.periodStart||null,p_period_end:model.periodEnd||null
@@ -162,7 +162,7 @@ export async function downloadOfficialDocx(identity:ReportIdentity,model:Officia
 }
 
 export async function issueAndExport(db:any,schoolId:string,identity:ReportIdentity,model:OfficialReportModel,format:"pdf"|"docx"|"xlsx"){
- const issued=await issueReport(db,schoolId,model);
+ const issued=await issueReport(db,schoolId,model,identity);
  if(format==="pdf")printOfficialReport(identity,{...model,status:"issued"},issued.document_number);
  if(format==="docx")await downloadOfficialDocx(identity,{...model,status:"issued"},issued.document_number);
  if(format==="xlsx")await downloadOfficialExcel({...model,status:"issued"},issued.document_number);
