@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
+import SmartSelect from "@/components/SmartSelect";
 import {browserDb} from "@/lib/supabase";
 import {isAdmin,type Role} from "@/lib/modules";
 type Fact={key:string;value:string;updated_at:string};
@@ -9,6 +10,19 @@ type Profile={
  semester:string;motto:string;logo_url:string
 };
 const blank:Profile={name:"",npsn:"",address:"",academic_year:"2026/2027",timezone:"Asia/Jakarta",school_type:"",education_level:"",accreditation:"",principal_name:"",phone:"",email:"",website:"",province:"",city:"",district:"",village:"",postal_code:"",semester:"Ganjil",motto:"",logo_url:""};
+const educationOptions=[
+ {value:"PAUD",label:"PAUD",subtitle:"Pendidikan anak usia dini"},
+ {value:"TK",label:"TK",subtitle:"Taman Kanak-kanak"},
+ {value:"SD",label:"SD",subtitle:"Kelas 1–6"},
+ {value:"MI",label:"MI",subtitle:"Kelas 1–6"},
+ {value:"SMP",label:"SMP",subtitle:"Kelas 7–9"},
+ {value:"MTs",label:"MTs",subtitle:"Kelas 7–9"},
+ {value:"SMA",label:"SMA",subtitle:"Kelas 10–12"},
+ {value:"MA",label:"MA",subtitle:"Kelas 10–12"},
+ {value:"SMK",label:"SMK",subtitle:"Kelas 10–12 / konsentrasi keahlian"},
+ {value:"SLB",label:"SLB",subtitle:"Jenjang khusus"},
+ {value:"PKBM",label:"PKBM",subtitle:"Pendidikan nonformal"}
+];
 
 export default function SchoolProfile({schoolId,role,focus}:{schoolId:string;role:Role;focus?:string}){
  const db=useMemo(()=>browserDb(),[]),admin=isAdmin(role);
@@ -28,10 +42,10 @@ export default function SchoolProfile({schoolId,role,focus}:{schoolId:string;rol
  const showBrand=!f||f.includes("branding");
  const showFacts=!f||f.includes("memori");
  return <>
-  {showGeneral&&<section className="panel"><div className="sectionhead"><div><h2>Profil Sekolah</h2><p className="muted">Identitas dasar dipakai oleh laporan, kuitansi, dokumen dan template sekolah.</p></div></div><div className="fields">{input("name","Nama Sekolah")}{input("npsn","NPSN")}{input("school_type","Status / Jenis Sekolah","Negeri / Swasta")}{input("education_level","Jenjang","SD / SMP / SMA / SMK")}{input("accreditation","Akreditasi")}{input("principal_name","Nama Kepala Sekolah")}</div><div style={{marginTop:14}}>{save}</div></section>}
+  {showGeneral&&<section className="panel"><div className="sectionhead"><div><h2>Profil Sekolah</h2><p className="muted">Identitas dasar dipakai oleh laporan, kuitansi, dokumen dan template sekolah.</p></div></div><div className="fields">{input("name","Nama Sekolah")}{input("npsn","NPSN")}{input("school_type","Status / Jenis Sekolah","Negeri / Swasta")}<div className="field"><SmartSelect label="Jenjang utama" value={profile.education_level} options={educationOptions} onChange={v=>set("education_level",v)} allowCustom customLabel="Gunakan jenjang ini" disabled={!admin}/><small className="hint">Jenjang ini menjadi default kelas, perangkat ajar AI, dan filter akademik. Pilihan di luar daftar tetap diperbolehkan.</small></div>{input("accreditation","Akreditasi")}{input("principal_name","Nama Kepala Sekolah")}</div><div style={{marginTop:14}}>{save}</div></section>}
   {showContact&&<section className="panel"><h2>Identitas & Kontak</h2><div className="fields">{input("phone","Telepon / WhatsApp")}{input("email","Email Sekolah")}{input("website","Website")}{input("principal_name","Kepala Sekolah")}</div><div style={{marginTop:14}}>{save}</div></section>}
   {showLocation&&<section className="panel"><h2>Lokasi Sekolah</h2><div className="fields"><label className="field full">Alamat lengkap<textarea value={profile.address} onChange={e=>set("address",e.target.value)} disabled={!admin}/></label>{input("province","Provinsi")}{input("city","Kabupaten / Kota")}{input("district","Kecamatan")}{input("village","Kelurahan / Desa")}{input("postal_code","Kode Pos")}{input("timezone","Zona Waktu")}</div><div style={{marginTop:14}}>{save}</div></section>}
-  {showAcademic&&<section className="panel"><h2>Pengaturan Akademik</h2><div className="fields">{input("academic_year","Tahun Ajaran")}{input("semester","Semester")}{input("education_level","Jenjang")}</div><div style={{marginTop:14}}>{save}</div></section>}
+  {showAcademic&&<section className="panel"><h2>Pengaturan Akademik</h2><div className="fields">{input("academic_year","Tahun Ajaran")}{input("semester","Semester")}<div className="field"><SmartSelect label="Jenjang" value={profile.education_level} options={educationOptions} onChange={v=>set("education_level",v)} allowCustom customLabel="Gunakan jenjang ini" disabled={!admin}/></div></div><div style={{marginTop:14}}>{save}</div></section>}
   {showBrand&&<section className="panel"><h2>Branding Dokumen</h2><p className="muted">Identitas ini dapat dipakai oleh template laporan Disiplin, BK, keuangan, supervisi dan slip.</p><div className="fields">{input("logo_url","URL Logo Sekolah")}{input("motto","Motto / Tagline")}{input("principal_name","Nama Penandatangan Utama")}</div>{profile.logo_url&&<div className="school-logo-preview"><img src={profile.logo_url} alt="Logo sekolah"/></div>}<div style={{marginTop:14}}>{save}</div></section>}
   {showFacts&&<section className="panel"><h2>Memori Sekolah untuk AI</h2><p className="muted">Simpan visi, misi, karakteristik, program prioritas dan fakta sekolah yang sudah diverifikasi. Jangan memasukkan catatan BK rahasia.</p>{admin&&<div className="fields"><label className="field">Topik<input value={key} onChange={e=>setKey(e.target.value)} placeholder="Contoh: Visi Sekolah"/></label><label className="field full">Informasi<textarea value={value} onChange={e=>setValue(e.target.value)}/></label><button className="button" disabled={busy||key.trim().length<2||!value.trim()} onClick={()=>void run(async()=>{await rpc("sc_save_school_fact",{p_school:schoolId,p_key:key,p_value:value});setKey("");setValue("")})}>Simpan Fakta</button></div>}{facts.map(x=><div className="entry" key={x.key}><div><strong>{x.key}</strong><small>{x.value}</small></div>{admin&&<div className="flow"><button className="button secondary" onClick={()=>{setKey(x.key);setValue(x.value)}}>Edit</button><button className="button danger" onClick={()=>{if(confirm("Hapus informasi ini?"))void run(()=>rpc("sc_delete_school_fact",{p_school:schoolId,p_key:x.key}))}}>Hapus</button></div>}</div>)}{!facts.length&&<div className="empty">Belum ada memori sekolah.</div>}</section>}
   {error&&<div className="banner error" role="alert">{error}</div>}{ok&&<div className="banner success" role="status">{ok}</div>}
