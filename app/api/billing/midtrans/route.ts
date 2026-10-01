@@ -12,13 +12,17 @@ export async function POST(req:NextRequest){
   const expected=createHash("sha512").update(order_id+status_code+gross_amount+serverKey).digest("hex");
   const provided=String(signature_key).toLowerCase();
   if(provided.length!==expected.length||!timingSafeEqual(Buffer.from(provided),Buffer.from(expected)))return NextResponse.json({error:"Invalid signature"},{status:401});
-  const settled=transaction_status==="settlement"||(transaction_status==="capture"&&fraud_status==="accept");
-  if(!settled)return NextResponse.json({ok:true,ignored:transaction_status});
   const amount=Number(gross_amount);
   if(!Number.isSafeInteger(amount)||amount<=0)return NextResponse.json({error:"Invalid amount"},{status:400});
+  let mapped:"pending"|"paid"|"failed"|"expired"|null=null;
+  if(transaction_status==="settlement"||(transaction_status==="capture"&&fraud_status==="accept"))mapped="paid";
+  else if(transaction_status==="pending"||transaction_status==="authorize")mapped="pending";
+  else if(transaction_status==="expire")mapped="expired";
+  else if(["cancel","deny","failure"].includes(transaction_status))mapped="failed";
+  if(!mapped)return NextResponse.json({ok:true,ignored:transaction_status});
   const admin=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
-  const {error}=await admin.rpc("sc_confirm_payment",{p_order_id:order_id,p_amount:amount,p_gateway_tx:typeof transaction_id==="string"?transaction_id:""});
+  const {error}=await admin.rpc("sc_reconcile_payment",{p_order_id:order_id,p_amount:amount,p_gateway_tx:typeof transaction_id==="string"?transaction_id:"",p_status:mapped});
   if(error)return NextResponse.json({error:"Payment reconciliation failed"},{status:400});
-  return NextResponse.json({ok:true});
+  return NextResponse.json({ok:true,status:mapped});
  }catch{return NextResponse.json({error:"Notification rejected"},{status:400});}
 }
