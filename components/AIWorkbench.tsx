@@ -5,6 +5,7 @@ import SmartSelect,{type SmartOption} from "@/components/SmartSelect";
 import {browserDb} from "@/lib/supabase";
 import {aiTemplates,type AiModule} from "@/lib/education-templates";
 import {subjectDefaults,teacherSystemStandard,teacherToolConfig} from "@/lib/teacher-ai-config";
+import {principalToolConfig} from "@/lib/principal-ai-config";
 
 type Draft={id:string;template_key:string|null;title:string;content:string;created_at:string};
 type SchoolClass={id:string;name:string;grade:string|null;academic_year:string};
@@ -41,11 +42,13 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
  const db=useMemo(()=>browserDb(),[]);
  const [template,setTemplate]=useState(""),[context,setContext]=useState(""),[output,setOutput]=useState(""),[title,setTitle]=useState(""),[drafts,setDrafts]=useState<Draft[]>([]);
  const [project,setProject]=useState<ProjectContext>(emptyProject),[toolData,setToolData]=useState<Record<string,string>>({});
- const [classes,setClasses]=useState<SchoolClass[]>([]),[subjects,setSubjects]=useState<Subject[]>([]),[teacherName,setTeacherName]=useState("");
+ const [classes,setClasses]=useState<SchoolClass[]>([]),[subjects,setSubjects]=useState<Subject[]>([]),[teacherName,setTeacherName]=useState(""),[schoolFacts,setSchoolFacts]=useState<Record<string,string>>({});
  const [error,setError]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false);
  const focusText=(focus||"").toLowerCase(),historyOnly=focusText.includes("riwayat"),projectOnly=module==="guru_ai"&&focusText.includes("proyek");
  const config=aiTemplates[module].find(t=>t.key===template);
  const teacherConfig=module==="guru_ai"?teacherToolConfig[template]:undefined;
+ const principalConfig=module==="kepsek_ai"?principalToolConfig[template]:undefined;
+ const activeToolConfig=teacherConfig||principalConfig;
 
  async function load(){
   if(!db)return;
@@ -61,6 +64,10 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
    let hasSaved=false;try{hasSaved=!!localStorage.getItem("school-control-teaching-project-"+schoolId)}catch{}
    if(!hasSaved&&school){const lv=String(school.education_level||emptyProject.level),gr=gradeFor(lv)[0]||emptyProject.grade;setProject(p=>({...p,level:lv,grade:gr,phase:phaseFor(lv,gr)||p.phase,academic_year:String(school.academic_year||p.academic_year),semester:String(school.semester||p.semester)}))}
    if(user){const {data:st}=await db.from("sc_staff").select("name").eq("school_id",schoolId).eq("user_id",user.id).maybeSingle();setTeacherName(st?.name||"")}
+  }
+  if(module==="kepsek_ai"){
+   const {data:school}=await db.from("sc_schools").select("name,npsn,school_type,education_level,accreditation,address,province,city,district,village,academic_year,semester,principal_name,vision,mission").eq("id",schoolId).maybeSingle();
+   if(school)setSchoolFacts(Object.fromEntries(Object.entries(school).filter(([,v])=>v!==null&&String(v).trim()!=="").map(([k,v])=>[k,String(v)])));
   }
  }
  useEffect(()=>{void load();if(module==="guru_ai"){try{const saved=localStorage.getItem("school-control-teaching-project-"+schoolId);if(saved)setProject({...emptyProject,...JSON.parse(saved)})}catch{}}},[db,schoolId,module]);
@@ -83,7 +90,17 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
  },[subjects,project.level,project.grade]);
 
  function projectText(){
-  if(module!=="guru_ai")return context;
+  if(module!=="guru_ai"){
+   const detail=Object.entries(toolData).filter(([,v])=>String(v).trim()).map(([k,v])=>k+": "+v).join("\n");
+   const facts=Object.entries(schoolFacts).map(([k,v])=>k+": "+v).join("\n");
+   return [
+    "KONTEKS SEKOLAH TERDAFTAR",facts||"Profil sekolah belum lengkap.",
+    detail?"\nDATA KHUSUS DOKUMEN\n"+detail:"",
+    context?"\nINSTRUKSI TAMBAHAN\n"+context:"",
+    principalConfig?"\nSTANDAR OUTPUT WAJIB\n- "+principalConfig.standard.join("\n- "):"",
+    principalConfig?"\nARAHAN DOKUMEN\n"+principalConfig.instruction:""
+   ].filter(Boolean).join("\n");
+  }
   const detail=Object.entries(toolData).filter(([,v])=>String(v).trim()).map(([k,v])=>k+": "+v).join("\n");
   return [
    teacherSystemStandard,
@@ -167,9 +184,9 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
    <div className="sectionhead"><div><h2>{module==="guru_ai"?(config?.label||"Generator Perangkat Ajar"):"Asisten Perencanaan Sekolah"}</h2><p className="muted">{module==="guru_ai"?"Setiap alat memiliki input dan standar output sendiri; konteks proyek tetap dipakai otomatis.":"Pilih dokumen, berikan konteks faktual sekolah, lalu tinjau hasil sebelum dipakai."}</p></div><span className="pill">{module==="guru_ai"?"Perangkat Ajar":"Manajemen"}</span></div>
    {!focus&&<label className="field full">Jenis generator<select value={template} onChange={e=>setTemplate(e.target.value)}><option value="">Pilih jenis</option>{aiTemplates[module].map(t=><option key={t.key} value={t.key}>{t.label}</option>)}</select></label>}
    {module==="guru_ai"&&<div className="project-summary"><b>{project.name||"Proyek belum diberi nama"}</b><span>{[project.level,project.grade&&"Kelas "+project.grade,project.subject,project.topic].filter(Boolean).join(" · ")||"Lengkapi Project Builder terlebih dahulu."}</span></div>}
-   {module==="guru_ai"&&teacherConfig&&<>
-    <div className="tool-question-grid">{teacherConfig.fields.map(f=><label className={"field "+(f.type==="textarea"?"full":"")} key={f.key}>{f.label}{f.type==="select"?<select value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))}><option value="">Pilih</option>{f.options?.map(o=><option key={o}>{o}</option>)}</select>:f.type==="textarea"?<textarea rows={4} value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))} placeholder={f.placeholder}/>:<input type={f.type||"text"} value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))} placeholder={f.placeholder}/>}</label>)}</div>
-    <div className="output-standard"><div><BookOpenCheck size={18}/><span><b>Standar output {config?.label}</b><small>AI diarahkan menghasilkan bagian berikut secara lengkap.</small></span></div><div className="standard-grid">{teacherConfig.standard.map(s=><span key={s}><CheckCircle2 size={14}/>{s}</span>)}</div></div>
+   {activeToolConfig&&<>
+    <div className="tool-question-grid">{activeToolConfig.fields.map(f=><label className={"field "+(f.type==="textarea"?"full":"")} key={f.key}>{f.label}{f.type==="select"?<select value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))}><option value="">Pilih</option>{f.options?.map(o=><option key={o}>{o}</option>)}</select>:f.type==="textarea"?<textarea rows={4} value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))} placeholder={f.placeholder}/>:<input type={f.type||"text"} value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))} placeholder={f.placeholder}/>}</label>)}</div>
+    <div className="output-standard"><div><BookOpenCheck size={18}/><span><b>Standar output {config?.label}</b><small>AI diarahkan menghasilkan bagian berikut secara lengkap dan menandai hal yang perlu diverifikasi.</small></span></div><div className="standard-grid">{activeToolConfig.standard.map(s=><span key={s}><CheckCircle2 size={14}/>{s}</span>)}</div></div>
    </>}
    <label className="field full" style={{marginTop:14}}>Instruksi tambahan untuk hasil<textarea value={context} onChange={e=>setContext(e.target.value)} rows={5} placeholder={template==="chat"?"Ceritakan masalah kelas atau keputusan yang ingin dibahas…":"Tambahkan batasan, gaya, contoh lokal, atau kebutuhan khusus yang belum tercakup…"}/></label>
    <div className="flow" style={{marginTop:12}}><button className="button" disabled={busy||!template} onClick={()=>void generate()}><Sparkles size={15}/>{busy?"Memproses…":template==="chat"?"Kirim ke AI":"Generate Draf Lengkap"}</button></div>
