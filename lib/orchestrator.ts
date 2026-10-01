@@ -5,9 +5,10 @@ export type WorkflowPlan={title:string;reason:string;steps:WorkflowStep[]};
 
 type Route={module:ModuleKey;label:string;keywords:string[]};
 const routes:Route[]=[
+ {module:"payslip",label:"Slip Gaji Saya",keywords:["slip gaji saya","slip gaji","payslip"]},
  {module:"master",label:"Data Induk",keywords:["data siswa","data guru","kelas","mata pelajaran","master data","import siswa","penugasan guru"]},
  {module:"calendar",label:"Agenda Sekolah",keywords:["agenda","kalender","jadwal kegiatan","pertemuan","rapat"]},
- {module:"attendance",label:"Presensi Realtime",keywords:["absen guru","presensi guru","check in","check out","kehadiran guru","cuti","izin guru"]},
+ {module:"attendance",label:"Presensi Realtime",keywords:["absen pribadi","absen guru","presensi guru","check in","check out","kehadiran guru","cuti","izin guru"]},
  {module:"guru_ai",label:"Perangkat Ajar AI",keywords:["modul ajar","bahan ajar","lkpd","rpp","soal","asesmen","perangkat ajar"]},
  {module:"buku_kerja",label:"Pembelajaran & Penilaian",keywords:["jurnal mengajar","nilai siswa","presensi siswa","rekap kelas","agenda mengajar","penilaian"]},
  {module:"disiplin",label:"Disiplin & Prestasi",keywords:["disiplin","pelanggaran","prestasi siswa","pembinaan","sanksi","surat panggilan"]},
@@ -36,6 +37,7 @@ function featureFor(module:ModuleKey,text:string){
   case "sikas": return has(text,"tagihan","spp")?"Tagihan Siswa":has(text,"anggaran")?"Realisasi Anggaran":has(text,"pemasukan")?"Pemasukan":has(text,"pengeluaran")?"Pengeluaran":has(text,"kuitansi")?"Riwayat Pembayaran":"Buku Kas Umum";
   case "gajian": return has(text,"lembur")?"Lembur":has(text,"kasbon")?"Kasbon":has(text,"reimburse")?"Reimburse":has(text,"rekrut")?"Rekrutmen":has(text,"lokasi")?"Lokasi Presensi":has(text,"payroll","gaji")?"Draft Payroll":"Pengajuan SDM";
   case "performance": return has(text,"evaluasi")?"Evaluasi":has(text,"pelatihan")?"Pelatihan":"Bukti capaian";
+  case "payslip": return "Riwayat Slip";
   case "access": return "Hak Akses Fitur";
   case "settings": return has(text,"langganan","trial")?"Langganan":"Profil sekolah";
   default:return "";
