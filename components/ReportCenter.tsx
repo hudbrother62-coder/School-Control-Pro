@@ -1,5 +1,5 @@
 "use client";
-import {Archive,BookOpen,BriefcaseBusiness,ClipboardCheck,Coins,FileBarChart,GraduationCap,HeartHandshake,ListChecks,ShieldAlert,UsersRound,ArrowRight} from "lucide-react";
+import {BookOpen,BriefcaseBusiness,ClipboardCheck,Coins,FileBarChart,GraduationCap,HeartHandshake,ListChecks,ShieldAlert,UsersRound,ArrowRight} from "lucide-react";
 import {canAccess,modules,type ModuleKey,type Role} from "@/lib/modules";
 
 type ReportRoute={title:string;caption:string;module:ModuleKey;feature:string;icon:typeof FileBarChart;formats:string};
