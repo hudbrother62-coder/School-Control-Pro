@@ -74,5 +74,10 @@ assert(demoWorkspace.includes('"reports","Pusat Laporan"')&&demoWorkspace.includ
 for(const required of ["Laporan Lengkap","Rekap & Laporan","Laporan BK","Laporan Program","Buku Kas Umum","Realisasi Anggaran","Laporan HR","Arsip Laporan"])assert(demoWorkspace.includes(required),"Demo report parity missing: "+required);
 assert(demoWorkspace.includes("DemoReportView")&&demoWorkspace.includes("downloadExcel"),"Demo report pages must provide preview/export behavior.");
 assert(demoWorkspace.includes("settings::Branding")&&demoWorkspace.includes("principalNip"),"Demo report identity must be configurable from Branding.");
+const authScreen=fs.readFileSync(path.join(base,"components/AuthScreen.tsx"),"utf8");
+const registerHelper=fs.readFileSync(path.join(base,"lib/register-account.ts"),"utf8");
+assert(!authScreen.includes(".auth.signUp("),"Primary registration must not depend on Supabase confirmation email.");
+assert(registerHelper.includes('functions.invoke("register-school-account"')&&registerHelper.includes("signInWithPassword"),"Registration must use the server-confirmed function and establish a password session.");
+assert(!dashboard.includes(".auth.signUp("),"Fallback /app registration must not reintroduce email-confirmation signup.");
 console.log("PASS: isolation, navigation visibility, command center, report center, CRUD, agenda, school-level, Guru AI, and official report regression checks.");
 "use client";
