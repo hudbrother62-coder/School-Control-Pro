@@ -14,7 +14,8 @@ export default function ReportCenter({role,focus,onRoute}:{schoolId:string;role:
   {title:"Laporan Keuangan",caption:"BKU, kas, anggaran, realisasi, tagihan dan transaksi.",module:"sikas",feature:"Laporan",icon:Coins,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan SDM & Payroll",caption:"Kehadiran, pengajuan, payroll dan kompensasi.",module:"gajian",feature:"Laporan HR",icon:UsersRound,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan Supervisi",caption:"Instrumen, hasil supervisi dan tindak lanjut guru.",module:"kepsek_ai",feature:"Supervisi guru",icon:BriefcaseBusiness,formats:"PDF · DOCX"}
- ];\n const reportRoutes=reportCatalog.filter(x=>{const m=modules.find(m=>m.key===x.module);return !!m&&canAccess(m,role)});
+ ];
+ const reportRoutes=reportCatalog.filter(x=>{const m=modules.find(m=>m.key===x.module);return !!m&&canAccess(m,role)});
 
  const standardItems=["Kop & identitas sekolah","NPSN dan tahun pelajaran","Nomor dokumen","Periode laporan","Tanda tangan kepala sekolah","Status draft / terbit","Arsip revisi","Format cetak A4"];
 
