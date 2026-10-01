@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850" role="img" aria-labelledby="t d"><title id="t">Lingkungan pendidikan modern</title><desc id="d">Ilustrasi guru dan siswa bekerja bersama di ruang kelas modern.</desc>
+<rect width="1200" height="850" rx="54" fill="#dfeee8"/>
+<rect x="0" y="0" width="1200" height="132" fill="#b8d8ca"/>
+<rect x="88" y="72" width="286" height="196" rx="26" fill="#ffffff" opacity=".92"/>
+<rect x="116" y="104" width="230" height="126" rx="14" fill="#eff7f3"/>
+<path d="M145 192c45-60 82-18 116-65 31 29 49 56 76 77" fill="none" stroke="#2b7d67" stroke-width="12" stroke-linecap="round"/>
+<circle cx="170" cy="137" r="18" fill="#e4ab58"/>
+<rect x="774" y="58" width="344" height="202" rx="26" fill="#fff" opacity=".92"/>
+<rect x="802" y="90" width="288" height="142" rx="15" fill="#173b34"/>
+<path d="M840 192l65-58 54 36 69-54" fill="none" stroke="#76c7aa" stroke-width="10" stroke-linecap="round"/>
+<circle cx="905" cy="134" r="10" fill="#f1c76e"/>
+<rect x="82" y="590" width="1036" height="182" rx="34" fill="#c7ddd3"/>
+<rect x="126" y="520" width="300" height="90" rx="18" fill="#fff"/>
+<rect x="460" y="510" width="300" height="100" rx="18" fill="#fff"/>
+<rect x="794" y="520" width="280" height="90" rx="18" fill="#fff"/>
+<g>
+ <circle cx="248" cy="418" r="70" fill="#f3c79f"/><path d="M180 414c10-86 128-112 145-8-28-30-91-45-145 8" fill="#233b4a"/><rect x="184" y="475" width="132" height="154" rx="48" fill="#2b7d67"/><path d="M205 526h91" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+ <circle cx="602" cy="390" r="66" fill="#e9b98d"/><path d="M538 390c9-79 118-105 133-6-24-28-83-42-133 6" fill="#47372e"/><rect x="540" y="447" width="126" height="170" rx="44" fill="#f3a95f"/><path d="M567 505h73" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+ <circle cx="920" cy="416" r="68" fill="#dca982"/><path d="M855 414c4-84 121-108 133-4-26-29-81-42-133 4" fill="#1f2937"/><rect x="855" y="474" width="132" height="154" rx="46" fill="#7357a8"/><path d="M880 526h82" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+</g>
+<g fill="#173b34"><rect x="172" y="559" width="168" height="18" rx="9"/><rect x="520" y="555" width="164" height="18" rx="9"/><rect x="842" y="558" width="146" height="18" rx="9"/></g>
+<circle cx="1095" cy="334" r="42" fill="#f1c76e"/><path d="M1095 276v-24M1095 416v-24M1037 334h-24M1177 334h-24M1054 293l-17-17M1153 392l-17-17M1136 293l17-17M1037 392l17-17" stroke="#f1c76e" stroke-width="9" stroke-linecap="round"/>
+</svg>
