@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
-import {BookOpen,ChevronDown,Plus,Search} from "lucide-react";
+import {BookOpen,ChevronDown,Pencil,Plus,Search,Trash2} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
 import SmartSelect from "@/components/SmartSelect";
 import {browserDb} from "@/lib/supabase";
@@ -15,7 +15,7 @@ const today=()=>new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Jakarta"})
 export default function TeachingJournal({schoolId,userId,role}:{schoolId:string;userId:string;role:Role}){
  const db=useMemo(()=>browserDb(),[]),manager=isAdmin(role);
  const [classes,setClasses]=useState<C[]>([]),[subjects,setSubjects]=useState<Subject[]>([]),[staff,setStaff]=useState<Staff[]>([]),[rows,setRows]=useState<J[]>([]);
- const [modal,setModal]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[query,setQuery]=useState("");
+ const [modal,setModal]=useState(false),[editingId,setEditingId]=useState<string|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[query,setQuery]=useState("");
  const [teacher,setTeacher]=useState(userId),[teacherText,setTeacherText]=useState(""),[classValue,setClassValue]=useState(""),[subjectValue,setSubjectValue]=useState(""),[date,setDate]=useState(today()),[topic,setTopic]=useState(""),[activity,setActivity]=useState(""),[reflection,setReflection]=useState(""),[followUp,setFollowUp]=useState("");
  const [filterTeacher,setFilterTeacher]=useState(""),[filterClass,setFilterClass]=useState(""),[filterSubject,setFilterSubject]=useState("");
 
@@ -40,7 +40,8 @@ export default function TeachingJournal({schoolId,userId,role}:{schoolId:string;
  const nameSubject=(r:J)=>subjects.find(s=>s.id===r.subject_id)?.name||r.subject||"Umum / wali kelas";
  const filtered=rows.filter(r=>(!filterTeacher||r.teacher_id===filterTeacher||nameTeacher(r)===filterTeacher)&&(!filterClass||r.class_id===filterClass||nameClass(r)===filterClass)&&(!filterSubject||r.subject_id===filterSubject||nameSubject(r)===filterSubject)&&(nameTeacher(r)+" "+nameClass(r)+" "+nameSubject(r)+" "+r.topic).toLowerCase().includes(query.toLowerCase()));
 
- function reset(){const own=staff.find(s=>s.user_id===userId);setTeacher(userId);setTeacherText(own?.name||"");setClassValue("");setSubjectValue("");setDate(today());setTopic("");setActivity("");setReflection("");setFollowUp("")}
+ function reset(){const own=staff.find(s=>s.user_id===userId);setEditingId(null);setTeacher(userId);setTeacherText(own?.name||"");setClassValue("");setSubjectValue("");setDate(today());setTopic("");setActivity("");setReflection("");setFollowUp("")}
+ function openEdit(r:J){setEditingId(r.id);setTeacher(r.teacher_id);setTeacherText(nameTeacher(r));setClassValue(r.class_id);setSubjectValue(r.subject_id||r.subject||"");setDate(r.lesson_date);setTopic(r.topic);setActivity(r.activity||"");setReflection(r.reflection||"");setFollowUp(r.follow_up||"");setModal(true)}
  async function resolveClass(){
   const known=classes.find(c=>c.id===classValue);if(known)return known;
   const byName=classes.find(c=>c.name.toLowerCase()===classValue.toLowerCase());if(byName)return byName;
@@ -61,10 +62,12 @@ export default function TeachingJournal({schoolId,userId,role}:{schoolId:string;
    const klass=await resolveClass(),subject=await resolveSubject();
    const selectedTeacher=staff.find(s=>s.user_id===teacher||s.name===teacher);
    const teacherId=selectedTeacher?.user_id||userId,teacherName=selectedTeacher?.name||teacherText||teacher||"Guru";
-   const {error:e}=await db.from("sc_teacher_journals").insert({school_id:schoolId,teacher_id:teacherId,class_id:klass.id,subject_id:subject?.id||null,subject:subject?.name||subjectValue||"Umum",lesson_date:date,topic:topic.trim(),notes:[activity&&"Aktivitas: "+activity,reflection&&"Refleksi: "+reflection,followUp&&"Tindak lanjut: "+followUp].filter(Boolean).join("\n\n")||null,teacher_name_snapshot:teacherName,class_name_snapshot:klass.name,activity:activity.trim()||null,reflection:reflection.trim()||null,follow_up:followUp.trim()||null});if(e)throw e;
-   setModal(false);reset();await load();setOk("Jurnal mengajar tersimpan dan terhubung dengan data guru, kelas, serta mata pelajaran.");
+   const payload={teacher_id:teacherId,class_id:klass.id,subject_id:subject?.id||null,subject:subject?.name||subjectValue||"Umum",lesson_date:date,topic:topic.trim(),notes:[activity&&"Aktivitas: "+activity,reflection&&"Refleksi: "+reflection,followUp&&"Tindak lanjut: "+followUp].filter(Boolean).join("\n\n")||null,teacher_name_snapshot:teacherName,class_name_snapshot:klass.name,activity:activity.trim()||null,reflection:reflection.trim()||null,follow_up:followUp.trim()||null};
+   const request=editingId?db.from("sc_teacher_journals").update(payload).eq("school_id",schoolId).eq("id",editingId):db.from("sc_teacher_journals").insert({school_id:schoolId,...payload});const {error:e}=await request;if(e)throw e;
+   const edited=!!editingId;setModal(false);reset();await load();setOk(edited?"Jurnal mengajar diperbarui.":"Jurnal mengajar tersimpan dan terhubung dengan data guru, kelas, serta mata pelajaran.");
   }catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}
  }
+ async function removeJournal(r:J){if(!db||!(manager||r.teacher_id===userId)||!confirm("Hapus jurnal mengajar ini? Tindakan ini tidak dapat dibatalkan."))return;setBusy(true);setError("");setOk("");try{const {error:e}=await db.from("sc_teacher_journals").delete().eq("school_id",schoolId).eq("id",r.id);if(e)throw e;await load();setOk("Jurnal mengajar dihapus.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
 
  return <>
   <section className="panel journal-page">
@@ -75,10 +78,10 @@ export default function TeachingJournal({schoolId,userId,role}:{schoolId:string;
     <SmartSelect label="Kelas" value={filterClass} options={[{value:"",label:"Semua kelas"},...classOptions]} onChange={setFilterClass} allowCustom customLabel="Cari kelas ini"/>
     <SmartSelect label="Mata pelajaran" value={filterSubject} options={[{value:"",label:"Semua mapel"},...subjectOptions]} onChange={setFilterSubject} allowCustom customLabel="Cari mapel ini"/>
    </div>
-   <div className="journal-list-pro">{filtered.map(r=><details className="journal-card-pro" key={r.id}><summary><span className="journal-date">{r.lesson_date.slice(5)}</span><div><strong>{r.topic}</strong><small>{nameClass(r)} · {nameSubject(r)} · {nameTeacher(r)}</small></div><ChevronDown size={16}/></summary><div className="journal-detail-grid"><div><span>Aktivitas Pembelajaran</span><p>{r.activity||r.notes||"Belum ada catatan aktivitas."}</p></div><div><span>Refleksi</span><p>{r.reflection||"Belum ada refleksi."}</p></div><div><span>Tindak Lanjut</span><p>{r.follow_up||"Belum ada tindak lanjut."}</p></div></div></details>)}{!filtered.length&&<div className="empty"><BookOpen size={20}/> Belum ada jurnal sesuai filter.</div>}</div>
+   <div className="journal-list-pro">{filtered.map(r=><details className="journal-card-pro" key={r.id}><summary><span className="journal-date">{r.lesson_date.slice(5)}</span><div><strong>{r.topic}</strong><small>{nameClass(r)} · {nameSubject(r)} · {nameTeacher(r)}</small></div><ChevronDown size={16}/></summary><div className="journal-detail-grid"><div><span>Aktivitas Pembelajaran</span><p>{r.activity||r.notes||"Belum ada catatan aktivitas."}</p></div><div><span>Refleksi</span><p>{r.reflection||"Belum ada refleksi."}</p></div><div><span>Tindak Lanjut</span><p>{r.follow_up||"Belum ada tindak lanjut."}</p></div></div>{(manager||r.teacher_id===userId)&&<div className="flow" style={{marginTop:12}}><button type="button" className="button secondary" onClick={()=>openEdit(r)}><Pencil size={14}/> Edit Jurnal</button><button type="button" className="button danger" disabled={busy} onClick={()=>void removeJournal(r)}><Trash2 size={14}/> Hapus</button></div>}</details>)}{!filtered.length&&<div className="empty"><BookOpen size={20}/> Belum ada jurnal sesuai filter.</div>}</div>
   </section>
 
-  <DataEntryModal open={modal} onClose={()=>setModal(false)} title="Tulis Jurnal Mengajar" subtitle="Struktur mengikuti Buku Kerja Digital: guru, kelas, mata pelajaran, topik, aktivitas, refleksi, dan tindak lanjut." wide>
+  <DataEntryModal open={modal} onClose={()=>setModal(false)} title={editingId?"Edit Jurnal Mengajar":"Tulis Jurnal Mengajar"} subtitle="Struktur mengikuti Buku Kerja Digital: guru, kelas, mata pelajaran, topik, aktivitas, refleksi, dan tindak lanjut." wide>
    <div className="fields">
     <div className="field"><SmartSelect label="Nama guru" value={teacher} options={teacherOptions} onChange={v=>{setTeacher(v);setTeacherText(teachers.find(s=>s.user_id===v)?.name||v)}} allowCustom customLabel="Gunakan nama guru ini"/></div>
     <label className="field">Tanggal<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label>
@@ -89,7 +92,7 @@ export default function TeachingJournal({schoolId,userId,role}:{schoolId:string;
     <label className="field full">Refleksi<textarea rows={4} value={reflection} onChange={e=>setReflection(e.target.value)} placeholder="Apa yang berjalan baik dan perlu diperbaiki?"/></label>
     <label className="field full">Tindak lanjut<textarea rows={4} value={followUp} onChange={e=>setFollowUp(e.target.value)} placeholder="Remedial, pengayaan, atau kegiatan berikutnya"/></label>
    </div>
-   <div className="modal-actions"><button className="button secondary" onClick={()=>setModal(false)}>Batal</button><button className="button" disabled={busy||!classValue||topic.trim().length<3} onClick={()=>void save()}>{busy?"Menyimpan…":"Simpan Jurnal"}</button></div>
+   <div className="modal-actions"><button className="button secondary" onClick={()=>setModal(false)}>Batal</button><button className="button" disabled={busy||!classValue||topic.trim().length<3} onClick={()=>void save()}>{busy?"Menyimpan…":editingId?"Simpan Perubahan":"Simpan Jurnal"}</button></div>
   </DataEntryModal>
   {error&&<div className="banner error">{error}</div>}{ok&&<div className="banner success">{ok}</div>}
  </>;
