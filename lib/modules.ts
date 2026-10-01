@@ -1,5 +1,4 @@
-e
- {key:"help",label:"Panduan Penggunaan",section:"Sistem",roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","staff","viewer"],features:["Mulai dari Sini","Data Induk","Agenda & Absensi","Perangkat Ajar AI","Jurnal & Penilaian","Disiplin & Prestasi","Bimbingan Konseling","Program & Tugas","Keuangan","SDM & Payroll","Akses & Pengaturan"]},xport type Role = "owner"|"principal"|"vice_principal"|"teacher"|"counselor"|"hr"|"treasurer"|"staff"|"viewer";
+export type Role = "owner"|"principal"|"vice_principal"|"teacher"|"counselor"|"hr"|"treasurer"|"staff"|"viewer";
 export type ModuleKey = "overview"|"master"|"calendar"|"attendance"|"performance"|"guru_ai"|"kepsek_ai"|"buku_kerja"|"disiplin"|"bk"|"command"|"sikas"|"gajian"|"payslip"|"access"|"settings"|"help";
 export type School = {id:string;name:string;timezone:string};
 export type Membership = {school_id:string;role:Role};
@@ -8,8 +7,8 @@ export type FeatureModule={key:ModuleKey;label:string;section:string;description
 export const ROLE_LABELS:Record<Role,string>={
  owner:"Pemilik Akun",principal:"Kepala Sekolah",vice_principal:"Wakil Kepala Sekolah",teacher:"Guru",counselor:"Guru BK",hr:"SDM / HR",treasurer:"Bendahara",staff:"Staf",viewer:"Viewer"
 };
-export const ADMIN_ROLES:Role[] = ["owner","principal","vice_principal"];
-export const modules:FeatureModule[] = [
+export const ADMIN_ROLES:Role[]=["owner","principal","vice_principal"];
+export const modules:FeatureModule[]=[
  {key:"overview",label:"Beranda",section:"Utama",description:"Ringkasan operasional sekolah.",features:["Ringkasan Operasional","Analitik Sekolah","Agenda & Deadline"]},
  {key:"master",label:"Data Induk",section:"Utama",description:"Sumber data utama seluruh sistem.",features:["Siswa","Kelas","Guru","Tenaga Kependidikan","Mata Pelajaran","Penugasan Guru","Import Excel Keseluruhan"]},
  {key:"calendar",label:"Agenda Sekolah",section:"Utama",description:"Kalender sekolah dan agenda setiap pengguna.",features:["Kalender Sekolah","Rekap Agenda","Agenda Pribadi","Agenda Pengguna","Kehadiran Agenda"]},
@@ -25,7 +24,8 @@ export const modules:FeatureModule[] = [
  {key:"payslip",label:"Slip Gaji Saya",section:"SDM",description:"Riwayat slip gaji pribadi.",features:["Riwayat Slip","Cetak Slip"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","staff"]},
  {key:"sikas",label:"Keuangan, Anggaran & Tagihan",section:"Keuangan",description:"Kas, anggaran, tagihan, kuitansi dan laporan.",features:["Dashboard Keuangan","Kas/Rekening","Pemasukan","Pengeluaran","Anggaran","Tagihan Siswa","Pembayaran","Kuitansi","Laporan","Import/Export"],roles:["owner","principal","treasurer"]},
  {key:"access",label:"Akses & Peran",section:"Sistem",description:"Anggota, undangan dan hak akses.",features:["Tambah Pengguna","Anggota Tim","Struktur Peran","Hak Akses Fitur"],roles:["owner","principal"]},
- {key:"settings",label:"Pengaturan Sekolah",section:"Sistem",description:"Identitas sekolah, memori dan langganan.",features:["Profil sekolah","Identitas & Kontak","Lokasi Sekolah","Akademik","Branding","Memori sekolah","Langganan","Riwayat pembayaran"],roles:["owner","principal"]}
+ {key:"settings",label:"Pengaturan Sekolah",section:"Sistem",description:"Identitas sekolah, memori dan langganan.",features:["Profil sekolah","Identitas & Kontak","Lokasi Sekolah","Akademik","Branding","Memori sekolah","Langganan","Riwayat pembayaran"],roles:["owner","principal"]},
+ {key:"help",label:"Panduan Penggunaan",section:"Sistem",description:"Panduan kerja langkah demi langkah berdasarkan modul aplikasi asal.",features:["Mulai dari Sini","Data Induk","Agenda & Absensi","Perangkat Ajar AI","Jurnal & Penilaian","Disiplin & Prestasi","Bimbingan Konseling","Program & Tugas","Keuangan","SDM & Payroll","Akses & Pengaturan"]}
 ];
 export const isAdmin=(role:Role)=>ADMIN_ROLES.includes(role);
 export const canAccess=(m:FeatureModule,role:Role)=>!m.roles||m.roles.includes(role);
