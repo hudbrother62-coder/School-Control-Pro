@@ -3,7 +3,7 @@
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import type {User} from "@supabase/supabase-js";
-import {LayoutDashboard,Users,Clock3,Activity,Sparkles,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,ChevronRight,Plus,RefreshCw,ReceiptText,CalendarDays,KeyRound} from "lucide-react";
+import {LayoutDashboard,Users,Clock3,Activity,Sparkles,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,ChevronRight,Plus,RefreshCw,ReceiptText,CalendarDays,KeyRound,CircleHelp} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import StaffWorkflows from "@/components/StaffWorkflows";
 import SchoolData from "@/components/SchoolData";
@@ -27,13 +27,14 @@ import BillingPanel from "@/components/BillingPanel";
 import PerformanceReviews from "@/components/PerformanceReviews";
 import SchoolCalendar from "@/components/SchoolCalendar";
 import AccessPanel from "@/components/AccessPanel";
+import GuideCenter from "@/components/GuideCenter";
 import {modules,canAccess,isAdmin,ROLE_LABELS,type School,type Role,type ModuleKey,type Membership,type Staff} from "@/lib/modules";
 
 type SchoolAccess={school:School;role:Role};
 type Attendance={id:string;duty_date:string;check_in_at:string|null;check_out_at:string|null;status:string;source:string;user_id:string;notes:string|null};
 type RecordItem={id:string;module_key:string;title:string;notes:string|null;status:string;created_at:string};
 type Summary={present_days:number;late_days:number;programs:number;trainings:number;verified_events:number};
-const icons={overview:LayoutDashboard,master:Users,calendar:CalendarDays,attendance:Clock3,performance:Activity,guru_ai:Sparkles,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,command:ListChecks,sikas:Wallet,gajian:CreditCard,payslip:ReceiptText,access:KeyRound,settings:Settings};
+const icons={overview:LayoutDashboard,master:Users,calendar:CalendarDays,attendance:Clock3,performance:Activity,guru_ai:Sparkles,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,command:ListChecks,sikas:Wallet,gajian:CreditCard,payslip:ReceiptText,access:KeyRound,settings:Settings,help:CircleHelp};
 const allowedRecordModules=["guru_ai","kepsek_ai","buku_kerja","disiplin","command","sikas","gajian"];
 const formatDate=(s:string|null|undefined)=>s?new Date(s).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"}):"—";
 const schoolDay=(tz:string)=>{const p=new Intl.DateTimeFormat("en-US",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const get=(k:string)=>p.find(x=>x.type===k)?.value||"";return get("year")+"-"+get("month")+"-"+get("day")};
@@ -118,7 +119,8 @@ export default function Home(){
  {(!featureFocus||["Partisipasi program","Pelatihan","Bukti capaian"].includes(featureFocus))&&<StaffWorkflows kind="performance" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>}
  {(!featureFocus||["Evaluasi","Tanggapan guru"].includes(featureFocus))&&<PerformanceReviews schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
  </>}
- {module==="access"&&<AccessPanel schoolId={schoolId} role={role} focus={featureFocus}/>}\n {module==="settings"&&<>
+ {module==="access"&&<AccessPanel schoolId={schoolId} role={role} focus={featureFocus}/>}
+ {module==="help"&&<GuideCenter role={role} focus={featureFocus}/>}\n {module==="settings"&&<>
  {(!featureFocus||["Langganan","Riwayat pembayaran"].includes(featureFocus))&&<section className="panel"><h2>Workspace & Langganan</h2><div className="fields"><label className="field">Pilih sekolah<select value={schoolId} onChange={e=>setSchoolId(e.target.value)}>{schools.map(x=><option key={x.school.id} value={x.school.id}>{x.school.name}</option>)}</select></label><div><span className="pill">{subscription?.status||"Belum aktif"}</span><p className="hint">Akhir masa uji coba: {formatDate(subscription?.trial_ends_at)}</p></div></div><div className="flow"><button className="button secondary" onClick={changeTheme}>{theme==="light"?"Aktifkan Mode Gelap":"Aktifkan Mode Terang"}</button>{role==="owner"&&<button className="button" disabled={loading} onClick={()=>void checkout("monthly")}>Perpanjang Langganan</button>}</div></section>}
  {(!featureFocus||featureFocus==="Undang anggota")&&isAdmin(role)&&<section className="panel"><h2>Undang Anggota</h2><div className="fields"><label className="field">Peran<select value={inviteRole} onChange={e=>setInviteRole(e.target.value as Role)}>{(["principal","vice_principal","teacher","counselor","hr","treasurer","staff","viewer"] as Role[]).map(x=><option key={x} value={x}>{ROLE_LABELS[x]}</option>)}</select></label><button className="button" disabled={loading} onClick={()=>void createInvite()}>Buat Undangan</button></div>{inviteResult&&<div className="banner"><b>Kode sekali pakai:</b> <code style={{overflowWrap:"anywhere"}}>{inviteResult}</code></div>}</section>}
  {(!featureFocus||!["Langganan","Riwayat pembayaran","Undang anggota"].includes(featureFocus))&&<SchoolProfile schoolId={schoolId} role={role} focus={featureFocus}/>}
