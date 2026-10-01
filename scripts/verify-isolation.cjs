@@ -38,6 +38,8 @@ assert(!/^import\s+\w+\s+from\s+["']@\/components\//m.test(dashboardWithoutClock
 assert(/dynamic\(\s*\(\)\s*=>\s*import\(/.test(dashboard),"Dashboard panels must use lazy dynamic imports.");
 assert(!dashboard.includes("setInterval(()=>setLiveTime"),"A per-second clock must not re-render the full dashboard.");
 assert(dashboard.includes("<LiveClock "),"Attendance must render the isolated live clock component.");
+const orchestratorUi=fs.readFileSync(path.join(base,"components/UniversalOrchestrator.tsx"),"utf8");
+assert(orchestratorUi.includes("/api/orchestrator"),"Universal Orchestrator must call the role-checked AI planning endpoint.");
+assert(fs.readdirSync(path.join(base,"supabase/migrations")).some(x=>x.includes("orchestration_workflows")),"Workflow run and step tables must be created by a migration.");
 console.log("PASS: source isolation and 8 role-aware orchestration scenarios.");
 "use client";
-
