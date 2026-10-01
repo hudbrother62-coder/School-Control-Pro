@@ -29,6 +29,15 @@ import PerformanceReviews from "@/components/PerformanceReviews";
 import SchoolCalendar from "@/components/SchoolCalendar";
 import AccessPanel from "@/components/AccessPanel";
 import GuideCenter from "@/components/GuideCenter";
+import AIProjectManager from "@/components/AIProjectManager";
+import AcademicLegacyParity from "@/components/AcademicLegacyParity";
+import DisciplineLegacyParity from "@/components/DisciplineLegacyParity";
+import ManagementLegacyParity from "@/components/ManagementLegacyParity";
+import HRLegacyParity from "@/components/HRLegacyParity";
+import FinanceLegacyParity from "@/components/FinanceLegacyParity";
+import CommandLegacyParity from "@/components/CommandLegacyParity";
+import WorkspaceTools from "@/components/WorkspaceTools";
+import SupervisorLegacyParity from "@/components/SupervisorLegacyParity";
 import {modules,canAccess,isAdmin,ROLE_LABELS,type School,type Role,type ModuleKey,type Membership,type Staff} from "@/lib/modules";
 
 type SchoolAccess={school:School;role:Role};
@@ -104,7 +113,7 @@ export default function Home(){
  if(!subscriptionOpen)return <div><div className="flow" style={{justifyContent:"space-between",padding:"16px 22px"}}><Link href="/" className="lp-brand"><img src="/school-control-mark.svg" alt="" width={35} height={35}/><strong>School Control</strong></Link><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button></div>{error&&<div className="banner error" role="alert">{error}</div>}<PaymentWall schoolName={access?.school.name||"Sekolah"} trialEnd={subscription?.trial_ends_at||new Date().toISOString()} status={subscription?.status||"unknown"} owner={role==="owner"} busy={loading} onCheckout={plan=>void checkout(plan)} onRefresh={()=>void checkSubscription()}/></div>;
  return <div className="shell">
   <aside className="side"><div className="brand"><img src="/school-control-mark.svg" alt=""/><div><strong>School Control</strong><small>Satu Sistem, Semua Urusan Sekolah</small></div></div><Nav/></aside>
-  <main className="main"><header className="top"><div><small>{access?.school.name} · {ROLE_LABELS[role]}</small><h1>{featureFocus||selected.label}</h1></div><div className="actions"><button className="iconbutton" aria-label="Ganti tema" onClick={changeTheme}>{theme==="light"?<Moon size={17}/>:<Sun size={17}/>}</button><button className="iconbutton" aria-label="Segarkan" onClick={()=>void refresh()}><RefreshCw size={17}/></button><button className="iconbutton" aria-label="Keluar" onClick={()=>void db.auth.signOut()}><LogOut size={17}/></button></div></header>
+  <main className="main"><header className="top"><div><small>{access?.school.name} · {ROLE_LABELS[role]}</small><h1>{featureFocus||selected.label}</h1></div><div className="actions"><WorkspaceTools schoolId={schoolId} role={role} onRoute={(m,f)=>choose(m,f||"")}/><button className="iconbutton" aria-label="Ganti tema" onClick={changeTheme}>{theme==="light"?<Moon size={17}/>:<Sun size={17}/>}</button><button className="iconbutton" aria-label="Segarkan" onClick={()=>void refresh()}><RefreshCw size={17}/></button><button className="iconbutton" aria-label="Keluar" onClick={()=>void db.auth.signOut()}><LogOut size={17}/></button></div></header>
   <div className="content">{error&&<div role="alert" className="banner error">{error}</div>}{message&&<div role="status" className="banner success">{message}</div>}
   {module==="overview"&&<><DashboardOverview schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>{(!featureFocus||featureFocus==="Agenda & Deadline")&&<SchoolCalendar schoolId={schoolId} userId={user.id} role={role} compact/>}</>}
   {module==="master"&&<MasterHubV2 schoolId={schoolId} role={role} focus={featureFocus}/>}\n  {module==="calendar"&&<SchoolCalendar schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
@@ -127,20 +136,35 @@ export default function Home(){
  {(!featureFocus||!["Langganan","Riwayat pembayaran","Undang anggota"].includes(featureFocus))&&<SchoolProfile schoolId={schoolId} role={role} focus={featureFocus}/>}
  {(!featureFocus||["Langganan","Riwayat pembayaran"].includes(featureFocus))&&<BillingPanel schoolId={schoolId} isOwner={role==="owner"} busy={loading} onCheckout={plan=>void checkout(plan)} focus={featureFocus}/>}
  </>}
- {module==="guru_ai"&&<><AIWorkbench module="guru_ai" schoolId={schoolId} focus={featureFocus}/>{(!featureFocus||featureFocus!=="Riwayat draf")&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} teacherOnly focus={featureFocus}/>}</>}
+ {module==="guru_ai"&&<>
+ {featureFocus==="Proyek Pembelajaran"&&<AIProjectManager schoolId={schoolId} module="guru_ai" mode="projects"/>}
+ {featureFocus==="Ngobrol AI"&&<AIProjectManager schoolId={schoolId} module="guru_ai" mode="chat"/>}
+ {featureFocus==="Riwayat draf"&&<AIProjectManager schoolId={schoolId} module="guru_ai" mode="outputs"/>}
+ {featureFocus==="Koneksi AI"&&<AIProjectManager schoolId={schoolId} module="guru_ai" mode="connection"/>}
+ {(!featureFocus||!["Proyek Pembelajaran","Ngobrol AI","Riwayat draf","Koneksi AI"].includes(featureFocus))&&<AIWorkbench module="guru_ai" schoolId={schoolId} focus={featureFocus}/>}
+ {(!featureFocus||!["Proyek Pembelajaran","Ngobrol AI","Riwayat draf","Koneksi AI"].includes(featureFocus))&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} teacherOnly focus={featureFocus}/>}
+ </>}
   {module==="kepsek_ai"&&<>
  {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP"].includes(featureFocus))&&<AIWorkbench module="kepsek_ai" schoolId={schoolId} focus={featureFocus}/>}
  {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Pusat dokumen","Persetujuan dokumen"].includes(featureFocus))&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
+ {featureFocus==="Asisten Kepsek"&&<AIProjectManager schoolId={schoolId} module="kepsek_ai" mode="chat"/>}
+ {["Kinerja Kepala Sekolah","Workflow Dokumen","Sumber Dokumen","Pustaka Format"].includes(featureFocus)&&<ManagementLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
  {(!featureFocus||featureFocus==="Supervisi guru")&&<Supervision schoolId={schoolId} role={role} staff={staff} userId={user.id}/>}
  {!featureFocus&&<SchoolProfile schoolId={schoolId} role={role}/>}
  </>}
- {module==="buku_kerja"&&<>{["Agenda Mengajar","Import/Export Excel"].includes(featureFocus)&&<SchoolData mode="academic" schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>} {featureFocus==="Lembar Nilai"&&<GradeBook schoolId={schoolId} userId={user.id} role={role}/>} {featureFocus==="Jurnal Mengajar"&&<TeachingJournal schoolId={schoolId} userId={user.id} role={role}/>} {["Presensi Siswa","Rekap Bulanan","Laporan Kelas"].includes(featureFocus)&&<AcademicAdvanced schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}</>}
-  {module==="disiplin"&&(featureFocus.toLowerCase().includes("template")?<DisciplineReportTemplate schoolId={schoolId}/>:<DisciplinePanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>)}
-  {module==="command"&&<CommandBoard schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
-  {module==="sikas"&&<FinancePanel schoolId={schoolId} userId={user.id} focus={featureFocus}/>}
-  {module==="gajian"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} focus={featureFocus}/>}
+ {module==="buku_kerja"&&<>
+ {["Mode Kerja Guru","Jadwal Mingguan","Asisten Kelas","Laporan Lengkap"].includes(featureFocus)&&<AcademicLegacyParity schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
+ {["Agenda Mengajar","Import/Export Excel"].includes(featureFocus)&&<SchoolData mode="academic" schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
+ {featureFocus==="Lembar Nilai"&&<GradeBook schoolId={schoolId} userId={user.id} role={role}/>}
+ {featureFocus==="Jurnal Mengajar"&&<TeachingJournal schoolId={schoolId} userId={user.id} role={role}/>}
+ {["Presensi Siswa","Rekap Bulanan","Laporan Kelas"].includes(featureFocus)&&<AcademicAdvanced schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
+ </>}
+  {module==="disiplin"&&(["Analitik Disiplin","Arsip Siswa","Import Riwayat","Surat & Dokumen"].includes(featureFocus)?<DisciplineLegacyParity schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>:featureFocus.toLowerCase().includes("template")?<DisciplineReportTemplate schoolId={schoolId}/>:<DisciplinePanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>)}
+  {module==="command"&&(["Verifikasi Bukti","Tindak Lanjut Rapat","Laporan Program"].includes(featureFocus)?<CommandLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>:<CommandBoard schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>)}
+  {module==="sikas"&&(["Bukti Transaksi","Realisasi Anggaran","Riwayat Pembayaran","WhatsApp Tagihan","Buku Kas Umum","Tim Keuangan"].includes(featureFocus)?<FinanceLegacyParity schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>:<FinancePanel schoolId={schoolId} userId={user.id} focus={featureFocus}/>)}
+  {module==="gajian"&&(["Tim SDM","Tim Saya","Kehadiran Tim","Approval Tim","Rekap Tim"].includes(featureFocus)?<SupervisorLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>:["Pengajuan SDM","Lembur","Kasbon","Reimburse","Jadwal Kerja","Lokasi Presensi","Komponen Dinamis","Rekrutmen","Kunjungan Lapangan","Pelacakan Lokasi","Laporan HR"].includes(featureFocus)?<HRLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>:<PayrollPanel schoolId={schoolId} role={role} staff={staff} focus={featureFocus}/>)}
   {module==="payslip"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} selfOnly focus={featureFocus}/>}
-  {module==="bk"&&<>{role==="counselor"?<BKPanel schoolId={schoolId} userId={user.id} focus={featureFocus}/>:<section className="panel"><h2>Bimbingan Konseling</h2><div className="banner">Data kasus hanya dibuka untuk Guru BK.</div></section>}</>}
+  {module==="bk"&&<BKPanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
   </div></main>
   {openMenu&&<div className="mobiledrawer"><div className="panel"><div className="flow" style={{justifyContent:"space-between"}}><strong>Semua fitur</strong><button className="iconbutton" onClick={()=>setOpenMenu(false)}>Tutup</button></div><Nav mobile/></div></div>}
   <nav className="bottomnav" aria-label="Navigasi utama">{(["overview","calendar","attendance","master"] as ModuleKey[]).map(k=>{const Icon=icons[k];return <button key={k} className={module===k?"active":""} onClick={()=>choose(k)}><Icon size={20}/>{modules.find(x=>x.key===k)?.label}</button>})}<button onClick={()=>setOpenMenu(true)}><Menu size={20}/>Menu</button></nav>
