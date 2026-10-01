@@ -29,6 +29,16 @@ export const teacherToolConfig:Record<string,{fields:ToolField[];standard:string
   standard:["Informasi umum & kompetensi awal","Tujuan pembelajaran terukur","Pemahaman bermakna & pertanyaan pemantik","Langkah pendahuluan–inti sesuai sintaks–penutup","Asesmen diagnostik, formatif, dan sumatif","Diferensiasi, remedial, pengayaan, refleksi & tindak lanjut"],
   instruction:"Susun Modul Ajar lengkap: informasi umum, kompetensi awal, profil/karakter murid, sarana prasarana, model, tujuan terukur, pemahaman bermakna, pertanyaan pemantik, langkah pendahuluan–inti sesuai sintaks–penutup, asesmen diagnostik-formatif-sumatif, refleksi, diferensiasi, remedial/pengayaan dan tindak lanjut."
  },
+ rpp:{
+  fields:[
+   {key:"rpp_format",label:"Format RPP",type:"select",options:["Ringkas 1 halaman","Lengkap operasional","AI pilih sesuai kebutuhan"]},
+   {key:"objective_focus",label:"Fokus tujuan pembelajaran",type:"textarea",placeholder:"Kompetensi/kemampuan yang ingin dicapai"},
+   {key:"learning_evidence",label:"Bukti belajar yang diharapkan",type:"textarea"},
+   {key:"class_condition",label:"Kondisi kelas yang perlu dipertimbangkan",type:"textarea"}
+  ],
+  standard:["Identitas dan konteks pembelajaran","Tujuan terukur","Materi/media/sumber","Langkah pendahuluan–inti–penutup","Asesmen selaras tujuan","Diferensiasi dan tindak lanjut","Refleksi guru"],
+  instruction:"Susun RPP operasional yang ringkas tetapi lengkap: identitas, tujuan terukur, materi/media/sumber, langkah pembelajaran, asesmen, diferensiasi, tindak lanjut dan refleksi."
+ },
  lkpd:{
   fields:[
    {key:"activity_type",label:"Jenis aktivitas utama",type:"select",options:["Eksperimen / praktik","Pemecahan masalah","Observasi","Proyek mini","Diskusi","Campuran"]},
