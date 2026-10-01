@@ -1,23 +1,26 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
-import {LayoutDashboard,Database,BookOpenCheck,Sparkles,ClipboardCheck,HeartHandshake,ListChecks,WalletCards,BriefcaseBusiness,Settings,LogOut,Clock3,BarChart3,Search,ChevronRight,GraduationCap,Sun,Moon,CalendarDays,KeyRound,Plus,Pencil,Trash2,MapPin,Download,Upload,AlertTriangle,CheckCircle2} from "lucide-react";
+import {LayoutDashboard,Database,BookOpenCheck,Sparkles,ClipboardCheck,HeartHandshake,ListChecks,WalletCards,BriefcaseBusiness,Settings,LogOut,Clock3,BarChart3,Search,ChevronRight,GraduationCap,Sun,Moon,CalendarDays,KeyRound,Plus,Pencil,Trash2,MapPin,Download,Upload,AlertTriangle,CheckCircle2,FileBarChart,FileText} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
+import ReportCenter from "@/components/ReportCenter";
+import {downloadExcel} from "@/lib/excel";
 import "./demo.css";
 
 const menu=[
  ["overview","Beranda",LayoutDashboard,["Ringkasan Operasional","Analitik Sekolah","Agenda & Deadline"]],
  ["master","Data Induk",Database,["Siswa","Kelas","Guru","Tenaga Kependidikan","Mata Pelajaran","Penugasan Guru","Import Excel Keseluruhan"]],
  ["calendar","Agenda Sekolah",CalendarDays,["Kalender Sekolah","Agenda Pribadi","Agenda Pengguna","Kehadiran Agenda"]],
+ ["reports","Pusat Laporan",FileBarChart,["Ringkasan Laporan","Akademik","Kehadiran","Disiplin","BK","Program & Tugas","Keuangan","SDM & Payroll","Supervisi","Arsip Laporan"]],
  ["teaching","Perangkat Ajar AI",Sparkles,["Proyek Pembelajaran","Modul Ajar","RPP","LKPD","Asesmen Soal","Strategi Pembelajaran","Bahan Ajar","Rubrik Penilaian","Panduan Presentasi","Peta Konsep","Ngobrol AI","Riwayat Draf"]],
- ["academic","Pembelajaran & Penilaian",BookOpenCheck,["Presensi Siswa","Lembar Nilai","Jurnal Mengajar","Agenda Mengajar","Rekap Bulanan","Laporan Kelas","Import/Export Excel"]],
- ["student","Disiplin & Prestasi",ClipboardCheck,["Pelanggaran","Prestasi","Pembinaan","Tindak Lanjut","Rekap & Laporan","Template Laporan"]],
- ["counseling","Bimbingan Konseling",HeartHandshake,["Pemetaan Kebutuhan","Kasus","Konseling Individu","Konseling Kelompok","Layanan Klasikal","RPL","Kunjungan Rumah","Rujukan","Karier","Riwayat Siswa","Tindak Lanjut"]],
+ ["academic","Pembelajaran & Penilaian",BookOpenCheck,["Presensi Siswa","Lembar Nilai","Jurnal Mengajar","Agenda Mengajar","Rekap Bulanan","Laporan Kelas","Laporan Lengkap","Import/Export Excel"]],
+ ["student","Disiplin & Prestasi",ClipboardCheck,["Pelanggaran","Prestasi","Pembinaan","Tindak Lanjut","Rekap & Laporan","Surat & Dokumen","Template Laporan"]],
+ ["counseling","Bimbingan Konseling",HeartHandshake,["Pemetaan Kebutuhan","Kasus","Konseling Individu","Konseling Kelompok","Layanan Klasikal","RPL","Kunjungan Rumah","Rujukan","Karier","Riwayat Siswa","Tindak Lanjut","Laporan BK"]],
  ["planning","Perencanaan & Supervisi",GraduationCap,["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Supervisi Guru","Pusat Dokumen","Persetujuan Dokumen"]],
- ["execution","Program, Tugas & Agenda",ListChecks,["Program Kerja","PIC","Tugas","Deadline","Progres","Kendala","Hasil Rapat","Agenda","Bukti Kegiatan"]],
+ ["execution","Program, Tugas & Agenda",ListChecks,["Program Kerja","PIC","Tugas","Deadline","Progres","Kendala","Hasil Rapat","Agenda","Bukti Kegiatan","Laporan Program"]],
  ["attendance","Presensi Realtime",Clock3,["Check-in/Check-out","Jadwal/Shift","Riwayat Kehadiran","Koreksi Beralasan","Izin","Cuti"]],
  ["performance","Kinerja & Pengembangan",BarChart3,["Kehadiran","Partisipasi Program","Pelatihan","Bukti Capaian","Evaluasi","Tanggapan Guru"]],
- ["finance","Keuangan & Tagihan",WalletCards,["Dashboard Keuangan","Kas/Rekening","Pemasukan","Pengeluaran","Anggaran","Tagihan Siswa","Pembayaran","Kuitansi","Laporan","Import/Export"]],
- ["payroll","Payroll & Slip",BriefcaseBusiness,["Komponen Gaji","Tunjangan","Potongan","Draft Payroll","Review","Approval","Kunci Periode","Rekap Payroll","Slip Saya"]],
+ ["finance","Keuangan & Tagihan",WalletCards,["Dashboard Keuangan","Kas/Rekening","Pemasukan","Pengeluaran","Anggaran","Realisasi Anggaran","Tagihan Siswa","Pembayaran","Kuitansi","Buku Kas Umum","Laporan","Import/Export"]],
+ ["payroll","Payroll & Slip",BriefcaseBusiness,["Komponen Gaji","Tunjangan","Potongan","Draft Payroll","Review","Approval","Kunci Periode","Rekap Payroll","Laporan HR","Slip Saya"]],
  ["access","Akses & Peran",KeyRound,["Tambah Pengguna","Anggota Tim","Struktur Peran","Hak Akses Fitur"]],
  ["settings","Pengaturan Sekolah",Settings,["Profil Sekolah","Identitas & Kontak","Lokasi Sekolah","Akademik","Branding","Memori Sekolah","Langganan","Riwayat Pembayaran"]]
 ] as const;
@@ -50,6 +53,7 @@ function fieldsFor(active:Key,feature:string):Field[]{
  if(active==="finance")return [{key:"title",label:"Data keuangan"},{key:"detail",label:"Kategori / Akun"},{key:"amount",label:"Nominal",type:"number"}];
  if(active==="payroll")return [{key:"employee",label:"Pegawai"},{key:"period",label:"Periode"},{key:"base",label:"Gaji pokok",type:"number"},{key:"allowance",label:"Tunjangan",type:"number"},{key:"deduction",label:"Potongan",type:"number"},{key:"bank",label:"Bank / Rekening"}];
  if(active==="access")return [{key:"name",label:"Nama / Email"},{key:"role",label:"Peran",type:"select",options:["Kepala Sekolah","Wakil Kepala Sekolah","Guru","Guru BK","Bendahara","SDM / HR","Staf","Viewer"]},{key:"notes",label:"Catatan akses",type:"textarea",wide:true}];
+ if(active==="settings"&&feature==="Branding")return [{key:"schoolName",label:"Nama sekolah",wide:true},{key:"npsn",label:"NPSN"},{key:"address",label:"Alamat sekolah",wide:true},{key:"city",label:"Kabupaten / Kota"},{key:"principal",label:"Nama kepala sekolah"},{key:"principalNip",label:"NIP kepala sekolah"},{key:"phone",label:"Telepon"},{key:"email",label:"Email sekolah"},{key:"signerTitle",label:"Jabatan penandatangan"},{key:"classification",label:"Kode klasifikasi dokumen"}];
  if(active==="settings")return [{key:"name",label:"Nama / Nilai pengaturan"},{key:"category",label:"Kategori"},{key:"notes",label:"Keterangan",type:"textarea",wide:true}];
  return [{key:"title",label:"Judul"},{key:"detail",label:"Detail"},{key:"notes",label:"Keterangan",type:"textarea",wide:true}];
 }
@@ -61,6 +65,54 @@ function Dashboard({feature}:{feature:string}){
  if(feature==="Analitik Sekolah")return <div className="demo-dashboard-stack"><div className="demo-panels"><section><div className="demo-section-title"><div><h3>Tren Kehadiran SDM 7 Hari</h3><p>Grafik utama operasional: cepat terlihat bila kehadiran menurun.</p></div><span className="demo-badge">Prioritas</span></div><div className="demo-bars">{attendance.map((n,i)=><div key={i}><i style={{height:(n/42*100)+"%"}}/><b>{n}</b><small>{["Kam","Jum","Sen","Sel","Rab","Kam","Jum"][i]}</small></div>)}</div></section><section><div className="demo-section-title"><div><h3>Status Program & Deadline</h3><p>Memisahkan pekerjaan aktif, berjalan, dan terlambat.</p></div></div>{["Belum mulai","Berjalan","Terlambat"].map((x,i)=><div className="demo-hbar" key={x}><span>{x}</span><i><b style={{width:(tasks[i]/8*100)+"%"}}/></i><strong>{tasks[i]}</strong></div>)}</section></div><section><div className="demo-section-title"><div><h3>Arus Kas 6 Bulan</h3><p>Ringkasan tren keuangan tanpa membuka detail transaksi sensitif.</p></div></div><div className="demo-bars wide">{finance.map((n,i)=><div key={i}><i style={{height:n+"%"}}/><b>{n}jt</b><small>{["Apr","Mei","Jun","Jul","Agu","Sep"][i]}</small></div>)}</div></section></div>;
  if(feature==="Agenda & Deadline")return <div className="demo-panels"><section><h3>Agenda 31 Hari ke Depan</h3>{["Rapat Kurikulum · 1 Okt 09.00","Supervisi VIII A · 2 Okt 08.00","Pelatihan Guru · 4 Okt 10.00"].map(x=><div className="demo-row" key={x}><CalendarDays size={16}/><b>{x}</b><small>Terjadwal</small></div>)}</section><section><h3>Deadline yang Perlu Tindakan</h3>{["Bukti Program Literasi · hari ini","Review RKT · 2 hari","Rekap Tagihan · 4 hari"].map((x,i)=><div className="demo-row" key={x}><AlertTriangle size={16}/><b>{x}</b><small>{i===0?"Prioritas":"Aktif"}</small></div>)}</section></div>;
  return <><div className="demo-grid"><div className="demo-stat"><small>Siswa Aktif</small><strong>486</strong><span>18 kelas</span></div><div className="demo-stat"><small>Guru & Staf</small><strong>42</strong><span>39 hadir hari ini</span></div><div className="demo-stat"><small>Kehadiran Hari Ini</small><strong>93%</strong><span>3 perlu verifikasi</span></div><div className="demo-stat"><small>Tugas Aktif</small><strong>8</strong><span>2 melewati tenggat</span></div></div><div className="demo-panels"><section><h3>Fokus Hari Ini</h3>{["39 SDM sudah presensi","2 tugas melewati tenggat","3 agenda sekolah hari ini"].map(x=><div className="demo-row" key={x}><CheckCircle2 size={16}/><b>{x}</b><small>Realtime</small></div>)}</section><section><h3>Agenda Terdekat</h3>{["Rapat Kurikulum · 09.00","Supervisi VIII A · besok","Pelatihan Guru · 4 Okt"].map(x=><div className="demo-row" key={x}><CalendarDays size={16}/><b>{x}</b><small>Terjadwal</small></div>)}</section></div></>;
+}
+
+
+const reportSourceKeys:Partial<Record<Key,string[]>>={
+ academic:["academic::Presensi Siswa","academic::Lembar Nilai","academic::Jurnal Mengajar"],
+ student:["student::Pelanggaran","student::Prestasi","student::Pembinaan"],
+ counseling:["counseling::Konseling Individu","counseling::Konseling Kelompok","counseling::Layanan Klasikal","counseling::Kunjungan Rumah","counseling::Rujukan","counseling::Karier"],
+ execution:["execution::Program Kerja","execution::Tugas","execution::Kendala","execution::Hasil Rapat","execution::Bukti Kegiatan"],
+ finance:["finance::Pemasukan","finance::Pengeluaran","finance::Anggaran","finance::Tagihan Siswa","finance::Pembayaran"],
+ payroll:["payroll::Draft Payroll","payroll::Komponen Gaji","payroll::Tunjangan","payroll::Potongan"]
+};
+function demoReportFeature(active:Key,feature:string){
+ return (active==="academic"&&["Rekap Bulanan","Laporan Kelas","Laporan Lengkap"].includes(feature))
+  ||(active==="student"&&["Rekap & Laporan","Template Laporan"].includes(feature))
+  ||(active==="counseling"&&feature==="Laporan BK")
+  ||(active==="execution"&&feature==="Laporan Program")
+  ||(active==="finance"&&["Buku Kas Umum","Realisasi Anggaran","Laporan"].includes(feature))
+  ||(active==="payroll"&&["Rekap Payroll","Laporan HR"].includes(feature));
+}
+function demoReportTitle(active:Key,feature:string){
+ if(active==="academic")return feature==="Laporan Kelas"?"Laporan Kelas":"Laporan Buku Kerja Guru";
+ if(active==="student")return "Laporan Disiplin & Prestasi Siswa";
+ if(active==="counseling")return "Laporan Layanan Bimbingan dan Konseling";
+ if(active==="execution")return "Laporan Program Kerja dan Progres Sekolah";
+ if(active==="finance")return feature==="Buku Kas Umum"?"Buku Kas Umum":feature==="Realisasi Anggaran"?"Laporan Realisasi Anggaran":"Laporan Keuangan Sekolah";
+ return feature==="Laporan HR"?"Laporan SDM dan Operasional":"Rekap Payroll Sekolah";
+}
+function demoReportRows(active:Key,saved:Record<string,Saved[]>){
+ return (reportSourceKeys[active]||[]).flatMap(k=>(saved[k]||[]).map(x=>({source:k.split("::")[1],...x.fields})));
+}
+function demoIdentity(saved:Record<string,Saved[]>){
+ const b=saved["settings::Branding"]?.[0]?.fields||{};
+ return {school:b.schoolName||"SMP Negeri Demo School Control",npsn:b.npsn||"20500001",address:b.address||"Jl. Pendidikan No. 1, Surabaya",city:b.city||"Surabaya",principal:b.principal||"Drs. Budi Santoso",nip:b.principalNip||"197805122005011008",phone:b.phone||"(031) 555-0101",email:b.email||"sekolah.demo@example.sch.id",signer:b.signerTitle||"Kepala Sekolah",classification:b.classification||"Internal"};
+}
+function makeReportHtml(title:string,identity:ReturnType<typeof demoIdentity>,rows:Record<string,string>[]){
+ const clean=(v:unknown)=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+ const cols=["source","date","student","employee","title","category","status","amount","notes"].filter(k=>rows.some(r=>r[k]));
+ const head=cols.map(k=>"<th>"+clean(k.replaceAll("_"," "))+"</th>").join("");
+ const body=rows.length?rows.slice(0,100).map(r=>"<tr>"+cols.map(k=>"<td>"+clean(r[k]||"—")+"</td>").join("")+"</tr>").join(""):"<tr><td colspan='"+Math.max(1,cols.length)+"'>Belum ada data demo. Isi data pada modul sumber untuk melihat laporan terisi.</td></tr>";
+ return "<!doctype html><html><head><meta charset='utf-8'><title>"+clean(title)+"</title><style>@page{size:A4 landscape;margin:14mm}body{font:11px Arial;color:#111827}.kop{text-align:center;border-bottom:4px double #111;padding-bottom:10px}.kop h1{font-size:18px;margin:0}.meta{text-align:center;margin:20px 0}.draft{position:fixed;top:42%;left:28%;font-size:64px;font-weight:800;color:rgba(0,0,0,.06);transform:rotate(-28deg)}table{width:100%;border-collapse:collapse}th,td{border:1px solid #9ca3af;padding:5px;text-align:left}th{background:#f1f5f9}.sign{margin:40px 0 0 auto;width:260px;text-align:center}</style></head><body><div class='draft'>DEMO</div><div class='kop'><h1>"+clean(identity.school)+"</h1><p>NPSN "+clean(identity.npsn)+" · "+clean(identity.address)+" · "+clean(identity.phone)+" · "+clean(identity.email)+"</p></div><div class='meta'><h2>"+clean(title.toUpperCase())+"</h2><p>Nomor: DEMO/0001/2026 · Klasifikasi: "+clean(identity.classification)+" · Tahun Pelajaran 2026/2027</p></div><table><thead><tr>"+head+"</tr></thead><tbody>"+body+"</tbody></table><div class='sign'><p>"+clean(identity.city)+", ................</p><p>"+clean(identity.signer)+"</p><br><br><b>"+clean(identity.principal)+"</b><div>NIP. "+clean(identity.nip)+"</div></div></body></html>";
+}
+function DemoReportView({active,feature,saved,onArchive}:{active:Key;feature:string;saved:Record<string,Saved[]>;onArchive:(row:Saved)=>void}){
+ const title=demoReportTitle(active,feature),identity=demoIdentity(saved),rows=demoReportRows(active,saved);
+ function archive(format:string){onArchive({id:crypto.randomUUID(),fields:{title,number:"DEMO/0001/2026",format,date:new Date().toLocaleString("id-ID")}})}
+ function preview(print=false){const w=window.open("","_blank","width=1100,height=800");if(!w)return;w.document.open();w.document.write(makeReportHtml(title,identity,rows));w.document.close();if(print)setTimeout(()=>{w.focus();w.print()},200)}
+ async function excel(){const exportRows=rows.length?rows:[{Keterangan:"Belum ada data demo"}];await downloadExcel("demo-"+title.toLowerCase().replaceAll(" ","-")+".xlsx",[{name:"Laporan",rows:exportRows}]);archive("XLSX")}
+ function word(){const blob=new Blob([makeReportHtml(title,identity,rows)],{type:"application/msword"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="demo-"+title.toLowerCase().replaceAll(" ","-")+".doc";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);archive("WORD")}
+ return <section><div className="demo-section-title"><div><h3>{title}</h3><p>Preview dokumen standar sekolah Indonesia pada mode demo. Data diambil dari modul sumber tanpa input ulang.</p></div><span className="demo-badge">Report Engine Demo</span></div><div className="demo-grid"><div className="demo-stat"><small>Data sumber</small><strong>{rows.length}</strong><span>baris demo</span></div><div className="demo-stat"><small>Format</small><strong style={{fontSize:18}}>A4</strong><span>kop + pengesahan</span></div><div className="demo-stat"><small>Nomor</small><strong style={{fontSize:16}}>DEMO/0001</strong><span>simulasi</span></div><div className="demo-stat"><small>Arsip</small><strong>{(saved["reports::__archive__"]||[]).length}</strong><span>ekspor demo</span></div></div><div className="demo-toolbar-live" style={{marginTop:16}}><button onClick={()=>preview(false)}><Search size={15}/> Preview A4</button><button onClick={()=>void excel()}><Download size={15}/> Excel</button><button onClick={word}><Download size={15}/> Word</button><button className="demo-primary" onClick={()=>{preview(true);archive("PDF")}}><Download size={15}/> PDF / Cetak</button></div><div className="banner" style={{marginTop:14}}><strong>{identity.school}</strong><p className="hint">NPSN {identity.npsn} · {identity.signer}: {identity.principal} · NIP {identity.nip}. Identitas contoh dapat diubah di Pengaturan Sekolah → Branding.</p></div></section>;
 }
 
 function CalendarPreview({items,onPick,onEdit}:{items:Saved[];onPick:(d:string)=>void;onEdit:(x:Saved)=>void}){
@@ -92,14 +144,25 @@ export default function DemoWorkspace(){
  const calendarFeature=active==="calendar";
  const attendanceFeature=active==="attendance"&&feature==="Check-in/Check-out";
  const filtered=rows.filter(x=>Object.values(x.fields).join(" ").toLowerCase().includes(query.toLowerCase()));
+ function routeReport(module:string,target?:string){
+  const map:Record<string,Key>={buku_kerja:"academic",disiplin:"student",bk:"counseling",command:"execution",sikas:"finance",gajian:"payroll",kepsek_ai:"planning"};
+  const k=map[module];if(!k)return;let targetFeature=target||menu.find(x=>x[0]===k)?.[3][0]||"";
+  if(k==="student"&&targetFeature==="Template Laporan")targetFeature="Rekap & Laporan";
+  chooseFeature(k,targetFeature);
+ }
+ function archiveReport(row:Saved){persist({...saved,"reports::__archive__":[row,...(saved["reports::__archive__"]||[])]})}
  return <div className="demo-shell"><aside><div className="demo-brand"><img src="/school-control-mark.svg" width={38} height={38} alt=""/><span><b>School Control</b><small>Demo · akses setara paket aktif</small></span></div><nav>{menu.map(([k,label,Icon,features])=><div className="demo-navitem" key={k}><button className={active===k?"active":""} onClick={()=>choose(k)}><Icon size={18}/>{label}<ChevronRight className={expanded===k?"open":""} size={15}/></button>{expanded===k&&<div className="demo-navchildren">{features.map(x=><button key={x} className={active===k&&feature===x?"selected":""} onClick={()=>chooseFeature(k,x)}>{x}</button>)}</div>}</div>)}</nav><button className="demo-exit" onClick={logout}><LogOut size={17}/> Keluar</button></aside>
  <main><header><div><span className="demo-kicker">SCHOOL CONTROL / DEMO AKSES PENUH</span><h1>{feature}</h1><p>{current[1]} · input sekarang memakai popup seperti akun produksi.</p></div><div className="demo-head-actions"><button className="demo-theme" onClick={toggleTheme}>{theme==="light"?<Moon size={16}/>:<Sun size={16}/>} {theme==="light"?"Gelap":"Terang"}</button><label className="demo-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Cari data halaman ini"/></label></div></header><div className="demo-content">
-  {active==="overview"?<Dashboard feature={feature}/>:<>
+  {active==="overview"?<Dashboard feature={feature}/>:active==="reports"?(
+   feature==="Arsip Laporan"?<section><div className="demo-section-title"><div><h3>Arsip Laporan · Demo</h3><p>Riwayat file laporan yang diekspor dari demo. Pada akun produksi arsip disimpan sebagai snapshot bernomor di database sekolah.</p></div><span className="demo-badge">Snapshot</span></div>{(saved["reports::__archive__"]||[]).map(x=><div className="demo-row" key={x.id}><FileText size={16}/><b>{x.fields.number} · {x.fields.title}<small style={{display:"block"}}>{x.fields.format} · {x.fields.date}</small></b></div>)}{!(saved["reports::__archive__"]||[]).length&&<div className="demo-empty">Belum ada laporan yang diekspor dari mode demo.</div>}</section>:
+   <ReportCenter schoolId="demo" role="owner" focus={feature} onRoute={routeReport}/>
+  ):<>
    {calendarFeature&&<CalendarPreview items={rows} onPick={openNew} onEdit={openEdit}/>}
    {attendanceFeature&&<section className="demo-realtime"><div><span className="demo-live-dot"/><b>Presensi realtime aktif</b><small>Demo meniru waktu server dan izin lokasi perangkat.</small></div><button className="demo-primary" onClick={()=>{navigator.geolocation?.getCurrentPosition(()=>{},()=>{});openNew()}}><MapPin size={15}/> Ambil Lokasi & Absen</button></section>}
-   {importFeature?<section><div className="demo-section-title"><div><h3>Import / Export</h3><p>Gunakan template agar kolom konsisten. Excel dan CSV dapat dipilih; sheet kosong pada import lengkap dilewati.</p></div></div><div className="demo-toolbar-live"><button onClick={downloadTemplate}><Download size={15}/> Unduh Template CSV</button><label><Upload size={15}/> Pilih Excel / CSV<input hidden type="file" accept=".xlsx,.xls,.csv,text/csv" onChange={e=>{const file=e.currentTarget.files?.[0];if(file){setForm({file:file.name,status:"Siap diperiksa"});setModal(true)}}}/></label></div></section>:
+   {demoReportFeature(active,feature)?<DemoReportView active={active} feature={feature} saved={saved} onArchive={archiveReport}/>:
+   importFeature?<section><div className="demo-section-title"><div><h3>Import / Export</h3><p>Gunakan template agar kolom konsisten. Excel dan CSV dapat dipilih; sheet kosong pada import lengkap dilewati.</p></div></div><div className="demo-toolbar-live"><button onClick={downloadTemplate}><Download size={15}/> Unduh Template CSV</button><label><Upload size={15}/> Pilih Excel / CSV<input hidden type="file" accept=".xlsx,.xls,.csv,text/csv" onChange={e=>{const file=e.currentTarget.files?.[0];if(file){setForm({file:file.name,status:"Siap diperiksa"});setModal(true)}}}/></label></div></section>:
     <section><div className="demo-section-title"><div><h3>Data {feature}</h3><p>{rows.length} data tersimpan di demo ini. Form tidak lagi memenuhi bagian atas halaman.</p></div><button className="demo-primary" onClick={()=>openNew()}><Plus size={15}/> Tambah Data</button></div></section>}
-   {!importFeature&&<section>{filtered.map(x=><div className="demo-row" key={x.id}><span className="dot"/><b>{labelOf(x.fields)}<small style={{display:"block"}}>{dateOf(x.fields)} · {Object.entries(x.fields).filter(([k,v])=>v&&!["name","title","date"].includes(k)).slice(0,3).map(([,v])=>v).join(" · ")}</small></b><div className="flow"><button onClick={()=>openEdit(x)} aria-label="Edit"><Pencil size={14}/></button><button onClick={()=>del(x.id)} aria-label="Hapus"><Trash2 size={14}/></button></div></div>)}{!filtered.length&&<div className="demo-empty">Belum ada data. Tekan Tambah Data atau klik tanggal kalender.</div>}</section>}
+   {!importFeature&&!demoReportFeature(active,feature)&&<section>{filtered.map(x=><div className="demo-row" key={x.id}><span className="dot"/><b>{labelOf(x.fields)}<small style={{display:"block"}}>{dateOf(x.fields)} · {Object.entries(x.fields).filter(([k,v])=>v&&!["name","title","date"].includes(k)).slice(0,3).map(([,v])=>v).join(" · ")}</small></b><div className="flow"><button onClick={()=>openEdit(x)} aria-label="Edit"><Pencil size={14}/></button><button onClick={()=>del(x.id)} aria-label="Hapus"><Trash2 size={14}/></button></div></div>)}{!filtered.length&&<div className="demo-empty">Belum ada data. Tekan Tambah Data atau klik tanggal kalender.</div>}</section>}
   </>}
  </div></main>
  <DataEntryModal open={modal} onClose={()=>setModal(false)} title={(editing?"Edit ":"Tambah ")+feature} subtitle="Popup demo memakai struktur field yang disesuaikan dengan modul asal." wide={defs.length>6}>
