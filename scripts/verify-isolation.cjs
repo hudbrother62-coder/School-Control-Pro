@@ -32,4 +32,12 @@ check("Konseling individu","counselor","bk",true);
 check("Konseling individu","principal","bk",true); // Principal sees overview only; counselor-only RLS still protects cases.
 check("Data siswa dan kelas","owner","master",true);
 check("Halo","teacher","overview",true);
+const dashboard=fs.readFileSync(path.join(base,"app/app/page.tsx"),"utf8");
+const dashboardWithoutClock=dashboard.replace(/^import LiveClock from ["']@\/components\/LiveClock["'];\n/m,"");
+assert(!/^import\s+\w+\s+from\s+["']@\/components\//m.test(dashboardWithoutClock),"Dashboard panels must load on demand instead of in the initial bundle.");
+assert(/dynamic\(\s*\(\)\s*=>\s*import\(/.test(dashboard),"Dashboard panels must use lazy dynamic imports.");
+assert(!dashboard.includes("setInterval(()=>setLiveTime"),"A per-second clock must not re-render the full dashboard.");
+assert(dashboard.includes("<LiveClock "),"Attendance must render the isolated live clock component.");
 console.log("PASS: source isolation and 8 role-aware orchestration scenarios.");
+"use client";
+
