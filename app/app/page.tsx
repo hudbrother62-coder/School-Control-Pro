@@ -3,7 +3,7 @@
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import type {User} from "@supabase/supabase-js";
-import {LayoutDashboard,Users,Clock3,Activity,Sparkles,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,ChevronRight,Plus,RefreshCw,ReceiptText,CalendarDays,KeyRound,CircleHelp} from "lucide-react";
+import {LayoutDashboard,Users,Clock3,Activity,Sparkles,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,ChevronRight,Plus,RefreshCw,ReceiptText,CalendarDays,KeyRound,CircleHelp,Paperclip} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import StaffWorkflows from "@/components/StaffWorkflows";
 import SchoolData from "@/components/SchoolData";
@@ -38,6 +38,7 @@ import FinanceLegacyParity from "@/components/FinanceLegacyParity";
 import CommandLegacyParity from "@/components/CommandLegacyParity";
 import WorkspaceTools from "@/components/WorkspaceTools";
 import UniversalOrchestrator from "@/components/UniversalOrchestrator";
+import AttachmentCenter from "@/components/AttachmentCenter";
 import SupervisorLegacyParity from "@/components/SupervisorLegacyParity";
 import {modules,canAccess,isAdmin,ROLE_LABELS,type School,type Role,type ModuleKey,type Membership,type Staff} from "@/lib/modules";
 
@@ -45,7 +46,7 @@ type SchoolAccess={school:School;role:Role};
 type Attendance={id:string;duty_date:string;check_in_at:string|null;check_out_at:string|null;status:string;source:string;user_id:string;notes:string|null};
 type RecordItem={id:string;module_key:string;title:string;notes:string|null;status:string;created_at:string};
 type Summary={present_days:number;late_days:number;programs:number;trainings:number;verified_events:number};
-const icons={overview:LayoutDashboard,orchestrator:Sparkles,master:Users,calendar:CalendarDays,attendance:Clock3,performance:Activity,guru_ai:Sparkles,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,command:ListChecks,sikas:Wallet,gajian:CreditCard,payslip:ReceiptText,access:KeyRound,settings:Settings,help:CircleHelp};
+const icons={overview:LayoutDashboard,orchestrator:Sparkles,master:Users,calendar:CalendarDays,attachments:Paperclip,attendance:Clock3,performance:Activity,guru_ai:Sparkles,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,command:ListChecks,sikas:Wallet,gajian:CreditCard,payslip:ReceiptText,access:KeyRound,settings:Settings,help:CircleHelp};
 const allowedRecordModules=["guru_ai","kepsek_ai","buku_kerja","disiplin","command","sikas","gajian"];
 const formatDate=(s:string|null|undefined)=>s?new Date(s).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"}):"—";
 const schoolDay=(tz:string)=>{const p=new Intl.DateTimeFormat("en-US",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const get=(k:string)=>p.find(x=>x.type===k)?.value||"";return get("year")+"-"+get("month")+"-"+get("day")};
@@ -120,6 +121,7 @@ export default function Home(){
   {workflowContext&&module!=="orchestrator"&&<div className="banner"><div className="sectionhead" style={{marginBottom:0}}><div><strong>Handoff Universal AI Orchestrator · langkah {workflowContext.step_order}</strong><p style={{margin:"6px 0"}}>{workflowContext.step_title}</p><small>{workflowContext.instruction}</small>{workflowContext.request&&<p className="hint" style={{marginBottom:0}}>Tujuan awal: {workflowContext.request}</p>}</div><div className="flow"><button className="button secondary" onClick={()=>choose("orchestrator","Workflow Aktif")}>Kembali ke Workflow</button><button className="iconbutton" aria-label="Tutup konteks workflow" onClick={()=>{sessionStorage.removeItem("school-control-orchestrator-context");setWorkflowContext(null)}}>×</button></div></div></div>}
   {module==="overview"&&<><DashboardOverview schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>{(!featureFocus||featureFocus==="Agenda & Deadline")&&<SchoolCalendar schoolId={schoolId} userId={user.id} role={role} compact/>}</>}
   {module==="orchestrator"&&<UniversalOrchestrator role={role} schoolId={schoolId} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}
+  {module==="attachments"&&<AttachmentCenter schoolId={schoolId} role={role} onRoute={(m,f)=>choose(m,f||"")}/>}
   {module==="master"&&<MasterHubV2 schoolId={schoolId} role={role} focus={featureFocus}/>}\n  {module==="calendar"&&<SchoolCalendar schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
   {module==="attendance"&&<>
  {(!featureFocus||featureFocus==="Check-in/check-out")&&<section className="panel"><div className="flow" style={{justifyContent:"space-between"}}><div><h2>Presensi Realtime</h2><strong className="live-clock">{liveTime.toLocaleTimeString("id-ID",{timeZone:access?.school.timezone||"Asia/Jakarta",hour:"2-digit",minute:"2-digit",second:"2-digit"})}</strong></div><span className="pill">{myAttendance?.status||"Belum presensi"}</span></div>{!myStaff?<div className="banner"><span>Profil presensi belum aktif.</span> <button className="button secondary" disabled={loading} onClick={()=>void selfStaff()}>Aktifkan Presensi</button></div>:<div className="grid" style={{gridTemplateColumns:"repeat(2,minmax(0,1fr))",marginBottom:16}}><div className="card"><label>Jam masuk</label><strong style={{fontSize:23}}>{myAttendance?.check_in_at?formatDate(myAttendance.check_in_at):"—"}</strong></div><div className="card"><label>Jam pulang</label><strong style={{fontSize:23}}>{myAttendance?.check_out_at?formatDate(myAttendance.check_out_at):"—"}</strong></div></div>}<div className="flow"><button className="button" disabled={loading||!myStaff||!!myAttendance?.check_in_at} onClick={()=>void clock("sc_check_in_geo")}>Absen Masuk</button><button className="button secondary" disabled={loading||!myAttendance?.check_in_at||!!myAttendance?.check_out_at} onClick={()=>void clock("sc_check_out_geo")}>Absen Pulang</button></div></section>}
