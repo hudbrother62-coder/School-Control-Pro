@@ -11,7 +11,9 @@ const roles:{key:Role;label:string;desc:string}[]=[
  {key:"teacher",label:"Guru",desc:"Pembelajaran, kelas, agenda dan presensi"},
  {key:"counselor",label:"Guru BK",desc:"Konseling privat, disiplin, agenda dan presensi"},
  {key:"treasurer",label:"Bendahara",desc:"Keuangan, tagihan, agenda dan presensi"},
+ {key:"finance_staff",label:"Staf Keuangan",desc:"Operasional kas, tagihan, pembayaran, bukti dan laporan keuangan"},
  {key:"hr",label:"SDM / HR",desc:"Presensi, cuti, kinerja dan payroll"},
+ {key:"supervisor",label:"Supervisor",desc:"Tim saya, kehadiran tim, approval dan rekap tim sesuai penugasan"},
  {key:"staff",label:"Staf",desc:"Agenda, presensi dan slip pribadi"},
  {key:"viewer",label:"Viewer",desc:"Akses baca sesuai kebijakan sekolah"}
 ];
