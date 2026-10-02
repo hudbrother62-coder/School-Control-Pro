@@ -132,7 +132,7 @@ export default function Home(){
  {(!featureFocus||["Partisipasi program","Pelatihan","Bukti capaian"].includes(featureFocus))&&<StaffWorkflows kind="performance" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>}
  {(!featureFocus||["Evaluasi","Tanggapan guru"].includes(featureFocus))&&<PerformanceReviews schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
  </>}
- {module==="reports"&&<>{featureFocus==="Arsip Laporan"?<ReportArchive schoolId={schoolId}/>:<ReportCenter schoolId={schoolId} role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}</>}
+ {module==="reports"&&<>{featureFocus==="Arsip Laporan"?<ReportArchive schoolId={schoolId} role={role}/>:<ReportCenter schoolId={schoolId} role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}</>}
  {module==="access"&&<AccessPanel schoolId={schoolId} role={role} focus={featureFocus}/>}
  {module==="help"&&<GuideCenter role={role} focus={featureFocus}/>}
  {module==="settings"&&<>
@@ -154,7 +154,7 @@ export default function Home(){
  {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Pusat dokumen","Persetujuan dokumen"].includes(featureFocus))&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
  {featureFocus==="Asisten Kepsek"&&<AIProjectManager schoolId={schoolId} module="kepsek_ai" mode="chat"/>}
  {["Kinerja Kepala Sekolah","Workflow Dokumen","Sumber Dokumen","Pustaka Format"].includes(featureFocus)&&<ManagementLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
- {featureFocus==="Arsip Laporan"&&<ReportArchive schoolId={schoolId}/>}
+ {featureFocus==="Arsip Laporan"&&<ReportArchive schoolId={schoolId} role={role}/>}
  {(!featureFocus||featureFocus==="Supervisi guru")&&<Supervision schoolId={schoolId} role={role} staff={staff} userId={user.id}/>}
  {!featureFocus&&<SchoolProfile schoolId={schoolId} role={role}/>}
  </>}

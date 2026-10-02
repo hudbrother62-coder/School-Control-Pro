@@ -46,6 +46,21 @@ Payment clarification: user explicitly selected Midtrans on 2026-10-02.
 
 ## Next work
 
+## Continuation implemented after “langsung atasi semuannya”
+
+- Added /pulihkan recovery form with password confirmation, 8–128-character validation, updateUser and sign-out. Reset emails now target that route. Email delivery/redirect allowlist and browser recovery still require verification.
+- HR schedule/location/payroll masters: edit, archive, restore, guarded permanent delete; weekday selection and assignment effective dates/history.
+- HR requests: distinct Lembur/Kasbon/Reimburse filters and explanations, positive monetary request validation, pending edit/cancel, own-account Excel templates/imports.
+- HR import: row failure capture/download and recruitment opening cache. Partial successes remain visible; duplicate/retry convergence across every module is still pending.
+- Recruitment: separate opening/candidate forms, draft/open/closed openings, candidate stage/interview/contact editing, candidate archive/restore/purge. Used openings cannot be deleted.
+- Report archive: status filter, reason, archive/restore RPC. Final snapshots, document number, period and original status cannot be mutated or purged.
+- Command: form editors replace prompt chains for program/task/meeting/agenda, program/task/meeting archive/restore, dependency-preserving purge guards, atomic task edit/status transaction, deadline clearing.
+- Closed confirmed database privilege bug: ordinary teachers could write HR masters directly. Restricted master writes to HR managers; limited candidate/payroll/tracking visibility; denied own-request approval and cross-school references.
+- SQL rollback tests passed: actual seeded private row visibility, teacher write denial, self-approval denial, own cancellation, HR dependency deletion, cross-school references, recruitment history protection, report archive/restore/immutability, command archive and atomic rollback.
+- npm lint/test/build passed during implementation; rerun required for final published changes. Added executable HR field validation tests and replayable scripts/verify-hr-runtime.sql.
+
+Overall remains NOT VERIFIED_DONE: full feature parity, all per-menu Excel round trips, authenticated responsive browser flows, merchant credentials and sandbox payment E2E are outstanding. Do not reduce remaining work to credentials alone.
+
 1. Establish school-owner browser session using secure browserAuth; do not request passwords in chat.
 2. Verify normal account experience, then execute per-menu template/CRUD/archive/report checks against disposable school data.
 3. Finish missing HR edit/archive/purge flows and other gaps identified in the inventory.

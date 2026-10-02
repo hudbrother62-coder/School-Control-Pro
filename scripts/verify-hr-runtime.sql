@@ -1,0 +1,63 @@
+begin;
+select set_config('request.jwt.claim.sub',(select user_id::text from sc_members where role='owner' limit 1),true);
+do $$
+declare sid uuid; foreign_school uuid; st uuid; foreign_st uuid; sch uuid; loc uuid; comp uuid; opening uuid; foreign_opening uuid; candidate uuid; rejected boolean;
+begin
+ select school_id into sid from sc_members where user_id=auth.uid() limit 1;
+ insert into sc_schools(name,created_by,is_internal_test) select 'QA rollback foreign-school',u.id,true from auth.users u where not exists(select 1 from sc_schools s where s.created_by=u.id) limit 1 returning id into foreign_school;
+ insert into sc_staff(school_id,name) values(sid,'QA rollback HR staff') returning id into st;
+ insert into sc_staff(school_id,name) values(foreign_school,'QA rollback foreign staff') returning id into foreign_st;
+ insert into sc_hr_work_schedules(school_id,name,start_time,end_time) values(sid,'QA rollback HR schedule','07:00','16:00') returning id into sch;
+ insert into sc_hr_locations(school_id,name,latitude,longitude,radius_meters) values(sid,'QA rollback HR location',0,0,150) returning id into loc;
+ insert into sc_hr_assignments(school_id,staff_id,schedule_id,location_id,effective_from) values(sid,st,sch,loc,current_date);
+ rejected:=false;
+ begin insert into sc_hr_assignments(school_id,staff_id,schedule_id,effective_from) values(sid,foreign_st,sch,current_date); exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL cross-school staff assignment'; end if;
+ update sc_hr_work_schedules set active=false where id=sch;
+ rejected:=false;
+ begin delete from sc_hr_work_schedules where id=sch; exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL referenced schedule deleted'; end if;
+ update sc_hr_locations set active=false where id=loc;
+ rejected:=false;
+ begin delete from sc_hr_locations where id=loc; exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL referenced location deleted'; end if;
+ insert into sc_payroll_component_catalog(school_id,name,kind,default_amount) values(sid,'QA rollback HR component','earning',125000) returning id into comp;
+ insert into sc_payroll_staff_components(school_id,staff_id,component_id,amount) values(sid,st,comp,125000);
+ update sc_payroll_component_catalog set active=false where id=comp;
+ rejected:=false;
+ begin delete from sc_payroll_component_catalog where id=comp; exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL referenced payroll component deleted'; end if;
+ insert into sc_recruitment_openings(school_id,title,status,created_by) values(sid,'QA rollback HR opening','closed',auth.uid()) returning id into opening;
+ insert into sc_recruitment_openings(school_id,title,status,created_by) values(foreign_school,'QA foreign opening','open',auth.uid()) returning id into foreign_opening;
+ rejected:=false;
+ begin insert into sc_recruitment_candidates(school_id,opening_id,name) values(sid,foreign_opening,'QA cross-school candidate'); exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL cross-school opening'; end if;
+ insert into sc_recruitment_candidates(school_id,opening_id,name) values(sid,opening,'QA rollback private candidate') returning id into candidate;
+ rejected:=false;
+ begin delete from sc_recruitment_openings where id=opening; exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL opening candidate history deleted'; end if;
+ rejected:=false;
+ begin delete from sc_recruitment_candidates where id=candidate; exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL active candidate deleted'; end if;
+ -- Keep fixtures in transaction to test actual row visibility, not an empty table.
+end $$;
+update sc_members set role='teacher' where user_id=auth.uid();
+set local role authenticated;
+do $$
+declare sid uuid; req uuid; rejected boolean;
+begin
+ select school_id into sid from sc_members where user_id=auth.uid() limit 1;
+ if exists(select 1 from sc_recruitment_candidates where name='QA rollback private candidate') then raise exception 'FAIL candidate privacy'; end if;
+ if exists(select 1 from sc_payroll_staff_components where amount=125000) then raise exception 'FAIL other staff payroll privacy'; end if;
+ rejected:=false;
+ begin insert into sc_hr_locations(school_id,name,latitude,longitude,radius_meters) values(sid,'QA denied teacher',0,0,150); exception when insufficient_privilege then rejected:=true; end;
+ if not rejected then raise exception 'FAIL teacher modifies HR master'; end if;
+ insert into sc_hr_requests(school_id,user_id,kind,reason,amount) values(sid,auth.uid(),'permission','QA rollback permission',0) returning id into req;
+ rejected:=false;
+ begin update sc_hr_requests set status='approved' where id=req; exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL self approval'; end if;
+ update sc_hr_requests set status='cancelled' where id=req;
+ if not exists(select 1 from sc_hr_requests where id=req and status='cancelled') then raise exception 'FAIL own cancellation'; end if;
+end $$;
+select 'PASS: cross-school references, referenced deletion, recruitment/payroll privacy, teacher writes, self approval, cancellation' result;
+rollback;

@@ -1,0 +1,11 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict'),{createHash}=require('node:crypto');
+const code=ts.transpileModule(fs.readFileSync('lib/midtrans-notification.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const exp={};new Function('exports','require',code)(exp,require);
+const key='test-key-not-merchant-secret',event={order_id:'SC-test',status_code:'200',gross_amount:'100000.00',transaction_status:'settlement',transaction_id:'tx-test'};
+event.signature_key=createHash('sha512').update(event.order_id+event.status_code+event.gross_amount+key).digest('hex');
+assert.deepEqual(exp.verifyNotification(event,key),{orderId:'SC-test',amount:100000,transactionId:'tx-test',status:'paid'});
+assert.throws(()=>exp.verifyNotification({...event,gross_amount:'1.00'},key));
+assert.throws(()=>exp.verifyNotification({...event,signature_key:'x'},key));
+assert.throws(()=>exp.verifyNotification({...event,order_id:42},key));
+for(const [state,fraud,expected] of [['capture','accept','paid'],['capture','challenge',null],['pending',undefined,'pending'],['authorize',undefined,'pending'],['expire',undefined,'expired'],['deny',undefined,'failed'],['cancel',undefined,'failed'],['failure',undefined,'failed'],['refund',undefined,null]])assert.equal(exp.verifyNotification({...event,transaction_status:state,fraud_status:fraud},key).status,expected);
+console.log('PASS Midtrans signed notification tampering, payload types, capture fraud gating and status mapping.');

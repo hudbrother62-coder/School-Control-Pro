@@ -12,7 +12,7 @@ export default function AuthScreen({mode}:{mode:"register"|"login"}){
  const [email,setEmail]=useState(""),[password,setPassword]=useState(""),[school,setSchool]=useState(""),[showPassword,setShowPassword]=useState(false),[loading,setLoading]=useState(false),[error,setError]=useState(""),[message,setMessage]=useState(""),[forgot,setForgot]=useState(false);
  useEffect(()=>{if(!db)return;let active=true;void (async()=>{const {data:{user}}=await db.auth.getUser();if(!user||!active)return;const {data}=await db.rpc("sc_is_platform_admin");if(active)window.location.assign(data===true?"/admin":"/app")})();return()=>{active=false}},[db,router]);
  async function submit(e:React.FormEvent){e.preventDefault();if(!db){setError("Konfigurasi database belum tersedia.");return;}setError("");setMessage("");setLoading(true);try{
-  if(forgot){const {error}=await db.auth.resetPasswordForEmail(email.trim(),{redirectTo:window.location.origin+"/masuk"});if(error)throw error;setMessage("Jika alamat email terdaftar, petunjuk pemulihan akan dikirim.");return}
+  if(forgot){const {error}=await db.auth.resetPasswordForEmail(email.trim(),{redirectTo:window.location.origin+"/pulihkan"});if(error)throw error;setMessage("Jika alamat email terdaftar, petunjuk pemulihan akan dikirim.");return}
   if(mode==="register"){
    if(school.trim().length<3)throw Error("Masukkan nama sekolah minimal 3 karakter.");
    await registerConfirmedAccount(db,{email,password,schoolName:school});

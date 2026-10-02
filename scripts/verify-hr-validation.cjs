@@ -1,0 +1,10 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');
+const code=ts.transpileModule(fs.readFileSync('lib/hr-validation.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const exportsObj={};new Function('exports',code)(exportsObj);
+for(const values of [['A','07:00','16:00',15],['Valid','16:00','07:00',15],['Valid','07:00','16:00',1.5],['Valid','25:00','16:00',15]])assert.throws(()=>exportsObj.scheduleValues(...values));
+assert.deepEqual(exportsObj.scheduleValues(' Pagi ','07:00','16:00',15),{name:'Pagi',start_time:'07:00',end_time:'16:00',late_tolerance_minutes:15});
+for(const values of [['Lokasi','','',150],['Lokasi',91,0,150],['Lokasi',0,181,150],['Lokasi',0,0,10],['Lokasi',0,0,150.5]])assert.throws(()=>exportsObj.locationValues(...values));
+assert.equal(exportsObj.locationValues('Sekolah',0,0,150).latitude,0);
+for(const n of [-1,NaN,Infinity,''])assert.throws(()=>exportsObj.nonnegativeAmount(n));
+assert.equal(exportsObj.nonnegativeAmount('0'),0);
+console.log('PASS HR name/time/GPS/radius/amount validation, including valid zero coordinates.');

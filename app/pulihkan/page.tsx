@@ -1,0 +1,13 @@
+"use client";
+import Link from 'next/link';
+import {useEffect,useMemo,useState} from 'react';
+import {browserDb} from '@/lib/supabase';
+import {errorMessage} from '@/lib/error-message';
+import '@/components/auth.css';
+export default function Recovery(){
+ const db=useMemo(()=>browserDb(),[]);
+ const [ready,setReady]=useState(false),[checking,setChecking]=useState(true),[password,setPassword]=useState(''),[confirmation,setConfirmation]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[done,setDone]=useState(false);
+ useEffect(()=>{let active=true;const {data:{subscription}}=db.auth.onAuthStateChange((event,session)=>{if(active&&(event==='PASSWORD_RECOVERY'||event==='INITIAL_SESSION')){setReady(Boolean(session));setChecking(false)}});void db.auth.getSession().then(({data,error})=>{if(!active)return;setReady(Boolean(data.session));setChecking(false);if(error)setError(errorMessage(error))});return()=>{active=false;subscription.unsubscribe()}},[db]);
+ async function submit(e:React.FormEvent){e.preventDefault();setError('');if(password.length<8||password.length>128){setError('Kata sandi harus 8–128 karakter.');return}if(password!==confirmation){setError('Konfirmasi kata sandi tidak sama.');return}setBusy(true);try{const {error}=await db.auth.updateUser({password});if(error)throw error;const {error:logoutError}=await db.auth.signOut();if(logoutError)throw logoutError;setPassword('');setConfirmation('');setDone(true)}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
+ return <main className="auth-v2"><div className="auth-v2-right" style={{width:'100%',minHeight:'100vh'}}><div className="auth-v2-form-wrap"><Link href="/masuk">School Control</Link><h2>Ganti kata sandi</h2>{checking?<p role="status">Memeriksa tautan pemulihan…</p>:done?<div className="auth-v2-message" role="status">Kata sandi diperbarui. <Link href="/masuk">Masuk dengan kata sandi baru</Link></div>:!ready?<><p>Tautan pemulihan tidak tersedia atau sudah kedaluwarsa. Kirim ulang dari menu Lupa kata sandi.</p><Link href="/masuk">Kembali ke login</Link></>:<form onSubmit={submit}><label>Kata sandi baru<input type="password" autoComplete="new-password" minLength={8} maxLength={128} required value={password} onChange={e=>setPassword(e.target.value)}/></label><label>Ulangi kata sandi<input type="password" autoComplete="new-password" minLength={8} maxLength={128} required value={confirmation} onChange={e=>setConfirmation(e.target.value)}/></label><button className="auth-v2-submit" disabled={busy}>{busy?'Menyimpan…':'Simpan kata sandi baru'}</button></form>}{error&&<div className="auth-v2-error" role="alert">{error}</div>}</div></div></main>;
+}

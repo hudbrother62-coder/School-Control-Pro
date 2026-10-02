@@ -1,5 +1,5 @@
 import {NextRequest,NextResponse} from "next/server";
-import {createHash,timingSafeEqual} from "node:crypto";
+import {verifyNotification,NotificationError} from "@/lib/midtrans-notification";
 import {createClient} from "@supabase/supabase-js";
 export const runtime="nodejs";
 export async function POST(req:NextRequest){
@@ -7,22 +7,11 @@ export async function POST(req:NextRequest){
   const serverKey=process.env.MIDTRANS_SERVER_KEY,url=process.env.NEXT_PUBLIC_SUPABASE_URL,serviceKey=process.env.SUPABASE_SERVICE_ROLE_KEY;
   if(!serverKey||!url||!serviceKey)return NextResponse.json({error:"Server not configured"},{status:503});
   const event=await req.json();
-  const {order_id,status_code,gross_amount,signature_key,transaction_status,fraud_status,transaction_id}=event;
-  if(![order_id,status_code,gross_amount,signature_key,transaction_status].every(x=>typeof x==="string"))return NextResponse.json({error:"Bad payload"},{status:400});
-  const expected=createHash("sha512").update(order_id+status_code+gross_amount+serverKey).digest("hex");
-  const provided=String(signature_key).toLowerCase();
-  if(provided.length!==expected.length||!timingSafeEqual(Buffer.from(provided),Buffer.from(expected)))return NextResponse.json({error:"Invalid signature"},{status:401});
-  const amount=Number(gross_amount);
-  if(!Number.isSafeInteger(amount)||amount<=0)return NextResponse.json({error:"Invalid amount"},{status:400});
-  let mapped:"pending"|"paid"|"failed"|"expired"|null=null;
-  if(transaction_status==="settlement"||(transaction_status==="capture"&&fraud_status==="accept"))mapped="paid";
-  else if(transaction_status==="pending"||transaction_status==="authorize")mapped="pending";
-  else if(transaction_status==="expire")mapped="expired";
-  else if(["cancel","deny","failure"].includes(transaction_status))mapped="failed";
-  if(!mapped)return NextResponse.json({ok:true,ignored:transaction_status});
+  const verified=verifyNotification(event,serverKey);
+  if(!verified.status)return NextResponse.json({ok:true,ignored:event.transaction_status});
   const admin=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
-  const {error}=await admin.rpc("sc_reconcile_payment",{p_order_id:order_id,p_amount:amount,p_gateway_tx:typeof transaction_id==="string"?transaction_id:"",p_status:mapped});
+  const {error}=await admin.rpc("sc_reconcile_payment",{p_order_id:verified.orderId,p_amount:verified.amount,p_gateway_tx:verified.transactionId,p_status:verified.status});
   if(error)return NextResponse.json({error:"Payment reconciliation failed"},{status:400});
-  return NextResponse.json({ok:true,status:mapped});
- }catch{return NextResponse.json({error:"Notification rejected"},{status:400});}
+  return NextResponse.json({ok:true,status:verified.status});
+ }catch(e){if(e instanceof NotificationError)return NextResponse.json({error:e.message},{status:e.statusCode});return NextResponse.json({error:"Notification rejected"},{status:400});}
 }

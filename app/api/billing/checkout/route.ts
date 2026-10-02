@@ -7,10 +7,10 @@ const h={"Cache-Control":"no-store"};
 export async function POST(req:NextRequest){
  try{
   const token=req.headers.get("authorization")?.replace(/^Bearer\s+/i,"");
+  if(!token)return NextResponse.json({error:"Login diperlukan."},{status:401,headers:h});
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const serviceKey=process.env.SUPABASE_SERVICE_ROLE_KEY,midtransKey=process.env.MIDTRANS_SERVER_KEY;
   if(!url||!key||!serviceKey||!midtransKey)return NextResponse.json({error:"Gateway pembayaran belum dikonfigurasi oleh pengelola platform."},{status:503,headers:h});
-  if(!token)return NextResponse.json({error:"Login diperlukan."},{status:401,headers:h});
   const db=createClient(url,key,{global:{headers:{Authorization:"Bearer "+token}},auth:{persistSession:false,autoRefreshToken:false}});
   const {data:{user}}=await db.auth.getUser(token);
   if(!user)return NextResponse.json({error:"Sesi tidak sah."},{status:401,headers:h});

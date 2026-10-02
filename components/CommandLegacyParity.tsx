@@ -17,9 +17,9 @@ export default function CommandLegacyParity({schoolId,userId,role,staff,focus}:{
  const [programs,setPrograms]=useState<P[]>([]),[tasks,setTasks]=useState<T[]>([]),[meetings,setMeetings]=useState<M[]>([]),[evidence,setEvidence]=useState<E[]>([]);
  const [meetingId,setMeetingId]=useState(""),[programId,setProgramId]=useState(""),[title,setTitle]=useState(""),[pic,setPic]=useState(""),[due,setDue]=useState(day()),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
  async function load(){if(!db)return;const [p,t,m,e]=await Promise.all([
-  db.from("sc_programs").select("id,title,status,deadline,pic_id").eq("school_id",schoolId).order("created_at",{ascending:false}),
-  db.from("sc_program_tasks").select("id,program_id,title,status,pic_id,due_at,problem,result").eq("school_id",schoolId).order("created_at",{ascending:false}),
-  db.from("sc_meetings").select("id,title,held_at,minutes,decisions,follow_up_status").eq("school_id",schoolId).order("held_at",{ascending:false}),
+  db.from("sc_programs").select("id,title,status,deadline,pic_id").eq("school_id",schoolId).is("archived_at",null).order("created_at",{ascending:false}),
+  db.from("sc_program_tasks").select("id,program_id,title,status,pic_id,due_at,problem,result").eq("school_id",schoolId).is("archived_at",null).order("created_at",{ascending:false}),
+  db.from("sc_meetings").select("id,title,held_at,minutes,decisions,follow_up_status").eq("school_id",schoolId).is("archived_at",null).order("held_at",{ascending:false}),
   db.from("sc_evidence").select("id,target_type,target_id,description,status,verified_at,review_note").eq("school_id",schoolId).order("created_at",{ascending:false})
  ]);setPrograms((p.data||[]) as P[]);setTasks((t.data||[]) as T[]);setMeetings((m.data||[]) as M[]);setEvidence((e.data||[]) as E[])}
  useEffect(()=>{void load()},[db,schoolId]);
