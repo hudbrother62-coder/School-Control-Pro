@@ -1,0 +1,13 @@
+const fs=require('fs'),ts=require('typescript'),assert=require('node:assert/strict');
+const e={};new Function('exports',ts.transpileModule(fs.readFileSync('lib/staff-import.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(e);
+const staff=[{id:'s1',name:'Guru Satu',user_id:'u1'},{id:'s2',name:'Nama Ganda',user_id:'u2'},{id:'s3',name:'Nama Ganda',user_id:'u3'}];
+assert.equal(e.validDate('2028-02-29'),'2028-02-29');for(const day of ['2026-02-29','2026-13-01','2026-04-31','2026-1-01'])assert.throws(()=>e.validDate(day));
+assert.throws(()=>e.parseStaffRow('staff',{Pegawai:'Nama Ganda'},staff));
+assert.equal(e.parseStaffRow('staff',{Pegawai_ID:'s2',Jam_Mulai:'07:00',Toleransi_Menit:0},staff).staffId,'s2');
+assert.throws(()=>e.parseStaffRow('staff',{Pegawai_ID:'s1',Jam_Mulai:'29:00',Toleransi_Menit:1},staff));
+assert.throws(()=>e.parseStaffRow('attendance',{Pegawai_ID:'s1',Tanggal:'2026-10-02',Alasan:'singkat'},staff));
+assert.equal(e.parseStaffRow('performance',{Pegawai:'Guru Satu',Tanggal:'2026-10-02',Kategori:'training',Kegiatan:'Pelatihan literasi'},staff).userId,'u1');
+assert.throws(()=>e.parseStaffRow('performance',{Pegawai:'Guru Satu',Tanggal:'2026-10-02',Kategori:'unknown',Kegiatan:'Pelatihan'},staff));
+assert.throws(()=>e.parseStaffRow('leave',{Jenis:'permission',Tanggal_Mulai:'2026-10-03',Tanggal_Selesai:'2026-10-02',Alasan:'Alasan izin'},staff));
+assert.equal(e.parseStaffRow('leave',{Jenis:'permission',Tanggal_Mulai:'2026-10-02',Tanggal_Selesai:'2026-10-03',Alasan:'Alasan izin'},staff).leaveKind,'permission');
+console.log('PASS staff import calendar dates, unambiguous tenant staff matching, shifts, evidence types and leave ranges.');

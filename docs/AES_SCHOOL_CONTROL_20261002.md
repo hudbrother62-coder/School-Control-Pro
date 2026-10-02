@@ -58,6 +58,11 @@ Payment clarification: user explicitly selected Midtrans on 2026-10-02.
 - Closed confirmed database privilege bug: ordinary teachers could write HR masters directly. Restricted master writes to HR managers; limited candidate/payroll/tracking visibility; denied own-request approval and cross-school references.
 - SQL rollback tests passed: actual seeded private row visibility, teacher write denial, self-approval denial, own cancellation, HR dependency deletion, cross-school references, recruitment history protection, report archive/restore/immutability, command archive and atomic rollback.
 - npm lint/test/build passed during implementation; rerun required for final published changes. Added executable HR field validation tests and replayable scripts/verify-hr-runtime.sql.
+- First continuation production commit f1da36d2f5e3ae9cbc26a8c84f9deebc992f9ae7, deployment dpl_34QVRJcRiKNU85aSwjKRY5FJAmmd READY. Public browser /pulihkan without a recovery session renders the correct expired/missing-link message.
+- Added docs/FEATURE_COVERAGE.md: every one of 180 submenu entries across 18 modules, explicit router component and source-level Excel indication. It deliberately does not certify E2E or direct import coverage for every entry.
+- Subsequent continuation adds distinct PIC assignment metrics, deadline ordering/overdue indication, per-program progress and problem filtering; distinct leave/permission and performance event filters/forms.
+- StaffWorkflows now has kind-specific templates/imports for shifts, manual attendance corrections, performance evidence and own leave requests; row errors downloadable. Exports explicitly identify loaded-data scope. New parser tests cover actual calendar dates, duplicate-name rejection, stable staff IDs, category/time/range validation.
+- Midtrans notification validation extracted without changing reconciliation behavior; signed tampering, invalid payload types, fraud capture gating and status mapping tests pass. Merchant sandbox checkout still blocked by configuration.
 
 Overall remains NOT VERIFIED_DONE: full feature parity, all per-menu Excel round trips, authenticated responsive browser flows, merchant credentials and sandbox payment E2E are outstanding. Do not reduce remaining work to credentials alone.
 
