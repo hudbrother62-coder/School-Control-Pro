@@ -63,10 +63,15 @@ Payment clarification: user explicitly selected Midtrans on 2026-10-02.
 - Subsequent continuation adds distinct PIC assignment metrics, deadline ordering/overdue indication, per-program progress and problem filtering; distinct leave/permission and performance event filters/forms.
 - StaffWorkflows now has kind-specific templates/imports for shifts, manual attendance corrections, performance evidence and own leave requests; row errors downloadable. Exports explicitly identify loaded-data scope. New parser tests cover actual calendar dates, duplicate-name rejection, stable staff IDs, category/time/range validation.
 - Midtrans notification validation extracted without changing reconciliation behavior; signed tampering, invalid payload types, fraud capture gating and status mapping tests pass. Merchant sandbox checkout still blocked by configuration.
+- Second continuation production commit e771ec00a36c8da191e1c03a23c2f7e8d7d08490, deployment dpl_F2u4ka9x4WuSdsCGkWr6LwCWVLbg READY. Public /masuk, /daftar, /pulihkan return 200; unauthenticated checkout correctly returns 401.
+- Additional runtime tests passed for imported staff update/evidence payloads, duplicate/future manual attendance rejection, payment amount mismatch and exactly-once entitlement extension under repeated/late notifications. Payment SQL tests ran with service-role claims inside a rolled-back transaction; this is not merchant sandbox E2E.
+- Added Excel templates/imports for evaluation drafts and own responses. Draft import does not submit or finalize evaluation. Response editor now uses a modal. Fixed ignored draft employee changes and denied finalization for expired subscriptions; rollback tests passed.
+- Management library/source/head-performance/workflow templates/imports now available, with row failure downloads. School templates and sources gain edit/archive/restore/purge, preserving linked document sources. Workflow metadata UI/imports restrict modifications to draft/review documents.
+- Executable URL schemes, credential-bearing URLs, wrong-school file prefixes and cross-school source-document references are rejected. Management SQL runtime script is saved at scripts/verify-management-runtime.sql.
 
 Overall remains NOT VERIFIED_DONE: full feature parity, all per-menu Excel round trips, authenticated responsive browser flows, merchant credentials and sandbox payment E2E are outstanding. Do not reduce remaining work to credentials alone.
 
-1. Establish school-owner browser session using secure browserAuth; do not request passwords in chat.
+1. Browser sign-in was declined earlier. Do not retry the secure handoff unless the user asks to sign in; do not request passwords in chat. Authenticated UI verification remains blocked.
 2. Verify normal account experience, then execute per-menu template/CRUD/archive/report checks against disposable school data.
 3. Finish missing HR edit/archive/purge flows and other gaps identified in the inventory.
 4. Verify recovery and invite/account edge cases.

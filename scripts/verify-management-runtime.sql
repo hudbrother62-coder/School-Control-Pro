@@ -1,0 +1,36 @@
+begin;
+select set_config('request.jwt.claim.sub',(select user_id::text from sc_members where role='owner' limit 1),true);
+do $$
+declare sid uuid; tid uuid; src uuid; doc uuid; fsid uuid; fdoc uuid; rejected boolean;
+begin
+ select school_id into sid from sc_members where user_id=auth.uid() limit 1;
+ insert into sc_template_library(school_id,scope,category,title,url,created_by) values(sid,'school','SOP Sekolah','QA rollback template','https://example.org/format',auth.uid()) returning id into tid;
+ rejected:=false;
+ begin update sc_template_library set url='javascript:alert(1)' where id=tid; exception when check_violation then rejected:=true; end;
+ if not rejected then raise exception 'FAIL executable template URL'; end if;
+ rejected:=false;
+ begin delete from sc_template_library where id=tid; exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL active template deletion'; end if;
+ perform sc_archive_management_resource(sid,'template',tid,true);
+ perform sc_archive_management_resource(sid,'template',tid,false);
+ if not exists(select 1 from sc_template_library where id=tid and archived_at is null) then raise exception 'FAIL template restore'; end if;
+ insert into sc_documents(school_id,kind,title,created_by) values(sid,'SOP','QA rollback source document',auth.uid()) returning id into doc;
+ insert into sc_document_sources(school_id,document_id,title,source_type,note,created_by) values(sid,doc,'QA rollback source','note','QA note',auth.uid()) returning id into src;
+ perform sc_archive_management_resource(sid,'source',src,true);
+ rejected:=false;
+ begin delete from sc_document_sources where id=src; exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL linked source deleted'; end if;
+ rejected:=false;
+ begin insert into sc_document_sources(school_id,title,source_type,url,created_by) values(sid,'QA invalid URL','url',null,auth.uid()); exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL source URL mandatory'; end if;
+ rejected:=false;
+ begin insert into sc_document_sources(school_id,title,source_type,storage_path,created_by) values(sid,'QA invalid file folder','file',gen_random_uuid()::text||'/source.pdf',auth.uid()); exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL cross-school file folder'; end if;
+ insert into sc_schools(name,created_by,is_internal_test) select 'QA rollback foreign source school',u.id,true from auth.users u where not exists(select 1 from sc_schools s where s.created_by=u.id) limit 1 returning id into fsid;
+ insert into sc_documents(school_id,kind,title,created_by) values(fsid,'SOP','QA foreign source document',auth.uid()) returning id into fdoc;
+ rejected:=false;
+ begin insert into sc_document_sources(school_id,document_id,title,source_type,note,created_by) values(sid,fdoc,'QA foreign linked source','note','QA note',auth.uid()); exception when raise_exception then rejected:=true; end;
+ if not rejected then raise exception 'FAIL cross-school source document'; end if;
+end $$;
+select 'PASS management URL, archive/restore, linked source preservation, file folder and tenant document boundaries' result;
+rollback;

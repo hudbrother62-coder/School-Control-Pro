@@ -128,12 +128,12 @@ Daftar diambil dari seluruh registry navigasi dan dipetakan ke komponen yang dip
 | RKT | AIWorkbench + DocumentCenter | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
 | RKAS | AIWorkbench + DocumentCenter | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
 | SOP | AIWorkbench + DocumentCenter | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
-| Kinerja Kepala Sekolah | ManagementLegacyParity | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
+| Kinerja Kepala Sekolah | ManagementLegacyParity | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
 | Supervisi guru | Supervision | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
 | Pusat dokumen | DocumentCenter | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
-| Workflow Dokumen | ManagementLegacyParity | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
-| Sumber Dokumen | ManagementLegacyParity | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
-| Pustaka Format | ManagementLegacyParity | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
+| Workflow Dokumen | ManagementLegacyParity | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
+| Sumber Dokumen | ManagementLegacyParity | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
+| Pustaka Format | ManagementLegacyParity | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
 | Arsip Laporan | ReportArchive | Tidak ada pembaca langsung; penulis tersedia | Belum disahkan E2E |
 | Asisten Kepsek | AIProjectManager | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
 | Persetujuan dokumen | DocumentCenter | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
@@ -174,8 +174,8 @@ Daftar diambil dari seluruh registry navigasi dan dipetakan ke komponen yang dip
 | Partisipasi program | StaffWorkflows | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
 | Pelatihan | StaffWorkflows | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
 | Bukti capaian | StaffWorkflows | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
-| Evaluasi | PerformanceReviews | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
-| Tanggapan guru | PerformanceReviews | Tidak ada pembaca langsung; tidak ada penulis langsung | Belum disahkan E2E |
+| Evaluasi | PerformanceReviews | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
+| Tanggapan guru | PerformanceReviews | Pembaca tersedia; penulis tersedia | Belum disahkan E2E |
 
 ## SDM, Payroll & Kompensasi
 

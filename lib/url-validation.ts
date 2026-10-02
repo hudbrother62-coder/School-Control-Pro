@@ -1,0 +1,1 @@
+export function validHttpUrl(value:string){const text=value.trim();if(!text)return null;let url:URL;try{url=new URL(text)}catch{throw Error('URL tidak valid. Gunakan alamat http:// atau https://.')}if(!['http:','https:'].includes(url.protocol)||url.username||url.password)throw Error('URL harus HTTP/HTTPS tanpa kredensial di alamat.');return url.href;}
