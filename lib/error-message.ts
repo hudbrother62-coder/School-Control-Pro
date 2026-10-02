@@ -1,0 +1,6 @@
+/** Supabase/PostgREST errors are plain objects, not always Error instances. */
+export function errorMessage(error:unknown):string {
+  if(error && typeof error === "object" && "message" in error && typeof error.message === "string" && error.message.trim()) return error.message;
+  if(typeof error === "string" && error.trim()) return error;
+  return "Permintaan belum berhasil. Silakan coba kembali.";
+}

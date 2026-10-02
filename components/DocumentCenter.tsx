@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Plus} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
@@ -13,11 +14,11 @@ export default function DocumentCenter({schoolId,userId,role,teacherOnly=false,f
  async function load(){if(!db)return;const {data,error}=await db.from("sc_documents").select("id,kind,title,content,status,revision,created_by").eq("school_id",schoolId).order("updated_at",{ascending:false}).limit(70);if(error)setError(error.message);else setDocs((data||[]) as Doc[])}
  useEffect(()=>{void load()},[db,schoolId]);
  function choose(id:string,open=true){setSelected(id);const d=docs.find(x=>x.id===id);setKind(d?.kind||(teacherOnly?"TEACHING":"RKT"));setTitle(d?.title||"");setBody(d?.content||"");if(open)setModal(true)}
- async function task(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Perubahan dokumen tersimpan.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function task(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Perubahan dokumen tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function save(submit:boolean){if(!db)return;await task(async()=>{const {data,error}=await db.rpc("sc_save_document",{p_school:schoolId,p_document:selected||null,p_kind:kind,p_title:title,p_content:body,p_submit:submit});if(error)throw error;setSelected(String(data||""));setModal(false)})}
  async function approve(id:string){if(!db)return;await task(async()=>{const {error}=await db.rpc("sc_approve_document",{p_school:schoolId,p_document:id});if(error)throw error})}
  async function remove(id:string){if(!db||!confirm("Hapus dokumen draft/review ini?"))return;await task(async()=>{const {error}=await db.rpc("sc_delete_auxiliary",{p_school:schoolId,p_entity:"document",p_id:id});if(error)throw error;if(selected===id){setSelected("");setTitle("");setBody("")}})}
- async function exportDoc(d:Doc,format:"docx"|"pdf"){if(!db)return;setBusy(true);setError("");try{const identity=await loadReportIdentity(db,schoolId);if(format==="docx")await downloadNarrativeDocx(identity,d);else printNarrativeDocument(identity,d);setOk(format==="docx"?"Word .docx asli berhasil dibuat.":"Dokumen siap dicetak / disimpan PDF.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function exportDoc(d:Doc,format:"docx"|"pdf"){if(!db)return;setBusy(true);setError("");try{const identity=await loadReportIdentity(db,schoolId);if(format==="docx")await downloadNarrativeDocx(identity,d);else printNarrativeDocument(identity,d);setOk(format==="docx"?"Word .docx asli berhasil dibuat.":"Dokumen siap dicetak / disimpan PDF.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  const editing=docs.find(d=>d.id===selected);const approvalOnly=(focus||"").toLowerCase().includes("persetujuan");
  return <>
   {!approvalOnly&&<section className="panel"><div className="sectionhead"><div><h2>Pusat Dokumen</h2><p className="muted">Dokumen kerja menggunakan editor, versi, review, dan persetujuan. Editor dibuka melalui popup agar daftar dokumen tetap bersih.</p></div><button className="button" onClick={()=>{setSelected("");setKind(teacherOnly?"TEACHING":"RKT");setTitle("");setBody("");setModal(true)}}><Plus size={15}/> Buat Dokumen</button></div></section>}

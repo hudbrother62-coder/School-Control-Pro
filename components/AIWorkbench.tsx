@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {BookOpenCheck,CheckCircle2,ClipboardList,Save,Sparkles} from "lucide-react";
 import SmartSelect,{type SmartOption} from "@/components/SmartSelect";
@@ -75,7 +76,7 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
  useEffect(()=>{setToolData({});setContext("")},[template]);
  function setField<K extends keyof ProjectContext>(k:K,v:ProjectContext[K]){setProject(p=>({...p,[k]:v}))}
  function saveProject(){localStorage.setItem("school-control-teaching-project-"+schoolId,JSON.stringify(project));setOk("Konteks pembelajaran tersimpan. Seluruh generator akan memakai data yang sama.")}
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
 
  const classOptions:SmartOption[]=useMemo(()=>{
   const fromDb=classes.map(c=>({value:c.name,label:c.name,subtitle:[c.grade,c.academic_year].filter(Boolean).join(" · ")}));

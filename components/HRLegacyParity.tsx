@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useRef,useState} from "react";
 import {Check,Download,MapPin,Plus,Save,Trash2,Upload,Users} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -49,7 +50,7 @@ export default function HRLegacyParity({schoolId,userId,role,staff,focus}:{schoo
   },()=>{}, {enableHighAccuracy:true,maximumAge:15000,timeout:12000});
   return()=>navigator.geolocation.clearWatch(id);
  },[focus,db,schoolId,userId,activeOwnTrack?.id]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  const staffName=(uid:string)=>staff.find(s=>s.user_id===uid)?.name||"Pengguna";
  async function request(){if(!db||!reason.trim())return;await run(async()=>{const {error}=await db.from("sc_hr_requests").insert({school_id:schoolId,user_id:userId,kind,from_at:from||null,to_at:to||null,amount:Number(amount||0),reason:reason.trim()});if(error)throw error;setReason("");setAmount("0");setOk("Pengajuan dikirim.")})}
  async function decide(id:string,status:string){if(!db)return;await run(async()=>{const note=prompt("Catatan keputusan (opsional)")||null;const {error}=await db.rpc("sc_decide_hr_request",{p_school:schoolId,p_request:id,p_status:status,p_note:note});if(error)throw error;setOk("Status pengajuan diperbarui.")})}
@@ -73,7 +74,7 @@ export default function HRLegacyParity({schoolId,userId,role,staff,focus}:{schoo
   if(focus==="Rekrutmen")return downloadExcel("template-rekrutmen.xlsx",[{name:"REKRUTMEN",rows:[{Lowongan:"Guru Matematika",Departemen:"Akademik",Nama_Kandidat:"Nama Kandidat",Email:"kandidat@example.com",Telepon:"08xxxxxxxxxx",Sumber:"Referensi",Tahap:"new",Interview:"",Catatan:""}]},{name:"Panduan",rows:[{Ketentuan:"Tahap: new, screening, interview, offer, hired, rejected. Lowongan akan dibuat bila belum ada."}]}]);
   if(focus==="Kunjungan Lapangan")return downloadExcel("template-kunjungan-lapangan.xlsx",[{name:"KUNJUNGAN",rows:[{Pegawai:"Nama Pegawai",Kegiatan:"Kunjungan mitra",Tempat:"Lokasi",Alamat:"Alamat/catatan",Jadwal:nowLocal().replace("T"," ")}]},{name:"Panduan",rows:[{Ketentuan:"Pegawai harus sudah memiliki akun/user_id. Jadwal gunakan YYYY-MM-DD HH:MM."}]}]);
  }
- async function readHrImport(file?:File){if(!file)return;setError("");try{if(file.size>8_000_000)throw Error("File maksimal 8 MB.");const rows=await readExcel(file);if(rows.length>2000)throw Error("Maksimal 2.000 baris.");setImportRows(rows);setImportFile(file.name);setOk(file.name+" siap diimport · "+rows.length+" baris.")}catch(e){setError(e instanceof Error?e.message:String(e))}}
+ async function readHrImport(file?:File){if(!file)return;setError("");try{if(file.size>8_000_000)throw Error("File maksimal 8 MB.");const rows=await readExcel(file);if(rows.length>2000)throw Error("Maksimal 2.000 baris.");setImportRows(rows);setImportFile(file.name);setOk(file.name+" siap diimport · "+rows.length+" baris.")}catch(e){setError(errorMessage(e))}}
  async function commitHrImport(){if(!db||!manager||!importRows.length)return;await run(async()=>{let imported=0,skipped=0;for(const row of importRows){
   if(focus==="Jadwal Kerja"){const nm=String(row.Nama_Jadwal||"").trim(),st=String(row.Jam_Mulai||"").trim(),en=String(row.Jam_Selesai||"").trim(),tol=Number(row.Toleransi_Menit??15),days=String(row.Hari||"1,2,3,4,5").split(",").map(x=>Number(x.trim())).filter(x=>x>=1&&x<=7);if(nm.length<2||!/^\d{2}:\d{2}$/.test(st)||!/^\d{2}:\d{2}$/.test(en)||st>=en||!Number.isFinite(tol)||tol<0||!days.length){skipped++;continue}const {error}=await db.from("sc_hr_work_schedules").insert({school_id:schoolId,name:nm,weekday:days,start_time:st,end_time:en,late_tolerance_minutes:tol});if(error)throw error;imported++;continue}
   if(focus==="Lokasi Presensi"){const nm=String(row.Nama_Lokasi||"").trim(),la=Number(row.Latitude),lo=Number(row.Longitude),rad=Number(row.Radius_Meter??150);if(nm.length<2||!Number.isFinite(la)||la< -90||la>90||!Number.isFinite(lo)||lo< -180||lo>180||!Number.isFinite(rad)||rad<20){skipped++;continue}const {error}=await db.from("sc_hr_locations").insert({school_id:schoolId,name:nm,address:String(row.Alamat||"").trim()||null,latitude:la,longitude:lo,radius_meters:rad});if(error)throw error;imported++;continue}

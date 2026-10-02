@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
 import {downloadExcel,readExcel} from "@/lib/excel";
@@ -32,7 +33,7 @@ export default function MasterHub({schoolId,role,focus}:{schoolId:string;role:Ro
  ]);setClasses((r[0].data||[]) as C[]);setStudents((r[1].data||[]) as S[]);setStaff((r[2].data||[]) as Staff[]);setSubjects((r[3].data||[]) as Subject[]);setMembers((r[4].data||[]) as Member[]);setAssignments((r[5].data||[]) as A[]);for(const x of r)if(x.error){setError(x.error.message);break}}
  useEffect(()=>{void load()},[db,schoolId]);
  useEffect(()=>{const f=(focus||"").toLowerCase();if(f.includes("siswa"))setTab("students");else if(f.includes("kelas"))setTab("classes");else if(f.includes("guru")||f.includes("tenaga"))setTab("staff");else if(f.includes("mata"))setTab("subjects");else if(f.includes("penugasan"))setTab("assignments");else if(f.includes("import")||f.includes("export"))setTab("import")},[focus]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Perubahan tersimpan dan langsung dipakai fitur lain.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Perubahan tersimpan dan langsung dipakai fitur lain.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function rpc(name:string,args:Record<string,unknown>){if(!db)throw Error("Database belum terhubung");const {data,error}=await db.rpc(name,args);if(error)throw error;return data}
  function resetStudent(){setSid(null);setSName("");setNis("");setNisn("");setGender("");setSClass("");setSStatus("active")}
  function pickStudent(s:S){setSid(s.id);setSName(s.name);setNis(s.nis||"");setNisn(s.nisn||"");setGender(s.gender||"");setSClass(s.class_id||"");setSStatus(s.status)}
@@ -54,7 +55,7 @@ export default function MasterHub({schoolId,role,focus}:{schoolId:string;role:Ro
    [{Kode:"MTK",Nama:"Matematika"}];
   await downloadExcel("template-"+importKind+"-school-control.xlsx",[{name:"Data",rows},{name:"Panduan",rows:guide}]);
  }
- async function read(file?:File){if(!file)return;setError("");try{if(file.size>5_000_000)throw Error("File maksimal 5 MB");const rows=await readExcel(file);if(rows.length>500)throw Error("Maksimal 500 baris");setPreview(rows as Record<string,unknown>[]);setFilename(file.name)}catch(e){setError(e instanceof Error?e.message:String(e));setPreview([])}}
+ async function read(file?:File){if(!file)return;setError("");try{if(file.size>5_000_000)throw Error("File maksimal 5 MB");const rows=await readExcel(file);if(rows.length>500)throw Error("Maksimal 500 baris");setPreview(rows as Record<string,unknown>[]);setFilename(file.name)}catch(e){setError(errorMessage(e));setPreview([])}}
  async function commitImport(){if(!preview.length)return;await run(async()=>{
   if(importKind==="students"){
    const rows=preview.map(r=>({nis:clean(r.NIS),nisn:clean(r.NISN),name:clean(r.Nama),gender:clean(r.Jenis_Kelamin),class_name:clean(r.Kelas),academic_year:clean(r.Tahun_Ajaran)}));

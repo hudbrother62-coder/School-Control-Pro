@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Download,FileSpreadsheet,Plus,Save,Sparkles,Trash2,Upload} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -26,7 +27,7 @@ export default function AcademicLegacyParity({schoolId,userId,role,focus}:{schoo
   db.from("sc_teacher_preferences").select("mode").eq("school_id",schoolId).eq("user_id",userId).maybeSingle()
  ]);setAssignments((a.data||[]) as Assignment[]);setClasses((c.data||[]) as C[]);setSubjects((s.data||[]) as Subject[]);setSchedules((sc.data||[]) as Schedule[]);if(p.data?.mode)setMode(p.data.mode);if(!assignmentId){const mine=(a.data||[]).find((x:any)=>x.teacher_id===userId)||(a.data||[])[0];if(mine)setAssignmentId(mine.id)}}
  useEffect(()=>{void load()},[db,schoolId,userId]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  const available=manager?assignments:assignments.filter(a=>a.teacher_id===userId);
  const label=(a:Assignment|undefined)=>{if(!a)return "Penugasan tidak ditemukan";const c=classes.find(x=>x.id===a.class_id)?.name||"Kelas",s=subjects.find(x=>x.id===a.subject_id)?.name||"Wali kelas";return c+" · "+s};
  async function saveMode(){if(!db)return;await run(async()=>{const {error}=await db.from("sc_teacher_preferences").upsert({school_id:schoolId,user_id:userId,mode},{onConflict:"school_id,user_id"});if(error)throw error;setOk("Mode kerja guru tersimpan.")})}

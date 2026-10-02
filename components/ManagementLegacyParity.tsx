@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {BookOpen,Download,FileText,Plus,Save,Trash2,Upload} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -21,7 +22,7 @@ export default function ManagementLegacyParity({schoolId,userId,role,staff,focus
   db.from("sc_staff_events").select("id,staff_user_id,event_type,title,occurred_at,verified_at,evidence_path").eq("school_id",schoolId).eq("event_type","head_performance").order("occurred_at",{ascending:false}).limit(100)
  ]);setTemplates((t.data||[]) as Template[]);setDocs((d.data||[]) as Doc[]);setSources((s.data||[]) as Source[]);setPerf((p.data||[]) as Perf[])}
  useEffect(()=>{void load()},[db,schoolId]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function upload(prefix:string){if(!db||!file)return null;if(file.size>15*1024*1024)throw Error("File maksimal 15 MB.");const path=schoolId+"/"+prefix+"/"+crypto.randomUUID()+"-"+file.name.replace(/[^\w.\-]/g,"_").slice(0,100);const {error}=await db.storage.from("sc-evidence").upload(path,file,{upsert:false,contentType:file.type});if(error)throw error;return path}
  async function addTemplate(){if(!db||title.trim().length<3)return;await run(async()=>{const path=await upload("templates");const {error}=await db.from("sc_template_library").insert({school_id:schoolId,scope:"school",category,title:title.trim(),description:description.trim()||null,storage_path:path,url:url.trim()||null,created_by:userId});if(error)throw error;setTitle("");setDescription("");setUrl("");setFile(null);setOk("Template masuk pustaka sekolah.")})}
  async function addSource(){if(!db||title.trim().length<3)return;await run(async()=>{const path=sourceType==="file"?await upload("document-sources"):null;const {error}=await db.from("sc_document_sources").insert({school_id:schoolId,document_id:docId||null,title:title.trim(),source_type:sourceType,storage_path:path,url:url.trim()||null,note:description.trim()||null,created_by:userId});if(error)throw error;setTitle("");setDescription("");setUrl("");setFile(null);setOk("Sumber dokumen tersimpan.")})}

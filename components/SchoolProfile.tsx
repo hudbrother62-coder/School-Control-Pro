@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import SmartSelect from "@/components/SmartSelect";
 import {browserDb} from "@/lib/supabase";
@@ -30,7 +31,7 @@ export default function SchoolProfile({schoolId,role,focus}:{schoolId:string;rol
  const f=(focus||"").toLowerCase();
  async function load(){if(!db)return;const cols="name,npsn,address,academic_year,timezone,school_type,education_level,accreditation,principal_name,principal_nip,phone,email,website,province,city,district,village,postal_code,semester,motto,logo_url,signature_url,stamp_url,report_settings";const [{data:p},{data:fs}]=await Promise.all([db.from("sc_schools").select(cols).eq("id",schoolId).maybeSingle(),db.from("sc_school_facts").select("key,value,updated_at").eq("school_id",schoolId).order("key")]);if(p)setProfile({...blank,...p} as Profile);setFacts((fs||[]) as Fact[])}
  useEffect(()=>{void load()},[db,schoolId]);
- async function run(fn:()=>Promise<void>){setError("");setOk("");setBusy(true);try{await fn();await load();setOk("Pengaturan sekolah tersimpan.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setError("");setOk("");setBusy(true);try{await fn();await load();setOk("Pengaturan sekolah tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function rpc(fn:string,args:Record<string,unknown>){if(!db)throw Error("Database belum siap.");const {error}=await db.rpc(fn,args);if(error)throw error}
  function set<K extends keyof Profile>(k:K,v:Profile[K]){setProfile(p=>({...p,[k]:v}))}
  const input=(k:Exclude<keyof Profile,"report_settings">,label:string,placeholder="")=><label className="field">{label}<input value={String(profile[k]||"")} onChange={e=>set(k,e.target.value as never)} placeholder={placeholder} disabled={!admin}/></label>;

@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Download,Plus,Trash2} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
@@ -27,7 +28,7 @@ export default function PayrollPanel({schoolId,role,staff,selfOnly=false,focus}:
  ]);setComp((c||[]) as Comp[]);setPayroll((p||[]) as Payroll[]);setAdjustments((a||[]) as Adjustment[])}
  const {data:s,error:e}=await db.rpc("sc_my_payslips",{p_school:schoolId});if(e)setError(e.message);else setSlips((s||[]) as Slip[])}
  useEffect(()=>{void load()},[db,schoolId,manage]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Perubahan payroll tersimpan.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Perubahan payroll tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function rpc(name:string,args:Record<string,unknown>){if(!db)throw Error("Database belum terhubung.");const {error:e}=await db.rpc(name,args);if(e)throw e}
  function pick(id:string,open=true){setStaffId(id);const x=comp.find(c=>c.staff_id===id);setBase(x?String(x.base_salary):"0");setAllowance(x?String(x.allowance):"0");setDeduct(x?String(x.deduction):"0");if(open)setCompModal(true)}
  const eligible=staff.filter(s=>s.user_id),periodRows=payroll.filter(p=>p.period===period),periodState=periodRows[0]?.status||"belum dibuat";

@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 
 import {useEffect,useMemo,useState} from "react";
 import {Check,ChevronRight,RotateCcw,Sparkles} from "lucide-react";
@@ -48,7 +49,7 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
    if(stepError)throw stepError;
    setActiveRunId(run.id);setStepRows((rows||[]) as SavedStep[]);await loadRuns();
    setStatus("Workflow tersimpan. Progres bisa dilanjutkan nanti.");
-  }catch(e){setStatus(e instanceof Error?e.message:String(e))}finally{setBusy(false)}
+  }catch(e){setStatus(errorMessage(e))}finally{setBusy(false)}
  }
 
  async function resume(run:WorkflowRun){
@@ -61,7 +62,7 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
    const steps:WorkflowStep[]=rows.map(row=>({module:row.module_key,feature:row.feature,title:row.title,instruction:row.instruction,permitted:canAccess(modules.find(m=>m.key===row.module_key)!,role),matched:[]}));
    setRequest(run.request);setSubmitted(run.request);setPlan({title:run.title,reason:"Lanjutkan langkah yang belum selesai. Data yang sudah tersimpan tetap mengikuti izin tiap modul.",steps});
    setActiveRunId(run.id);setStepRows(rows);setDone(Object.fromEntries(rows.map((row,i)=>[i,row.status==="done"])));setSource("workflow tersimpan");
-  }catch(e){setStatus(e instanceof Error?e.message:String(e))}finally{setBusy(false)}
+  }catch(e){setStatus(errorMessage(e))}finally{setBusy(false)}
  }
 
  async function toggleStep(index:number){

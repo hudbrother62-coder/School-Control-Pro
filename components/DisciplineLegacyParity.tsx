@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Archive,Download,FileText,RotateCcw,Trash2,Upload} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -27,11 +28,11 @@ export default function DisciplineLegacyParity({schoolId,userId,role,focus}:{sch
   db.from("sc_schools").select("name,npsn,address,city,principal_name,principal_nip,logo_url,signature_url,stamp_url,report_settings").eq("id",schoolId).maybeSingle()
  ]);setStudents((s.data||[]) as Student[]);setClasses((c.data||[]) as C[]);setEvents((e.data||[]) as EventRow[]);setMaster((m.data||[]) as Master[]);setDocs((d.data||[]) as Doc[]);setSchool(sc.data||null)}
  useEffect(()=>{void load()},[db,schoolId]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  const className=(id:string|null)=>classes.find(c=>c.id===id)?.name||"—";
  async function archive(id:string,value:boolean){if(!db)return;await run(async()=>{const {error}=await db.rpc("sc_archive_student",{p_school:schoolId,p_student:id,p_archive:value});if(error)throw error;setOk(value?"Siswa dipindahkan ke arsip.":"Siswa dipulihkan.")})}
  async function finalDelete(id:string){if(!db)return;const phrase=prompt("Ketik HAPUS PERMANEN untuk menghapus siswa dari daftar operasional. Riwayat referensial tetap dipertahankan untuk audit.");if(phrase!=="HAPUS PERMANEN")return;await run(async()=>{const {error}=await db.rpc("sc_soft_delete_student",{p_school:schoolId,p_student:id});if(error)throw error;setOk("Siswa dikeluarkan permanen dari daftar operasional.")})}
- async function read(file?:File){if(!file)return;try{const rows=await readExcel(file);if(rows.length>3000)throw Error("Maksimal 3.000 baris per import.");setPreview(rows as Record<string,unknown>[]);setFileName(file.name)}catch(e){setError(e instanceof Error?e.message:String(e))}}
+ async function read(file?:File){if(!file)return;try{const rows=await readExcel(file);if(rows.length>3000)throw Error("Maksimal 3.000 baris per import.");setPreview(rows as Record<string,unknown>[]);setFileName(file.name)}catch(e){setError(errorMessage(e))}}
  async function downloadImportTemplate(){await downloadExcel("template-riwayat-disiplin-prestasi.xlsx",[
   {name:"RIWAYAT",rows:[{Nama:"Contoh Siswa",Kelas:"VII A",Jenis:"Pelanggaran",Kejadian:"Terlambat masuk kelas",Kategori:"Kedisiplinan",Poin:5,Tanggal:today(),Kronologi:"Hapus baris contoh sebelum import",Pencatat:"Guru Piket"}]},
   {name:"Panduan",rows:[{Ketentuan:"Nama + Kelas harus cocok dengan Data Induk. Jenis diisi Pelanggaran atau Prestasi. Tanggal memakai YYYY-MM-DD. Poin berupa angka positif."}]}

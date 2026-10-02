@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
@@ -27,10 +28,10 @@ export default function PlatformAdmin(){
  db.rpc("sc_platform_summary"),db.rpc("sc_platform_schools"),db.rpc("sc_platform_orders")
  ]);for(const r of [m,s,o])if(r.error)throw r.error;
  setMetrics(m.data as Metrics);setSchools((s.data||[]) as SchoolRow[]);setOrders((o.data||[]) as Order[]);
- }catch(e){setError(e instanceof Error?e.message:String(e))}finally{setLoading(false)}}
+ }catch(e){setError(errorMessage(e))}finally{setLoading(false)}}
  useEffect(()=>{if(authorized)void refresh()},[authorized]);
  async function signOut(){await db?.auth.signOut();router.replace("/masuk")}
- async function openSchool(id:string){if(!db)return;setDetailSchoolId(id);setDetailLoading(true);setError("");try{const {data,error}=await db.rpc("sc_platform_school_detail",{p_school:id});if(error)throw error;setDetail(data as SchoolDetail)}catch(e){setError(e instanceof Error?e.message:String(e));setDetail(null)}finally{setDetailLoading(false)}}
+ async function openSchool(id:string){if(!db)return;setDetailSchoolId(id);setDetailLoading(true);setError("");try{const {data,error}=await db.rpc("sc_platform_school_detail",{p_school:id});if(error)throw error;setDetail(data as SchoolDetail)}catch(e){setError(errorMessage(e));setDetail(null)}finally{setDetailLoading(false)}}
  const filteredSchools=schools.filter(s=>(s.name+" "+s.id).toLowerCase().includes(query.toLowerCase()));
  const filteredOrders=orders.filter(o=>(o.order_id+" "+o.school_name).toLowerCase().includes(query.toLowerCase()));
  const labels:Record<string,string>={members:"Anggota",students:"Siswa",students_active:"Siswa aktif",students_archived:"Siswa arsip",classes:"Kelas",staff:"SDM",teachers:"Guru",today:"Presensi hari ini",present_30d:"Hadir 30 hari",late_30d:"Terlambat 30 hari",event_checkins_30d:"Check-in agenda 30 hari",grades:"Nilai",journals:"Jurnal mengajar",student_attendance:"Presensi siswa",ai_projects:"Proyek AI",ai_outputs:"Output AI",discipline_events:"Kejadian disiplin",discipline_open_actions:"Tindak lanjut disiplin terbuka",bk_cases:"Kasus BK",bk_records:"Catatan layanan BK",programs:"Program",tasks:"Tugas",tasks_open:"Tugas aktif",tasks_overdue:"Tugas terlambat",evidence:"Bukti kegiatan",transactions:"Transaksi",income:"Total pemasukan",expense:"Total pengeluaran",student_bills:"Tagihan siswa",bill_payments:"Pembayaran tagihan",requests:"Pengajuan SDM",requests_pending:"Pengajuan pending",payroll_records:"Record payroll",payroll_approved:"Payroll final",work_locations:"Lokasi kerja",documents:"Dokumen",reports:"Laporan terbit",imports:"Riwayat import",supervisions:"Supervisi",upcoming_31d:"Agenda 31 hari",attendance_required:"Agenda wajib presensi",total:"Total agenda",orders:"Order pembayaran",pending:"Order pending",paid:"Order lunas",paid_amount:"Nominal lunas"};

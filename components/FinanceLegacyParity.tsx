@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Download,Eye,FileSpreadsheet,MessageCircle,Plus,Upload,Users} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -29,7 +30,7 @@ export default function FinanceLegacyParity({schoolId,userId,role,focus}:{school
   db.rpc("sc_team_directory",{p_school:schoolId})
  ]);setTx((t.data||[]) as Tx[]);setBudgets((b.data||[]) as Budget[]);setBills((bi.data||[]) as Bill[]);setPayments((p.data||[]) as Payment[]);setStudents((s.data||[]) as Student[]);setContacts((c.data||[]) as Contact[]);setAccounts((a.data||[]) as Account[]);if(!tm.error)setTeam((tm.data||[]) as any[])}
  useEffect(()=>{void load()},[db,schoolId]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  const studentName=(id:string)=>students.find(s=>s.id===id)?.name||"Siswa";
  const paid=(id:string)=>payments.filter(p=>p.bill_id===id).reduce((n,p)=>n+Number(p.amount),0);
  const balance=(b:Bill)=>Math.max(0,Number(b.amount_due)-paid(b.id));

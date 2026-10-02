@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Plus} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
@@ -11,7 +12,7 @@ export default function PerformanceReviews({schoolId,userId,role,staff,focus}:{s
  const [rows,setRows]=useState<Review[]>([]),[selected,setSelected]=useState(""),[target,setTarget]=useState(""),[period,setPeriod]=useState(periodNow()),[summary,setSummary]=useState(""),[response,setResponse]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[modal,setModal]=useState(false);
  async function load(){if(!db)return;const {data,error}=await db.from("sc_performance_reviews").select("id,user_id,period,summary,status,response,created_at,updated_at").eq("school_id",schoolId).order("created_at",{ascending:false}).limit(100);if(error)setError(error.message);else setRows((data||[]) as Review[])}
  useEffect(()=>{void load()},[db,schoolId]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Evaluasi kinerja tersimpan.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Evaluasi kinerja tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function rpc(name:string,args:Record<string,unknown>){if(!db)throw Error("Database belum siap");const {data,error}=await db.rpc(name,args);if(error)throw error;return data}
  function pick(r:Review){setSelected(r.id);setTarget(r.user_id);setPeriod(r.period);setSummary(r.summary);setResponse(r.response||"");setModal(true)}
  function reset(open=false){setSelected("");setTarget("");setPeriod(periodNow());setSummary("");setResponse("");if(open)setModal(true)}

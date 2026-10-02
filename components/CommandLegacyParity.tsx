@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Check,Download,FileCheck2,Plus} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -22,7 +23,7 @@ export default function CommandLegacyParity({schoolId,userId,role,staff,focus}:{
   db.from("sc_evidence").select("id,target_type,target_id,description,status,verified_at,review_note").eq("school_id",schoolId).order("created_at",{ascending:false})
  ]);setPrograms((p.data||[]) as P[]);setTasks((t.data||[]) as T[]);setMeetings((m.data||[]) as M[]);setEvidence((e.data||[]) as E[])}
  useEffect(()=>{void load()},[db,schoolId]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  const person=(id:string|null)=>staff.find(s=>s.user_id===id)?.name||"Belum ditugaskan";
  async function verify(e:E,approved:boolean){if(!db||!manager)return;await run(async()=>{const note=prompt(approved?"Catatan verifikasi (opsional)":"Alasan revisi")||null;const {error}=await db.from("sc_evidence").update({status:approved?"verified":"needs_revision",verified_by:userId,verified_at:approved?new Date().toISOString():null,review_note:note}).eq("id",e.id);if(error)throw error;setOk(approved?"Bukti diverifikasi.":"Bukti dikembalikan untuk revisi.")})}
  async function meetingTask(){if(!db||!meetingId||!programId||title.trim().length<3)return;await run(async()=>{const {error}=await db.from("sc_program_tasks").insert({school_id:schoolId,program_id:programId,title:title.trim(),pic_id:pic||null,due_at:due+"T23:59:00+07:00",status:"todo",created_by:userId});if(error)throw error;await db.from("sc_meetings").update({follow_up_status:"in_progress"}).eq("id",meetingId);setTitle("");setOk("Keputusan rapat menjadi tugas tindak lanjut.")})}

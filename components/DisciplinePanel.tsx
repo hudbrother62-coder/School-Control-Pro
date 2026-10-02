@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {AlertTriangle,Download,Plus,Search,Trophy} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
@@ -56,7 +57,7 @@ export default function DisciplinePanel({schoolId,userId,role,focus}:{schoolId:s
  const monthEvents=events.filter(x=>eventDate(x).startsWith(month)&&(!classFilter||students.find(s=>s.id===x.student_id)?.class_id===classFilter));
  const violations=monthEvents.filter(x=>x.event_type==="violation"),achievements=monthEvents.filter(x=>x.event_type==="achievement");
 
- async function job(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Data disiplin tersimpan dan tersinkron.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function job(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Data disiplin tersimpan dan tersinkron.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function ensureMaster(type:"violation"|"achievement"|"sanction",value:string){
   const found=master.find(m=>m.id===value||m.name.toLowerCase()===value.toLowerCase());if(found)return found;
   if(!db||!value.trim())throw Error("Pilih atau tulis master data.");

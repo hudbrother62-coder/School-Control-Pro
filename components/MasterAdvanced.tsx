@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
 import {parseCsv,csvExport,saveCsv} from "@/lib/csv";
@@ -23,12 +24,12 @@ export default function MasterAdvanced({schoolId,role}:{schoolId:string;role:Rol
  db.from("sc_teacher_assignments").select("id,teacher_id,class_id,subject_id,mode").eq("school_id",schoolId)
  ]);setClasses((c||[]) as C[]);setStudents((s||[]) as S[]);setMembers((m||[]) as M[]);setSubjects((su||[]) as Subject[]);setAssignments((a||[]) as Assignment[])}
  useEffect(()=>{void load()},[db,schoolId]);
- async function job(fn:()=>Promise<void>){setBusy(true);setErr("");setOk("");try{await fn();await load();setOk("Perubahan berhasil tersimpan.")}catch(e){setErr(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function job(fn:()=>Promise<void>){setBusy(true);setErr("");setOk("");try{await fn();await load();setOk("Perubahan berhasil tersimpan.")}catch(e){setErr(errorMessage(e))}finally{setBusy(false)}}
  async function call(name:string,params:Record<string,unknown>){if(!db)throw Error("Database belum terhubung.");const {data,error}=await db.rpc(name,params);if(error)throw error;return data}
  async function insert(table:string,row:Record<string,unknown>){if(!db)throw Error("Database belum terhubung.");const {error}=await db.from(table).insert({...row,school_id:schoolId});if(error)throw error}
  function pickClass(id:string){setSelected(id);setName(classes.find(c=>c.id===id)?.name||"")}
  function pickStudent(id:string){setStudentSelected(id);const s=students.find(s=>s.id===id);setStudentName(s?.name||"");setStudentClass(s?.class_id||"");setStudentStatus(s?.status||"active")}
- async function readFile(file?:File){if(!file)return;setErr("");try{if(file.size>2_000_000)throw Error("Ukuran CSV maksimal 2 MB.");const all=parseCsv(await file.text());const heads=(all.shift()||[]).map(s=>s.trim().toLowerCase());const required=["nis","nama","kelas","tahun_ajaran"];if(required.some(h=>!heads.includes(h)))throw Error("Header wajib: NIS,Nama,Kelas,Tahun_Ajaran");const rows=all.map(r=>({nis:r[heads.indexOf("nis")]?.trim()||"",name:r[heads.indexOf("nama")]?.trim()||"",class_name:r[heads.indexOf("kelas")]?.trim()||"",academic_year:r[heads.indexOf("tahun_ajaran")]?.trim()||""}));if(rows.length>500)throw Error("Maksimal 500 siswa per berkas.");if(rows.some(r=>!r.nis||!r.name||!r.class_name||!r.academic_year))throw Error("Ada kolom wajib yang belum diisi.");setPreview(rows);setFileName(file.name)}catch(e){setErr(e instanceof Error?e.message:String(e));setPreview([])}}
+ async function readFile(file?:File){if(!file)return;setErr("");try{if(file.size>2_000_000)throw Error("Ukuran CSV maksimal 2 MB.");const all=parseCsv(await file.text());const heads=(all.shift()||[]).map(s=>s.trim().toLowerCase());const required=["nis","nama","kelas","tahun_ajaran"];if(required.some(h=>!heads.includes(h)))throw Error("Header wajib: NIS,Nama,Kelas,Tahun_Ajaran");const rows=all.map(r=>({nis:r[heads.indexOf("nis")]?.trim()||"",name:r[heads.indexOf("nama")]?.trim()||"",class_name:r[heads.indexOf("kelas")]?.trim()||"",academic_year:r[heads.indexOf("tahun_ajaran")]?.trim()||""}));if(rows.length>500)throw Error("Maksimal 500 siswa per berkas.");if(rows.some(r=>!r.nis||!r.name||!r.class_name||!r.academic_year))throw Error("Ada kolom wajib yang belum diisi.");setPreview(rows);setFileName(file.name)}catch(e){setErr(errorMessage(e));setPreview([])}}
  const template=()=>saveCsv("template-import-siswa-school-control.csv",csvExport(["NIS","Nama","Kelas","Tahun_Ajaran"],[]));
  const exportData=()=>saveCsv("data-siswa-school-control.csv",csvExport(["NIS","Nama","Kelas","Tahun_Ajaran","Status"],students.map(s=>{const c=classes.find(c=>c.id===s.class_id);return[s.nis,s.name,c?.name,c?.academic_year,s.status]})));
  const notice=<>{err&&<p role="alert" className="banner error">{err}</p>}{ok&&<p role="status" className="banner success">{ok}</p>}</>;

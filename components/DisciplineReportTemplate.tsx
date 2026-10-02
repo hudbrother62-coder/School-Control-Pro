@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Eye,Save} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -18,7 +19,7 @@ export default function DisciplineReportTemplate({schoolId}:{schoolId:string}){
   title:String(s.discipline_title||blank.title),subtitle:String(s.discipline_subtitle||blank.subtitle),signerTitle:String(s.signer_title||blank.signerTitle),letterCity:String(s.letter_city||i.city||""),
   footer:String(s.discipline_footer||blank.footer),classificationCode:String(s.classification_code||""),showLogo:s.show_logo!==false,showNpsn:s.show_npsn!==false,showPhone:s.show_phone!==false,
   showEmail:s.show_email!==false,showWebsite:s.show_website===true,showSignature:s.show_signature!==false,showStamp:s.show_stamp===true,layout:s.layout==="minimal"?"minimal":"formal"
- })}catch(e){setError(e instanceof Error?e.message:String(e))}}
+ })}catch(e){setError(errorMessage(e))}}
  useEffect(()=>{void load()},[db,schoolId]);
  function set<K extends keyof Form>(k:K,v:Form[K]){setForm(x=>({...x,[k]:v}))}
  async function save(){if(!db)return;setBusy(true);setError("");setOk("");try{
@@ -26,7 +27,7 @@ export default function DisciplineReportTemplate({schoolId}:{schoolId:string}){
    show_logo:form.showLogo,show_npsn:form.showNpsn,show_phone:form.showPhone,show_email:form.showEmail,show_website:form.showWebsite,show_signature:form.showSignature,show_stamp:form.showStamp,layout:form.layout};
   const {error}=await db.rpc("sc_update_report_settings",{p_school:schoolId,p_patch:patch});if(error)throw error;
   await load();setOk("Template dokumen tersimpan di database sekolah dan berlaku lintas perangkat.");
- }catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ }catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  function preview(){if(!identity)return;const i={...identity,report_settings:{...(identity.report_settings||{}),signer_title:form.signerTitle,letter_city:form.letterCity,classification_code:form.classificationCode,show_logo:form.showLogo,show_npsn:form.showNpsn,show_phone:form.showPhone,show_email:form.showEmail,show_website:form.showWebsite,show_signature:form.showSignature,show_stamp:form.showStamp,layout:form.layout}};const model:OfficialReportModel={moduleKey:"disiplin",documentType:"template_preview",prefix:"DIS",title:form.title,subtitle:form.subtitle,orientation:"portrait",confidentiality:"restricted",status:"draft",footer:form.footer,metrics:[{label:"Nama siswa",value:"Contoh Peserta Didik"},{label:"NIS",value:"12345"},{label:"Kelas",value:"VIII A"},{label:"Catatan terkait",value:"3"}],sections:[{title:"Contoh Rekap",columns:["Tanggal","Jenis/Kejadian","Kategori","Poin","Tindak Lanjut"],rows:[["01-10-2026","Contoh catatan","Kedisiplinan",10,"Pembinaan dan pemantauan"]]}],signatures:[{role:"Mengetahui / Menetapkan · "+form.signerTitle,name:i.principal_name||form.signerTitle,identifier:i.principal_nip?"NIP. "+i.principal_nip:null}]};previewOfficialReport(i,model)}
  return <section className="panel"><div className="sectionhead"><div><h2>Template Dokumen Disiplin & Prestasi</h2><p className="muted">Template sekarang tersimpan pada workspace sekolah, bukan browser lokal. Pengaturan kop dan pengesahan dipakai oleh Report Engine bersama.</p></div></div>
  <div className="fields">

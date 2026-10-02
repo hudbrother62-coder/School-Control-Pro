@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
 import {isAdmin,type Role,type Staff} from "@/lib/modules";
@@ -27,7 +28,7 @@ export default function Operations({mode,schoolId,userId,role,staff}:{mode:Mode;
   if(mode==="sikas")body={...body,kind:financeKind,occurred_at:day,category:category.trim(),amount:Number(amount),description:notes.trim()||null,created_by:userId};
   if(mode==="gajian")body={...body,staff_id:staffId,period,gross:Number(gross),deductions:Number(deductions),status:"draft"};
   const {error:e}=await db.from(tableFor[mode]).insert(body);if(e)throw e;await load();setTitle("");setNotes("");setFollowUp("");setAmount("");setGross("");setOk("Data disimpan.");}
- catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  const textField=(label:string,value:string,set:(s:string)=>void,type="text",required=true)=><label className="field">{label}<input type={type} required={required} value={value} onChange={e=>set(e.target.value)}/></label>;
  const studentField=<label className="field">Siswa<select value={studentId} required onChange={e=>setStudentId(e.target.value)}><option value="">Pilih siswa</option>{students.map(s=><option key={s.id} value={s.id}>{s.name} {s.nis?"· "+s.nis:""}</option>)}</select></label>;
  if(mode==="bk"&&!counselor)return <section className="panel"><h2>Perlindungan data BK</h2><p>Catatan konseling per siswa hanya untuk konselor penanggung jawab. Kepala sekolah memperoleh jumlah agregat melalui kanal laporan yang terpisah.</p></section>;

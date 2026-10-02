@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Archive,Check,Copy,KeyRound,MessageSquare,Plus,RotateCcw,Save,Sparkles,Trash2} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -21,7 +22,7 @@ export default function AIProjectManager({schoolId,module="guru_ai",mode}:{schoo
   db.from("sc_ai_messages").select("id,project_id,role,content,created_at").eq("school_id",schoolId).eq("module",module).order("created_at",{ascending:true}).limit(200)
  ]);setProjects((p.data||[]) as Project[]);setDrafts((d.data||[]) as Draft[]);setOutputs((o.data||[]) as Output[]);setMessages((m.data||[]) as Msg[]);if(!projectId&&p.data?.[0])setProjectId(p.data[0].id)}
  useEffect(()=>{void load()},[db,schoolId,module]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function addProject(){if(!db||name.trim().length<3)return;await run(async()=>{const {data,error}=await db.from("sc_ai_projects").insert({school_id:schoolId,name:name.trim(),module}).select("id").single();if(error)throw error;setName("");setProjectId(data.id);setOk("Proyek dibuat dan siap dipakai.")})}
  async function archiveProject(id:string){if(!db)return;await run(async()=>{const {error}=await db.from("sc_ai_projects").update({status:"archived",updated_at:new Date().toISOString()}).eq("id",id);if(error)throw error;setOk("Proyek diarsipkan.")})}
  async function importDraft(d:Draft){if(!db||!projectId)throw Error("Pilih proyek terlebih dahulu.");await run(async()=>{const same=outputs.filter(x=>x.project_id===projectId&&x.tool_key===d.template_key),version=Math.max(0,...same.map(x=>x.version))+1;const {error}=await db.from("sc_ai_outputs").insert({school_id:schoolId,project_id:projectId,tool_key:d.template_key,title:d.title,prompt:d.prompt,content:d.content,version});if(error)throw error;setOk("Draf dimasukkan sebagai versi "+version+".")})}

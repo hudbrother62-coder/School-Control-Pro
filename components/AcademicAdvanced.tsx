@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Check,ChevronLeft,ChevronRight,Search} from "lucide-react";
 import SmartSelect from "@/components/SmartSelect";
@@ -63,7 +64,7 @@ export default function AcademicAdvanced({schoolId,userId,role,focus}:{schoolId:
    if(!rows.length)throw Error("Pilih setidaknya satu status kehadiran.");
    const r=await db.rpc("sc_bulk_attendance",{p_school:schoolId,p_day:date,p_lesson:lesson,p_rows:rows});if(r.error)throw r.error;
    await refreshMonth();setOk(rows.length+" absensi berhasil disimpan.");
-  }catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}
+  }catch(e){setError(errorMessage(e))}finally{setBusy(false)}
  }
  function currentMark(id:string){return marks[id]||selectedRecords.find(a=>a.student_id===id)?.mark||""}
  function currentNote(id:string){return notes[id]??selectedRecords.find(a=>a.student_id===id)?.notes??""}
@@ -74,8 +75,8 @@ export default function AcademicAdvanced({schoolId,userId,role,focus}:{schoolId:
  const reportRows=baseRoster.map(s=>{const aa=att.filter(x=>x.student_id===s.id),gg=grades.filter(x=>x.student_id===s.id),c=(m:string)=>aa.filter(a=>a.mark===m).length,avg=gg.length?Math.round(gg.reduce((v,g)=>v+Number(g.score),0)/gg.length*100)/100:null;return {s,h:c("present"),i:c("permission"),sk:c("sick"),a:c("absent"),avg}});
  const exportReport=()=>saveCsv("rekap-kelas-"+month+".csv",csvExport(["NIS","Nama","Hadir","Izin","Sakit","Alpa","Rata-rata Nilai"],reportRows.map(r=>[r.s.nis,r.s.name,r.h,r.i,r.sk,r.a,r.avg])));
  function classReportModel():OfficialReportModel{const klass=classId?classes.find(c=>c.id===classId):null,totalAttendance=reportRows.reduce((n,r)=>n+r.h+r.i+r.sk+r.a,0),present=reportRows.reduce((n,r)=>n+r.h,0),validAvg=reportRows.filter(r=>r.avg!==null);return {moduleKey:"buku_kerja",documentType:(focus||"").toLowerCase().includes("laporan")?"laporan_kelas":"rekap_bulanan",prefix:"KLS",title:(focus||"").toLowerCase().includes("laporan")?"Laporan Kelas":"Rekap Bulanan Kelas",subtitle:(klass?klass.name:"Semua kelas")+" · "+monthLabel(month),periodLabel:monthLabel(month),periodStart:month+"-01",periodEnd:shiftMonth(month,1)+"-01",orientation:"landscape",status:"approved",metrics:[{label:"Siswa",value:String(reportRows.length)},{label:"Kehadiran",value:totalAttendance?Math.round(present/totalAttendance*1000)/10+"%":"0%"},{label:"Rerata nilai",value:validAvg.length?(validAvg.reduce((n,r)=>n+Number(r.avg),0)/validAvg.length).toFixed(1):"—"},{label:"Catatan presensi",value:String(totalAttendance)}],sections:[{title:"Rekap Per Siswa",columns:["NIS","Nama","Kelas","Hadir","Izin","Sakit","Alpa","Rata-rata Nilai"],rows:reportRows.map(r=>[r.s.nis||"—",r.s.name,classes.find(c=>c.id===r.s.class_id)?.name||"—",r.h,r.i,r.sk,r.a,r.avg??"—"])}]}}
- async function officialReport(format:"pdf"|"docx"|"xlsx"){if(!db)return;setBusy(true);setError("");setOk("");try{const identity=await loadReportIdentity(db,schoolId),issued=await issueAndExport(db,schoolId,identity,classReportModel(),format);setOk("Laporan "+issued.document_number+" diterbitkan dan masuk arsip.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
- async function previewReport(){if(!db)return;setBusy(true);setError("");try{const identity=await loadReportIdentity(db,schoolId);previewOfficialReport(identity,{...classReportModel(),status:"draft"});setOk("Preview draft dibuka tanpa memakai nomor dokumen.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function officialReport(format:"pdf"|"docx"|"xlsx"){if(!db)return;setBusy(true);setError("");setOk("");try{const identity=await loadReportIdentity(db,schoolId),issued=await issueAndExport(db,schoolId,identity,classReportModel(),format);setOk("Laporan "+issued.document_number+" diterbitkan dan masuk arsip.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
+ async function previewReport(){if(!db)return;setBusy(true);setError("");try{const identity=await loadReportIdentity(db,schoolId);previewOfficialReport(identity,{...classReportModel(),status:"draft"});setOk("Preview draft dibuka tanpa memakai nomor dokumen.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  const ids=new Set(baseRoster.map(s=>s.id));
  const dayCount=(d:string)=>new Set(att.filter(a=>a.attendance_date===d&&ids.has(a.student_id)).map(a=>a.student_id)).size;
  const dayProgress=(d:string)=>{const n=dayCount(d);return n===0?"missing":n>=baseRoster.length&&baseRoster.length>0?"complete":"partial"};

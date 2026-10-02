@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useState} from "react";
 import {Plus} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
@@ -22,7 +23,7 @@ export default function StaffWorkflows({kind,schoolId,userId,role,staff,onChange
  if(kind==="leave"){const {data,error:e}=await db.from("sc_leave_requests").select("id,user_id,kind,from_date,to_date,reason,status").eq("school_id",schoolId).order("created_at",{ascending:false}).limit(100);if(e)setError(e.message);setLeave((data||[]) as Leave[])}}
  useEffect(()=>{void load();setModal(false)},[db,kind,schoolId]);
  function selectStaff(id:string){setStaffId(id);const s=staff.find(z=>z.id===id);if(s){setEditName(s.name);setPosition(s.position||"");setShift((s.shift_start||"07:00").slice(0,5));setTolerance(String(s.late_tolerance_minutes??15));}}
- async function execute(fn:()=>Promise<void>){setBusy(true);setError("");setSuccess("");try{await fn();await load();await onChanged();setSuccess("Perubahan tersimpan.")}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function execute(fn:()=>Promise<void>){setBusy(true);setError("");setSuccess("");try{await fn();await load();await onChanged();setSuccess("Perubahan tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function rpc(fn:string,payload:Record<string,unknown>){if(!db)throw Error("Database belum terhubung.");const {error:e}=await db.rpc(fn,payload);if(e)throw e;}
  async function updateAux(entity:"staff_event"|"leave_request",id:string,patch:Record<string,unknown>){await execute(()=>rpc("sc_update_auxiliary",{p_school:schoolId,p_entity:entity,p_id:id,p_patch:patch}))}
  async function deleteAux(entity:"staff_event"|"leave_request",id:string){if(!confirm("Hapus data pending ini?"))return;await execute(()=>rpc("sc_delete_auxiliary",{p_school:schoolId,p_entity:entity,p_id:id}))}

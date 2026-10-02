@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Check,Download,Link2,Users} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -24,7 +25,7 @@ export default function SupervisorLegacyParity({schoolId,userId,role,staff,focus
   db.from("sc_hr_requests").select("id,user_id,kind,from_at,to_at,amount,reason,status,created_at").eq("school_id",schoolId).order("created_at",{ascending:false}).limit(500)
  ]);setAssignments((a.data||[]) as Assign[]);if(!dir.error)setDirectory((dir.data||[]) as Directory[]);setAttendance((att.data||[]) as Attendance[]);setRequests((req.data||[]) as Request[])}
  useEffect(()=>{void load()},[db,schoolId,month]);
- async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function rpc(name:string,args:Record<string,unknown>){if(!db)throw Error("Database belum terhubung");const {error}=await db.rpc(name,args);if(error)throw error}
  const assignedIds=assignments.filter(a=>manager||a.supervisor_user_id===userId).map(a=>a.staff_id);
  const team=staff.filter(s=>assignedIds.includes(s.id));

@@ -1,4 +1,5 @@
 "use client";
+import {errorMessage} from "@/lib/error-message";
 
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
@@ -51,7 +52,7 @@ type Summary={present_days:number;late_days:number;programs:number;trainings:num
 const icons={overview:LayoutDashboard,master:Users,calendar:CalendarDays,reports:ReceiptText,attendance:Clock3,performance:Activity,guru_ai:Sparkles,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,command:ListChecks,sikas:Wallet,gajian:CreditCard,payslip:ReceiptText,access:KeyRound,settings:Settings,help:CircleHelp};
 const formatDate=(s:string|null|undefined)=>s?new Date(s).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"}):"—";
 const schoolDay=(tz:string)=>{const p=new Intl.DateTimeFormat("en-US",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const get=(k:string)=>p.find(x=>x.type===k)?.value||"";return get("year")+"-"+get("month")+"-"+get("day")};
-function feedback(error:unknown){return error instanceof Error?error.message:String(error)}
+function feedback(error:unknown){return errorMessage(error)}
 
 export default function Home(){
  const db=useMemo(()=>browserDb(),[]);
