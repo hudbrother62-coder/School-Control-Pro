@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const ts=require('typescript');
+const output=ts.transpileModule(fs.readFileSync('lib/register-account.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const api={};new Function('exports',output)(api);
+(async()=>{
+ let logins=0;
+ const input={email:' New@School.test ',password:'test-password',schoolName:'New School'};
+ const db={functions:{invoke:async()=>({data:{code:'already_registered'}})},auth:{signInWithPassword:async()=>{logins++;return {data:{user:{email:'new@school.test'}}}}}};
+ await assert.rejects(api.registerConfirmedAccount(db,input),/Email sudah terdaftar/);assert.equal(logins,0);
+ db.functions.invoke=async(_name,{body})=>{assert.equal(body.email,'new@school.test');return {data:{ok:true}}};
+ assert.equal((await api.registerConfirmedAccount(db,input)).user.email,'new@school.test');
+ db.auth.signInWithPassword=async()=>({data:{user:{email:'old-admin@school.test'}}});
+ await assert.rejects(api.registerConfirmedAccount(db,input),/Sesi akun tidak sesuai/);
+ const screen=fs.readFileSync('components/AuthScreen.tsx','utf8');
+ assert.ok(screen.includes('if(!db||mode!=="login")return'));
+ assert.ok(screen.includes('if(active&&!submitting.current)window.location.assign'));
+ assert.ok(screen.includes('if(mode==="register"){window.location.assign("/app");return}'));
+ console.log('PASS: duplicate signup cannot reuse an existing admin; new account identity checked; registration bypasses stale-session redirects.');
+})().catch(e=>{console.error(e);process.exit(1)});
