@@ -1,4 +1,4 @@
-import {modules,canAccess,type ModuleKey,type Role} from "./modules";
+import {modules,canAccess,visibleFeatures,type ModuleKey,type Role} from "./modules";
 
 export type WorkflowStep={module:ModuleKey;feature:string;title:string;instruction:string;permitted:boolean;matched:string[]};
 export type WorkflowPlan={title:string;reason:string;steps:WorkflowStep[]};
@@ -25,7 +25,7 @@ const routes:Route[]=[
 const has=(text:string,...keys:string[])=>keys.some(k=>text.includes(k));
 function featureFor(module:ModuleKey,text:string){
  switch(module){
-  case "master": return has(text,"guru","staf","sdm")?"Guru":has(text,"kelas")?"Kelas":has(text,"mata pelajaran","mapel")?"Mata Pelajaran":has(text,"import")?"Import Excel Keseluruhan":"Siswa";
+  case "master": return has(text,"penugasan")?"Penugasan Guru":has(text,"staf","tenaga kependidikan")?"Tenaga Kependidikan":has(text,"guru","sdm")?"Guru":has(text,"kelas")?"Kelas":has(text,"mata pelajaran","mapel")?"Mata Pelajaran":has(text,"import")?"Import Excel Keseluruhan":"Siswa";
   case "calendar": return has(text,"pribadi")?"Agenda Pribadi":has(text,"rekap")?"Rekap Agenda":"Kalender Sekolah";
   case "attendance": return has(text,"cuti")?"Cuti":has(text,"izin")?"Izin":has(text,"jadwal","shift")?"Jadwal/shift":"Check-in/check-out";
   case "guru_ai": return has(text,"lkpd")?"LKPD":has(text,"rpp")?"RPP":has(text,"bahan ajar")?"Bahan Ajar":has(text,"soal","asesmen")?"Asesmen Soal":"Modul Ajar";
@@ -35,17 +35,17 @@ function featureFor(module:ModuleKey,text:string){
   case "kepsek_ai": return has(text,"kosp","ksp")?"KSP/KOSP":has(text,"rkjm")?"RKJM":has(text,"rkt")?"RKT":has(text,"rkas")?"RKAS":has(text,"pbd","eds")?"PBD/EDS":has(text,"sop")?"SOP":has(text,"supervisi")?"Supervisi guru":"PBD/EDS";
   case "command": return has(text,"rapat","notula")?"Tindak Lanjut Rapat":has(text,"bukti")?"Verifikasi Bukti":has(text,"tugas","deadline")?"Tugas":"Program Kerja";
   case "sikas": return has(text,"tagihan","spp")?"Tagihan Siswa":has(text,"anggaran")?"Realisasi Anggaran":has(text,"pemasukan")?"Pemasukan":has(text,"pengeluaran")?"Pengeluaran":has(text,"kuitansi")?"Riwayat Pembayaran":"Buku Kas Umum";
-  case "gajian": return has(text,"lembur")?"Lembur":has(text,"kasbon")?"Kasbon":has(text,"reimburse")?"Reimburse":has(text,"rekrut")?"Rekrutmen":has(text,"lokasi")?"Lokasi Presensi":has(text,"payroll","gaji")?"Draft Payroll":"Pengajuan SDM";
+  case "gajian": return has(text,"lembur")?"Lembur":has(text,"kasbon")?"Kasbon":has(text,"reimburse")?"Reimburse":has(text,"rekrut")?"Rekrutmen":has(text,"lokasi")?"Lokasi Presensi":has(text,"payroll","gaji")?"Proses Payroll":"Pengajuan SDM";
   case "performance": return has(text,"evaluasi")?"Evaluasi":has(text,"pelatihan")?"Pelatihan":"Bukti capaian";
   case "payslip": return "Riwayat Slip";
-  case "access": return "Hak Akses Fitur";
+  case "access": return "Struktur Peran & Hak Akses";
   case "settings": return has(text,"langganan","trial")?"Langganan":"Profil sekolah";
   default:return "";
  }
 }
 function step(module:ModuleKey,feature:string,title:string,instruction:string,role:Role,matched:string[]=[]):WorkflowStep{
  const mod=modules.find(m=>m.key===module);
- return {module,feature,title,instruction,permitted:!!mod&&canAccess(mod,role),matched};
+ return {module,feature,title,instruction,permitted:!!mod&&canAccess(mod,role)&&visibleFeatures(mod,role).includes(feature),matched};
 }
 
 export function planWorkflow(input:string,role:Role):WorkflowPlan{
@@ -88,11 +88,11 @@ export function planWorkflow(input:string,role:Role):WorkflowPlan{
  if(has(text,"izin","lembur","reimburse","kasbon")&&has(text,"payroll","gaji")){
   return {title:"Pengajuan SDM sampai payroll",reason:"Pengajuan perlu diputuskan sebelum periode payroll dikunci.",steps:[
    step("gajian","Pengajuan SDM","Periksa pengajuan","Pastikan jenis, waktu, nominal dan alasan lengkap.",role),
-   step("gajian","Approval","Setujui / tolak","Manajemen memberi keputusan dan catatan.",role),
+   step("gajian","Pengajuan SDM","Setujui / tolak","Manajemen memberi keputusan dan catatan.",role),
    step("attendance","Riwayat kehadiran","Periksa kehadiran","Gunakan catatan kehadiran sebagai data pendukung, bukan potongan otomatis.",role),
-   step("gajian","Draft Payroll","Hitung draft","Buat draft payroll dari komponen aktif.",role),
-   step("gajian","Review","Review rincian","Periksa komponen dan penyesuaian tiap pegawai.",role),
-   step("gajian","Kunci Periode","Kunci periode","Kunci setelah disetujui agar slip stabil.",role),
+   step("gajian","Proses Payroll","Hitung draft","Buat draft payroll dari komponen aktif.",role),
+   step("gajian","Proses Payroll","Review rincian","Periksa komponen dan penyesuaian tiap pegawai.",role),
+   step("gajian","Proses Payroll","Kunci periode","Kunci setelah disetujui agar slip stabil.",role),
    step("payslip","Riwayat Slip","Terbitkan slip","Pegawai dapat melihat slip periode terkunci.",role)
   ]};
  }

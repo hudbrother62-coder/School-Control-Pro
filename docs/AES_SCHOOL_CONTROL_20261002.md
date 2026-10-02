@@ -77,3 +77,7 @@ Overall remains NOT VERIFIED_DONE: full feature parity, all per-menu Excel round
 4. Verify recovery and invite/account edge cases.
 5. Obtain merchant configuration through supported secure settings; configure and test Midtrans sandbox.
 6. Repeat complete requirement coverage, mobile/desktop and production checks; mark VERIFIED_DONE only after all relevant must-haves pass.
+
+## Checkpoint lanjutan: panduan, navigasi dan mobile
+
+Permintaan terbaru diterapkan pada navigasi, bantuan dan kesesuaian layar. Asisten AI terpisah; menu duplikat digabung dengan alias alamat lama; sidebar/drawer/modal serta state saat pindah layar diperbaiki. Empat layar HR yang salah dipulihkan. Lihat `NAVIGATION_MOBILE_QA_20261002.md` untuk bukti dan batas pengujian, serta `public/panduan-school-control.md` untuk panduan pengguna. Ini tidak mengubah status integrasi merchant produksi atau mengesahkan seluruh backlog awal.

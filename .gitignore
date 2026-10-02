@@ -5,3 +5,6 @@ node_modules
 .env.production
 *.tsbuildinfo
 .vercel
+
+# Local visual QA captures; reproducible by verify-workspace-browser.cjs
+docs/qa/*.png

@@ -1,6 +1,7 @@
 import {NextRequest,NextResponse} from "next/server";
 import {createClient} from "@supabase/supabase-js";
-import {modules,canAccess,type ModuleKey,type Role} from "@/lib/modules";
+import {modules,canAccess,visibleFeatures,type ModuleKey,type Role} from "@/lib/modules";
+import {resolveWorkspaceRoute} from "@/lib/workspace-navigation";
 import {planWorkflow} from "@/lib/orchestrator";
 
 export const runtime="nodejs";
@@ -17,8 +18,8 @@ function validated(raw:any,role:Role,request:string){
  for(const item of (Array.isArray(raw?.steps)?raw.steps:[]) as RawStep[]){
   const mod=modules.find(m=>m.key===item.module);
   if(!mod)continue;
-  const feature=mod.features.includes(String(item.feature||""))?String(item.feature):mod.features[0]||"";
-  steps.push({module:mod.key,feature,title:String(item.title||mod.label).slice(0,120),instruction:String(item.instruction||"Buka fitur dan verifikasi data sebelum menyimpan.").slice(0,500),permitted:canAccess(mod,role),matched:[]});
+  const target=resolveWorkspaceRoute(mod.key,String(item.feature||""),role);if(!target)continue;const feature=target.feature;
+  steps.push({module:target.module,feature,title:String(item.title||mod.label).slice(0,120),instruction:String(item.instruction||"Buka fitur dan verifikasi data sebelum menyimpan.").slice(0,500),permitted:true,matched:[]});
   if(steps.length>=8)break;
  }
  if(!steps.length)return planWorkflow(request,role);
@@ -27,7 +28,7 @@ function validated(raw:any,role:Role,request:string){
 
 export async function POST(req:NextRequest){
  try{
-  const token=req.headers.get("authorization")?.replace(/^Bearer\\s+/i,"");
+  const token=req.headers.get("authorization")?.replace(/^Bearer\s+/i,"");
   const url=process.env.NEXT_PUBLIC_SUPABASE_URL,key=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if(!token||!url||!key)return NextResponse.json({error:"Autentikasi diperlukan."},{status:401,headers});
   const db=createClient(url,key,{global:{headers:{Authorization:"Bearer "+token}},auth:{persistSession:false,autoRefreshToken:false}});
@@ -38,7 +39,7 @@ export async function POST(req:NextRequest){
   if(!member)return NextResponse.json({error:"Tidak memiliki akses sekolah."},{status:403,headers});
   const role=member.role as Role,fallback=planWorkflow(request,role),apiKey=process.env.GEMINI_API_KEY;
   if(!apiKey)return NextResponse.json({plan:fallback,source:"deterministic"},{headers});
-  const catalog=modules.filter(m=>canAccess(m,role)).map(m=>({module:m.key,label:m.label,features:m.features}));
+  const catalog=modules.filter(m=>canAccess(m,role)).map(m=>({module:m.key,label:m.label,features:visibleFeatures(m,role)}));
   const prompt="Anda adalah workflow planner untuk aplikasi School Control sekolah Indonesia.\\n"+
    "Tugas: pecah permintaan pengguna menjadi urutan kerja lintas modul yang benar, tanpa mengeksekusi perubahan data.\\n"+
    "Gunakan HANYA module dan feature dari katalog berikut:\\n"+JSON.stringify(catalog)+"\\n"+

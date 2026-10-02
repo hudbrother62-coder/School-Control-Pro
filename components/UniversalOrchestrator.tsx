@@ -3,9 +3,10 @@ import {errorMessage} from "@/lib/error-message";
 
 import {useEffect,useMemo,useState} from "react";
 import {Check,ChevronRight,RotateCcw,Sparkles} from "lucide-react";
+import {resolveWorkspaceRoute} from "@/lib/workspace-navigation";
 import {planWorkflow,type WorkflowPlan,type WorkflowStep} from "@/lib/orchestrator";
 import {browserDb} from "@/lib/supabase";
-import {modules,canAccess,type ModuleKey,type Role} from "@/lib/modules";
+import {modules,canAccess,visibleFeatures,type ModuleKey,type Role} from "@/lib/modules";
 
 type WorkflowRun={id:string;title:string;request:string;status:string;updated_at:string};
 type SavedStep={id:string;step_order:number;module_key:ModuleKey;feature:string;title:string;instruction:string;status:string};
@@ -59,7 +60,7 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
    const {data,error}=await db.from("sc_workflow_steps").select("id,step_order,module_key,feature,title,instruction,status").eq("run_id",run.id).order("step_order");
    if(error)throw error;
    const rows=(data||[]) as SavedStep[];
-   const steps:WorkflowStep[]=rows.map(row=>({module:row.module_key,feature:row.feature,title:row.title,instruction:row.instruction,permitted:canAccess(modules.find(m=>m.key===row.module_key)!,role),matched:[]}));
+   const steps:WorkflowStep[]=rows.map(row=>{const target=resolveWorkspaceRoute(row.module_key,row.feature,role);return {module:target?.module||row.module_key,feature:target?.feature||row.feature,title:row.title,instruction:row.instruction,permitted:!!target,matched:[]}});
    setRequest(run.request);setSubmitted(run.request);setPlan({title:run.title,reason:"Lanjutkan langkah yang belum selesai. Data yang sudah tersimpan tetap mengikuti izin tiap modul.",steps});
    setActiveRunId(run.id);setStepRows(rows);setDone(Object.fromEntries(rows.map((row,i)=>[i,row.status==="done"])));setSource("workflow tersimpan");
   }catch(e){setStatus(errorMessage(e))}finally{setBusy(false)}
@@ -79,7 +80,7 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
 
  const shortcuts=["Siswa sering alpa, sudah dibina, buat surat panggilan dan agenda orang tua","Dari PBD buat RKT lalu program kerja sampai laporan","Tagihan siswa sampai pembayaran, kuitansi dan buku kas","Pengajuan lembur sampai payroll dan slip"];
  return <section className="panel">
-  <div className="sectionhead"><div><span className="pill"><Sparkles size={13}/> Universal AI Orchestrator</span><h2 style={{marginTop:10}}>Rencanakan pekerjaan lintas modul</h2><p className="muted">Susun langkah lintas modul, periksa hak akses, lalu simpan dan lanjutkan progres kapan pun.</p></div></div>
+  <div className="sectionhead"><div><span className="pill"><Sparkles size={13}/> Asisten Rencana Pekerjaan</span><h2 style={{marginTop:10}}>Rencanakan pekerjaan lintas modul</h2><p className="muted">Susun langkah lintas modul, periksa hak akses, lalu simpan dan lanjutkan progres kapan pun.</p></div></div>
   <form onSubmit={event=>{event.preventDefault();void analyze(request)}} className="fields"><label className="field full">Permintaan<textarea value={request} onChange={event=>setRequest(event.target.value)} rows={4} placeholder="Contoh: siswa sering alpa, sudah dua kali dibina, buat surat panggilan orang tua dan jadwalkan pertemuan"/></label><button className="button" disabled={request.trim().length<3||planning}>{planning?"Menyusun…":"Susun Workflow"}</button></form>
   <div className="flow" style={{marginTop:12}}>{shortcuts.map(item=><button type="button" key={item} className="button secondary" onClick={()=>{setRequest(item);void analyze(item)}}>{item.length>34?item.slice(0,34)+"…":item}</button>)}</div>
   {savedRuns.length>0&&<div className="panel" style={{marginTop:14}}><strong>Workflow tersimpan</strong><div className="flow" style={{marginTop:8}}>{savedRuns.map(run=><button type="button" key={run.id} className="button secondary" disabled={busy} onClick={()=>void resume(run)}>{run.title} · {run.status}</button>)}</div></div>}

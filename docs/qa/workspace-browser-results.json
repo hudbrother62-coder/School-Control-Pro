@@ -1,0 +1,1426 @@
+{
+  "scope": "Local UI integration with synthetic identity and intercepted APIs; not a live database or merchant E2E test.",
+  "screens": 174,
+  "viewports": [
+    320,
+    390,
+    768,
+    1366
+  ],
+  "errors": [],
+  "writes": [
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_my_payslips",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_my_payslips",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_my_payslips",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_hr_work_schedules",
+      "body": {
+        "school_id": "22222222-2222-4222-8222-222222222222",
+        "name": "Jadwal Uji",
+        "start_time": "07:00",
+        "end_time": "16:00",
+        "late_tolerance_minutes": 15,
+        "weekday": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      }
+    },
+    {
+      "name": "sc_hr_locations",
+      "body": {
+        "school_id": "22222222-2222-4222-8222-222222222222",
+        "name": "Kampus Uji",
+        "latitude": 0,
+        "longitude": 0,
+        "radius_meters": 150,
+        "address": null
+      }
+    },
+    {
+      "name": "sc_payroll_component_catalog",
+      "body": {
+        "school_id": "22222222-2222-4222-8222-222222222222",
+        "name": "Tunjangan Uji",
+        "kind": "earning",
+        "taxable": false,
+        "default_amount": 250000
+      }
+    },
+    {
+      "name": "sc_recruitment_openings",
+      "body": {
+        "school_id": "22222222-2222-4222-8222-222222222222",
+        "title": "Guru Matematika",
+        "department": null,
+        "description": null,
+        "status": "draft",
+        "created_by": "11111111-1111-4111-8111-111111111111"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_my_payslips",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_my_payslips",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_my_payslips",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_account_balances",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    }
+  ],
+  "smoke": [
+    {
+      "role": "owner",
+      "module": "overview",
+      "feature": "Ringkasan Operasional",
+      "heading": "Kondisi sekolah hari ini | Masuk langsung ke pekerjaan | Perlu ditindak hari ini | Agenda terdekat"
+    },
+    {
+      "role": "owner",
+      "module": "overview",
+      "feature": "Analitik Sekolah",
+      "heading": "Tren Kehadiran 7 Hari | Status Program & Deadline"
+    },
+    {
+      "role": "owner",
+      "module": "overview",
+      "feature": "Agenda & Deadline",
+      "heading": "Agenda 31 Hari ke Depan | Deadline Program | Agenda Terdekat"
+    },
+    {
+      "role": "owner",
+      "module": "master",
+      "feature": "Siswa",
+      "heading": "Data Siswa | Import / Export Siswa"
+    },
+    {
+      "role": "owner",
+      "module": "master",
+      "feature": "Kelas",
+      "heading": "Data Kelas | Import / Export Kelas"
+    },
+    {
+      "role": "owner",
+      "module": "master",
+      "feature": "Guru",
+      "heading": "Data Guru | Import / Export Guru"
+    },
+    {
+      "role": "owner",
+      "module": "master",
+      "feature": "Tenaga Kependidikan",
+      "heading": "Data Tenaga Kependidikan | Import / Export Tenaga Kependidikan"
+    },
+    {
+      "role": "owner",
+      "module": "master",
+      "feature": "Mata Pelajaran",
+      "heading": "Data Mata Pelajaran | Import / Export Mata Pelajaran"
+    },
+    {
+      "role": "owner",
+      "module": "master",
+      "feature": "Penugasan Guru",
+      "heading": "Data Penugasan Guru | Import / Export Penugasan Guru"
+    },
+    {
+      "role": "owner",
+      "module": "master",
+      "feature": "Import Excel Keseluruhan",
+      "heading": "Import Excel Keseluruhan"
+    },
+    {
+      "role": "owner",
+      "module": "calendar",
+      "feature": "Kalender Sekolah",
+      "heading": "Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+    },
+    {
+      "role": "owner",
+      "module": "calendar",
+      "feature": "Rekap Agenda",
+      "heading": "Oktober 2026 | Rekap Agenda · Oktober 2026"
+    },
+    {
+      "role": "owner",
+      "module": "calendar",
+      "feature": "Agenda Mengajar",
+      "heading": "Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+    },
+    {
+      "role": "owner",
+      "module": "calendar",
+      "feature": "Agenda Pribadi",
+      "heading": "Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+    },
+    {
+      "role": "owner",
+      "module": "calendar",
+      "feature": "Agenda Pengguna",
+      "heading": "Agenda Pengguna | Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+    },
+    {
+      "role": "owner",
+      "module": "calendar",
+      "feature": "Kehadiran Agenda",
+      "heading": "Kehadiran Agenda"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Ringkasan Laporan",
+      "heading": "Laporan resmi sekolah dalam satu tempat | Elemen wajib laporan"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Akademik",
+      "heading": "Laporan resmi sekolah dalam satu tempat | Akademik"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Kehadiran",
+      "heading": "Laporan resmi sekolah dalam satu tempat | Kehadiran"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Disiplin",
+      "heading": "Laporan resmi sekolah dalam satu tempat | Disiplin"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "BK",
+      "heading": "Laporan resmi sekolah dalam satu tempat | BK"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Program & Tugas",
+      "heading": "Laporan resmi sekolah dalam satu tempat | Program & Tugas"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Keuangan",
+      "heading": "Laporan resmi sekolah dalam satu tempat | Keuangan"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "SDM & Payroll",
+      "heading": "Laporan resmi sekolah dalam satu tempat | SDM & Payroll"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Supervisi",
+      "heading": "Laporan resmi sekolah dalam satu tempat | Supervisi"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Arsip Laporan",
+      "heading": "Arsip Laporan Resmi"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Proyek Pembelajaran",
+      "heading": "Proyek Pembelajaran | Project Builder Pembelajaran"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Modul Ajar",
+      "heading": "Project Builder Pembelajaran | Modul Ajar"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "RPP",
+      "heading": "Project Builder Pembelajaran | RPP"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "LKPD",
+      "heading": "Project Builder Pembelajaran | LKPD"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Asesmen Soal",
+      "heading": "Project Builder Pembelajaran | Asesmen Soal"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Strategi Pembelajaran",
+      "heading": "Project Builder Pembelajaran | Strategi Pembelajaran"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Bahan Ajar",
+      "heading": "Project Builder Pembelajaran | Bahan Ajar"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Rubrik Penilaian",
+      "heading": "Project Builder Pembelajaran | Rubrik Penilaian"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Panduan Presentasi",
+      "heading": "Project Builder Pembelajaran | Panduan Presentasi"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Peta Konsep",
+      "heading": "Project Builder Pembelajaran | Peta Konsep"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Riwayat draf",
+      "heading": "Riwayat, Versi & Hasil Final | Draf terbaru | Versi proyek"
+    },
+    {
+      "role": "owner",
+      "module": "guru_ai",
+      "feature": "Dokumen Pembelajaran",
+      "heading": "Pusat Dokumen | Daftar Dokumen"
+    },
+    {
+      "role": "owner",
+      "module": "assistant",
+      "feature": "Asisten Guru",
+      "heading": "Ngobrol AI Guru"
+    },
+    {
+      "role": "owner",
+      "module": "assistant",
+      "feature": "Asisten Kepala Sekolah",
+      "heading": "Asisten AI Kepala Sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "assistant",
+      "feature": "Asisten Kelas",
+      "heading": "Asisten Kelas"
+    },
+    {
+      "role": "owner",
+      "module": "assistant",
+      "feature": "Rencana Pekerjaan",
+      "heading": "Rencanakan pekerjaan lintas modul"
+    },
+    {
+      "role": "owner",
+      "module": "assistant",
+      "feature": "Koneksi AI",
+      "heading": "Koneksi AI Pribadi"
+    },
+    {
+      "role": "owner",
+      "module": "buku_kerja",
+      "feature": "Mode Kerja Guru",
+      "heading": "Mode Kerja Guru"
+    },
+    {
+      "role": "owner",
+      "module": "buku_kerja",
+      "feature": "Presensi Siswa",
+      "heading": "Absensi | Oktober 2026"
+    },
+    {
+      "role": "owner",
+      "module": "buku_kerja",
+      "feature": "Lembar Nilai",
+      "heading": "Lembar Nilai"
+    },
+    {
+      "role": "owner",
+      "module": "buku_kerja",
+      "feature": "Jurnal Mengajar",
+      "heading": "Jurnal Mengajar"
+    },
+    {
+      "role": "owner",
+      "module": "buku_kerja",
+      "feature": "Jadwal Mingguan",
+      "heading": "Jadwal Mengajar Mingguan"
+    },
+    {
+      "role": "owner",
+      "module": "buku_kerja",
+      "feature": "Rekap Bulanan",
+      "heading": "Rekap Bulanan"
+    },
+    {
+      "role": "owner",
+      "module": "buku_kerja",
+      "feature": "Laporan Lengkap",
+      "heading": "Rekap & Laporan Lengkap"
+    },
+    {
+      "role": "owner",
+      "module": "buku_kerja",
+      "feature": "Import/Export Excel",
+      "heading": "Import / Export Akademik"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Pelanggaran",
+      "heading": "Pelanggaran"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Prestasi",
+      "heading": "Prestasi"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Pembinaan",
+      "heading": "Pembinaan"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Tindak Lanjut",
+      "heading": "Tindak Lanjut & Sanksi"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Master Data",
+      "heading": "Master Pelanggaran, Prestasi & Sanksi | Pelanggaran | Prestasi | Sanksi"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Rekap & Laporan",
+      "heading": "Rekap & Laporan Disiplin"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Analitik Disiplin",
+      "heading": "Analitik Disiplin & Prestasi | Tren bulanan | Poin bersih per siswa"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Arsip Siswa",
+      "heading": "Arsip Siswa | Siswa aktif"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Import Riwayat",
+      "heading": "Import Riwayat Disiplin"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Surat & Dokumen",
+      "heading": "Laporan & Surat Disiplin"
+    },
+    {
+      "role": "owner",
+      "module": "disiplin",
+      "feature": "Template Laporan",
+      "heading": "Template Dokumen Disiplin & Prestasi"
+    },
+    {
+      "role": "owner",
+      "module": "bk",
+      "feature": "Analitik BK",
+      "heading": "Ringkasan BK untuk Manajemen"
+    },
+    {
+      "role": "owner",
+      "module": "bk",
+      "feature": "Laporan BK",
+      "heading": "Laporan BK untuk Kepala Sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "PBD/EDS",
+      "heading": "Perencanaan Sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "KSP/KOSP",
+      "heading": "Perencanaan Sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "RKJM",
+      "heading": "RKJM"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "RKT",
+      "heading": "RKT"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "RKAS",
+      "heading": "Pendamping RKAS"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "SOP",
+      "heading": "SOP Sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "Kinerja Kepala Sekolah",
+      "heading": "Kinerja Kepala Sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "Supervisi guru",
+      "heading": "Supervisi Akademik Guru | Riwayat & Penilaian Supervisi"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "Pusat dokumen",
+      "heading": "Pusat Dokumen | Daftar Dokumen"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "Workflow Dokumen",
+      "heading": "Workflow & Kesiapan Dokumen"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "Sumber Dokumen",
+      "heading": "Dokumen Sumber"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "Pustaka Format",
+      "heading": "Pustaka Format"
+    },
+    {
+      "role": "owner",
+      "module": "kepsek_ai",
+      "feature": "Persetujuan dokumen",
+      "heading": "Persetujuan Dokumen"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Program Kerja",
+      "heading": "Program Sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "PIC",
+      "heading": "Penanggung Jawab Program"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Tugas",
+      "heading": "Tugas & Tindak Lanjut"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Deadline",
+      "heading": "Deadline"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Progres",
+      "heading": "Progres"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Kendala",
+      "heading": "Kendala"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Hasil Rapat",
+      "heading": "Rapat & Keputusan"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Tindak Lanjut Rapat",
+      "heading": "Tindak Lanjut Hasil Rapat"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Bukti Kegiatan",
+      "heading": "Bukti Kegiatan"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Verifikasi Bukti",
+      "heading": "Verifikasi Bukti Kegiatan"
+    },
+    {
+      "role": "owner",
+      "module": "command",
+      "feature": "Laporan Program",
+      "heading": "Laporan Program & Progres"
+    },
+    {
+      "role": "owner",
+      "module": "attendance",
+      "feature": "Check-in/check-out",
+      "heading": "Presensi Realtime"
+    },
+    {
+      "role": "owner",
+      "module": "attendance",
+      "feature": "Jadwal/shift",
+      "heading": "Jadwal & Shift SDM"
+    },
+    {
+      "role": "owner",
+      "module": "attendance",
+      "feature": "Riwayat kehadiran",
+      "heading": "Riwayat Kehadiran Sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "attendance",
+      "feature": "Koreksi beralasan",
+      "heading": "Koreksi Presensi Manual"
+    },
+    {
+      "role": "owner",
+      "module": "attendance",
+      "feature": "Izin",
+      "heading": "Izin"
+    },
+    {
+      "role": "owner",
+      "module": "attendance",
+      "feature": "Cuti",
+      "heading": "Cuti"
+    },
+    {
+      "role": "owner",
+      "module": "performance",
+      "feature": "Kehadiran",
+      "heading": ""
+    },
+    {
+      "role": "owner",
+      "module": "performance",
+      "feature": "Partisipasi program",
+      "heading": "Partisipasi program"
+    },
+    {
+      "role": "owner",
+      "module": "performance",
+      "feature": "Pelatihan",
+      "heading": "Pelatihan"
+    },
+    {
+      "role": "owner",
+      "module": "performance",
+      "feature": "Bukti capaian",
+      "heading": "Bukti capaian"
+    },
+    {
+      "role": "owner",
+      "module": "performance",
+      "feature": "Evaluasi",
+      "heading": "Evaluasi Kinerja | Riwayat Evaluasi"
+    },
+    {
+      "role": "owner",
+      "module": "performance",
+      "feature": "Tanggapan guru",
+      "heading": "Tanggapan Guru"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Pengajuan SDM",
+      "heading": "Pengajuan SDM"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Lembur",
+      "heading": "Lembur"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Kasbon",
+      "heading": "Kasbon"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Reimburse",
+      "heading": "Reimburse"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Tim SDM",
+      "heading": "Tim SDM & Hubungan Akun | Hubungkan akun ↔ pegawai | Tetapkan supervisor"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Tim Saya",
+      "heading": "Tim Saya"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Kehadiran Tim",
+      "heading": "Kehadiran Tim"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Approval Tim",
+      "heading": "Approval Tim"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Rekap Tim",
+      "heading": "Rekap Tim"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Jadwal Kerja",
+      "heading": "Jadwal Kerja & Penempatan | Daftar jadwal | Penempatan pegawai"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Lokasi Presensi",
+      "heading": "Lokasi Presensi"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Komponen Dinamis",
+      "heading": "Komponen Dinamis Payroll | Pasang komponen ke pegawai"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Komponen Gaji",
+      "heading": "Komponen Gaji Dasar"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Proses Payroll",
+      "heading": "Proses Payroll Bulanan"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Rekrutmen",
+      "heading": "Rekrutmen Sekolah | Lowongan | Kandidat"
+    },
+    {
+      "role": "owner",
+      "module": "gajian",
+      "feature": "Laporan HR",
+      "heading": "Laporan HR & Operasional"
+    },
+    {
+      "role": "owner",
+      "module": "payslip",
+      "feature": "Riwayat Slip",
+      "heading": "Slip Gaji Pribadi"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Dashboard Keuangan",
+      "heading": "Ringkasan Keuangan | Saldo per kas / rekening | Transaksi terbaru"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Kas/Rekening",
+      "heading": "Kas & Rekening"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Pemasukan",
+      "heading": "Pemasukan"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Pengeluaran",
+      "heading": "Pengeluaran"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Bukti Transaksi",
+      "heading": "Bukti Transaksi"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Anggaran",
+      "heading": "Anggaran"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Realisasi Anggaran",
+      "heading": "Realisasi Anggaran"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Tagihan Siswa",
+      "heading": "Tagihan Siswa"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Pembayaran",
+      "heading": "Pembayaran & Kuitansi"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Riwayat Pembayaran",
+      "heading": "Riwayat Pembayaran Siswa"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "WhatsApp Tagihan",
+      "heading": "WhatsApp Tagihan"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Buku Kas Umum",
+      "heading": "Buku Kas Umum"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Laporan",
+      "heading": "Pusat Laporan Keuangan"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Import/Export",
+      "heading": "Pusat Laporan & Import Keuangan"
+    },
+    {
+      "role": "owner",
+      "module": "sikas",
+      "feature": "Tim Keuangan",
+      "heading": "Tim Keuangan"
+    },
+    {
+      "role": "owner",
+      "module": "access",
+      "feature": "Tambah Pengguna",
+      "heading": "Tambah Pengguna"
+    },
+    {
+      "role": "owner",
+      "module": "access",
+      "feature": "Anggota Tim",
+      "heading": "Anggota & Hak Akses"
+    },
+    {
+      "role": "owner",
+      "module": "access",
+      "feature": "Struktur Peran & Hak Akses",
+      "heading": "Struktur Peran & Hak Akses"
+    },
+    {
+      "role": "owner",
+      "module": "settings",
+      "feature": "Profil sekolah",
+      "heading": "Profil Sekolah | Identitas & Kontak"
+    },
+    {
+      "role": "owner",
+      "module": "settings",
+      "feature": "Lokasi Sekolah",
+      "heading": "Lokasi Sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "settings",
+      "feature": "Akademik",
+      "heading": "Pengaturan Akademik"
+    },
+    {
+      "role": "owner",
+      "module": "settings",
+      "feature": "Branding",
+      "heading": "Template & Identitas Dokumen Resmi"
+    },
+    {
+      "role": "owner",
+      "module": "settings",
+      "feature": "Memori sekolah",
+      "heading": "Memori Sekolah untuk AI"
+    },
+    {
+      "role": "owner",
+      "module": "settings",
+      "feature": "Langganan",
+      "heading": "Berlangganan School Control"
+    },
+    {
+      "role": "owner",
+      "module": "settings",
+      "feature": "Riwayat pembayaran",
+      "heading": "Berlangganan School Control | Riwayat Pesanan"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Mulai dari Sini",
+      "heading": "Panduan School Control | Urutan cepat untuk Pemilik Akun | Mulai dengan pekerjaan berikut | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Data Induk",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Agenda & Absensi",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Presensi Guru & Staf",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Perangkat Ajar AI",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Asisten AI",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Jurnal & Penilaian",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Disiplin & Prestasi",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Bimbingan Konseling",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Perencanaan & Supervisi",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Program & Tugas",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Keuangan",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "SDM & Payroll",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Kinerja & Pengembangan",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Laporan & Arsip",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "owner",
+      "module": "help",
+      "feature": "Akses & Pengaturan",
+      "heading": "Panduan School Control | Petunjuk per menu"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Kasus & Asesmen",
+      "heading": "Kasus & Asesmen"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Pemetaan Kebutuhan",
+      "heading": "Pemetaan kebutuhan"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Konseling Individu",
+      "heading": "Konseling individu"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Konseling Kelompok",
+      "heading": "Konseling kelompok"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Layanan Klasikal",
+      "heading": "Layanan klasikal"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "RPL Layanan",
+      "heading": "RPL layanan"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Program BK",
+      "heading": "Program BK"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Agenda BK",
+      "heading": "Agenda BK"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Tindak Lanjut",
+      "heading": "Tindak Lanjut BK"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Kunjungan Rumah",
+      "heading": "Kunjungan rumah"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Rujukan",
+      "heading": "Rujukan"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Perencanaan Karier",
+      "heading": "Perencanaan karier"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Dokumen BK",
+      "heading": "Dokumen BK"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Siswa 360°",
+      "heading": "Siswa 360° BK"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Analitik BK",
+      "heading": "Analitik BK | Jenis layanan | Bidang layanan"
+    },
+    {
+      "role": "counselor",
+      "module": "bk",
+      "feature": "Laporan BK",
+      "heading": "Laporan Operasional BK"
+    }
+  ]
+}

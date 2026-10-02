@@ -1,7 +1,9 @@
 "use client";
-import {useMemo,useState} from "react";
+import {useEffect,useMemo,useState} from "react";
 import {AlertTriangle,BookOpen,CheckCircle2,ChevronDown,CircleHelp,Search,ShieldCheck,Target} from "lucide-react";
-import type {Role} from "@/lib/modules";
+import {modules,visibleFeatures,ROLE_LABELS,type Role,type ModuleKey} from "@/lib/modules";
+import {guideFor,resolveWorkspaceRoute,type WorkspaceRoute} from "@/lib/workspace-navigation";
+import {taskHelp} from "@/lib/workspace-help";
 
 type Guide={id:string;feature:string;title:string;basis:string;summary:string;before:string[];steps:{title:string;detail:string;result:string}[];success:string[];problems:{problem:string;fix:string}[]};
 const guides:Guide[]=[
@@ -73,6 +75,42 @@ const guides:Guide[]=[
  ],success:["Pengguna hanya melihat menu sesuai role.","Satu sekolah mempunyai ruang data sendiri."],problems:[{problem:"Menu terlalu sedikit.",fix:"Periksa role akun; jangan mengubah data hanya untuk membuka akses."},{problem:"Akun dan pegawai terasa ganda.",fix:"Gunakan hubungan akun–data SDM, bukan membuat pegawai baru."}]}
 ];
 
+const extraGuides:{id:string;feature:string;module:ModuleKey;features:string[]}[]=[
+ {id:"assistant",feature:"Asisten AI",module:"assistant",features:["Asisten Guru","Asisten Kepala Sekolah","Asisten Kelas","Rencana Pekerjaan"]},
+ {id:"attendance",feature:"Presensi Guru & Staf",module:"attendance",features:["Check-in/check-out","Riwayat kehadiran","Izin","Cuti"]},
+ {id:"planning",feature:"Perencanaan & Supervisi",module:"kepsek_ai",features:["PBD/EDS","Pusat dokumen","Persetujuan dokumen","Supervisi guru"]},
+ {id:"performance",feature:"Kinerja & Pengembangan",module:"performance",features:["Kehadiran","Bukti capaian","Evaluasi","Tanggapan guru"]},
+ {id:"reports",feature:"Laporan & Arsip",module:"reports",features:["Ringkasan Laporan","Akademik","Keuangan","Arsip Laporan"]},
+];
+for(const g of extraGuides){const h=taskHelp(g.module,"");guides.push({id:g.id,feature:g.feature,title:g.feature,basis:"School Control",summary:h.purpose,before:[h.before],steps:h.steps.map((detail,i)=>({title:String(i+1)+". "+(g.features[i]||g.feature),detail,result:h.result})),success:[h.result],problems:[{problem:"Fitur atau data tidak muncul.",fix:"Periksa peran akun, data prasyarat dan pesan validasi. Gunakan tombol Buka fitur yang tersedia untuk peran Anda."}]})}
+const stepRoutes:Record<string,[ModuleKey,string][]>={
+ start:[["settings","Profil sekolah"],["master","Kelas"],["access","Tambah Pengguna"],["calendar","Kalender Sekolah"],["reports","Ringkasan Laporan"]],
+ master:[["master","Kelas"],["master","Siswa"],["master","Guru"],["master","Penugasan Guru"]],
+ agenda:[["calendar","Kalender Sekolah"],["calendar","Rekap Agenda"],["buku_kerja","Presensi Siswa"],["buku_kerja","Presensi Siswa"]],
+ guruai:[["guru_ai","Modul Ajar"],["guru_ai","LKPD"],["guru_ai","Asesmen Soal"],["guru_ai","Riwayat draf"]],
+ journal:[["buku_kerja","Jurnal Mengajar"],["buku_kerja","Lembar Nilai"],["buku_kerja","Rekap Bulanan"]],
+ discipline:[["disiplin","Master Data"],["disiplin","Pelanggaran"],["disiplin","Pembinaan"],["disiplin","Tindak Lanjut"],["disiplin","Rekap & Laporan"]],
+ bk:[["bk","Kasus & Asesmen"],["bk","Konseling Individu"],["bk","Laporan BK"]],
+ command:[["command","Program Kerja"],["command","Tugas"],["command","Hasil Rapat"],["command","Bukti Kegiatan"]],
+ finance:[["sikas","Kas/Rekening"],["sikas","Pemasukan"],["sikas","Tagihan Siswa"],["sikas","Pembayaran"],["sikas","Laporan"]],
+ payroll:[["gajian","Tim SDM"],["gajian","Jadwal Kerja"],["gajian","Komponen Gaji"],["gajian","Proses Payroll"]],
+ access:[["access","Tambah Pengguna"],["gajian","Tim SDM"],["settings","Profil sekolah"]],
+ ...Object.fromEntries(extraGuides.map(g=>[g.id,g.features.map(f=>[g.module,f])])),
+};
+const quickStart:[ModuleKey,string,string,string][]=[
+ ["settings","Profil sekolah","Lengkapi identitas sekolah","Isi profil, jenjang, tahun ajaran dan branding."],
+ ["master","Kelas","Siapkan kelas dan data siswa","Buat kelas, lalu tambah/import siswa dari template."],
+ ["access","Tambah Pengguna","Undang guru dan staf","Pilih peran lalu bagikan kode undangan secara pribadi."],
+ ["calendar","Kalender Sekolah","Lihat agenda hari ini","Pilih tanggal dan periksa waktu serta peserta."],
+ ["attendance","Check-in/check-out","Absen kerja","Catat masuk/pulang sesuai ketentuan sekolah."],
+ ["buku_kerja","Presensi Siswa","Isi presensi siswa","Pilih kelas dan tanggal; simpan status siswa."],
+ ["buku_kerja","Jurnal Mengajar","Isi jurnal mengajar","Catat topik, aktivitas, refleksi dan tindak lanjut."],
+ ["bk","Kasus & Asesmen","Catat layanan BK","Gunakan kasus dan layanan dengan privasi konselor."],
+ ["sikas","Pemasukan","Catat keuangan","Siapkan kas dan catat transaksi pada tanggal yang tepat."],
+ ["assistant","Rencana Pekerjaan","Minta panduan urutan pekerjaan","Tulis tujuan; asisten membantu memilih langkah dan fitur."],
+ ["reports","Ringkasan Laporan","Periksa hasil dan laporan","Pilih laporan, periode dan pratinjau sebelum ekspor."],
+];
+
 const flow:Record<string,string[]>={
  owner:["Lengkapi Pengaturan Sekolah","Isi Data Induk","Atur Akses & Peran","Pantau Agenda/Program/Keuangan","Tinjau laporan"],
  principal:["Tinjau Beranda & Agenda","Pantau Program dan Supervisi","Gunakan Perencanaan & Dokumen","Tinjau laporan sekolah"],
@@ -84,18 +122,24 @@ const flow:Record<string,string[]>={
  viewer:["Baca informasi yang dibagikan","Gunakan agenda/rekap yang diizinkan"]
 };
 
-export default function GuideCenter({role,focus}:{role:Role;focus?:string}){
+export default function GuideCenter({role,focus,onRoute}:{role:Role;focus?:string;onRoute?:(m:ModuleKey,f?:string)=>void}){
  const [query,setQuery]=useState(""),[open,setOpen]=useState("start");
+ useEffect(()=>{setQuery("");setOpen(guides.find(g=>g.feature===focus)?.id||"start")},[focus]);
  const selected=useMemo(()=>{const q=(focus||"").toLowerCase();return guides.filter(g=>(!q||q.includes("mulai")||g.feature.toLowerCase()===q||g.feature.toLowerCase().includes(q)||q.includes(g.feature.toLowerCase()))&&(g.title+" "+g.summary+" "+g.basis+" "+g.steps.map(s=>s.detail).join(" ")).toLowerCase().includes(query.toLowerCase()))},[focus,query]);
+ const shortcuts=quickStart.filter(([m,f])=>!!resolveWorkspaceRoute(m,f,role));
+ const featureLinks=modules.filter(m=>m.key!=="help"&&(!focus||focus==="Mulai dari Sini"||guideFor(m.key)===focus)).flatMap(m=>visibleFeatures(m,role).map(f=>({module:m.key,feature:f,label:m.label,help:taskHelp(m.key,f)}))).filter(x=>(x.label+" "+x.feature+" "+x.help.purpose).toLowerCase().includes(query.toLowerCase()));
  return <section className="guide-center">
-  <div className="guide-hero-pro"><div><span className="eyebrow">BUKU PANDUAN LANGKAH DEMI LANGKAH</span><h2>Panduan School Control</h2><p>Panduan disusun dari alur aplikasi asal: BK Pro, Gajian Pro, SIKAS Pro, Buku Kerja Digital, Kepsek AI, Disiplin Pro, dan Command Pro.</p></div><div className="guide-role-pro"><ShieldCheck size={20}/><span>Akses Anda</span><b>{role}</b></div></div>
-  {(focus==="Mulai dari Sini"||!focus)&&<section className="panel guide-flow-pro"><div><Target size={19}/><h3>Urutan cepat untuk {role}</h3></div><div>{(flow[role]||flow.staff).map((x,i)=><span key={x}><b>{i+1}</b>{x}</span>)}</div></section>}
-  <label className="guide-search-pro"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Cari: import, agenda, absensi, jurnal, payroll, laporan…"/></label>
-  <div className="guide-list-pro">{selected.map((g,i)=><article className={"panel guide-card-pro "+(open===g.id?"open":"")} key={g.id}><button className="guide-toggle-pro" onClick={()=>setOpen(open===g.id?"":g.id)}><span>{String(i+1).padStart(2,"0")}</span><div><small>{g.feature} · Standar {g.basis}</small><strong>{g.title}</strong><em>{g.summary}</em></div><ChevronDown size={18}/></button>{open===g.id&&<div className="guide-body-pro">
+  <div className="guide-hero-pro"><div><span className="eyebrow">BUKU PANDUAN LANGKAH DEMI LANGKAH</span><h2>Panduan School Control</h2><p>Pilih pekerjaan Anda, ikuti langkahnya, lalu buka fitur langsung dari panduan. Mulai dengan data yang dibutuhkan; tidak perlu mengisi semua menu sekaligus.</p></div><div className="guide-role-pro"><ShieldCheck size={20}/><span>Akses Anda</span><b>{ROLE_LABELS[role]}</b><a className="button secondary" href="/panduan-school-control.md" download>Unduh panduan</a></div></div>
+  {(focus==="Mulai dari Sini"||!focus)&&<section className="panel guide-flow-pro"><div><Target size={19}/><h3>Urutan cepat untuk {ROLE_LABELS[role]}</h3></div><div>{(flow[role]||flow.staff).map((x,i)=><span key={x}><b>{i+1}</b>{x}</span>)}</div></section>}
+  {(focus==="Mulai dari Sini"||!focus)&&<section className="panel"><h3>Mulai dengan pekerjaan berikut</h3><div className="guide-launch-grid">{shortcuts.map(([m,f,title,detail])=><button key={m+f} onClick={()=>onRoute?.(m,f)}><strong>{title}</strong><small>{detail}</small><span className="text-action">Buka {f} →</span></button>)}</div></section>}
+  <label className="guide-search-pro"><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} aria-label="Cari petunjuk" placeholder="Cari: import, agenda, absensi, jurnal, payroll, laporan…"/></label>
+  <div className="guide-list-pro">{selected.map((g,i)=><article className={"panel guide-card-pro "+(open===g.id?"open":"")} key={g.id}><button className="guide-toggle-pro" aria-expanded={open===g.id} onClick={()=>setOpen(open===g.id?"":g.id)}><span>{String(i+1).padStart(2,"0")}</span><div><small>{g.feature}</small><strong>{g.title}</strong><em>{g.summary}</em></div><ChevronDown size={18}/></button>{open===g.id&&<div className="guide-body-pro">
    <section><h4><CircleHelp size={16}/> Sebelum mulai</h4>{g.before.map(x=><p key={x}><CheckCircle2 size={14}/>{x}</p>)}</section>
-   <section><h4><BookOpen size={16}/> Langkah satu per satu</h4>{g.steps.map(s=><div className="guide-step-pro" key={s.title}><b>{s.title}</b><p>{s.detail}</p><small>Hasil: {s.result}</small></div>)}</section>
+   <section><h4><BookOpen size={16}/> Langkah satu per satu</h4>{g.steps.map((s,index)=>{const r=stepRoutes[g.id]?.[index];const route=r?resolveWorkspaceRoute(r[0],r[1],role):null;return <div className="guide-step-pro" key={s.title}><b>{s.title}</b><p>{s.detail}</p><small>Hasil: {s.result}</small>{route&&<button className="button secondary" onClick={()=>onRoute?.(route.module,route.feature)}>Buka {route.feature}</button>}</div>})}</section>
    <section><h4><CheckCircle2 size={16}/> Tanda berhasil</h4>{g.success.map(x=><p key={x}><CheckCircle2 size={14}/>{x}</p>)}</section>
    <section><h4><AlertTriangle size={16}/> Kalau gagal, cek ini</h4>{g.problems.map(x=><div className="guide-problem-pro" key={x.problem}><b>{x.problem}</b><p>{x.fix}</p></div>)}</section>
   </div>}</article>)}</div>
+  {!selected.length&&!featureLinks.length&&<div className="empty guide-empty">Tidak ada petunjuk yang cocok. Coba nama fitur atau pekerjaan lain.</div>}
+  <section className="panel"><h3>Petunjuk per menu</h3><p className="muted">Hanya fitur sesuai akses Anda yang ditampilkan.</p>{featureLinks.map(x=><details className="task-help" key={x.module+x.feature}><summary>{x.feature} · {x.label}</summary><p>{x.help.purpose}</p><p><b>Sebelum mulai:</b> {x.help.before}</p><ol>{x.help.steps.map(s=><li key={s}>{s}</li>)}</ol><p><b>Hasil:</b> {x.help.result}</p><button className="button secondary" onClick={()=>onRoute?.(x.module,x.feature)}>Buka {x.feature}</button></details>)}</section>
  </section>;
 }

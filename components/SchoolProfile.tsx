@@ -39,7 +39,7 @@ export default function SchoolProfile({schoolId,role,focus}:{schoolId:string;rol
  const setSetting=(k:string,v:unknown)=>setProfile(p=>({...p,report_settings:{...(p.report_settings||{}),[k]:v}}));
  const save=<button className="button" disabled={!admin||busy||profile.name.trim().length<3} onClick={()=>void run(()=>rpc("sc_edit_school_details",{p_school:schoolId,p_payload:profile}))}>Simpan Pengaturan</button>;
  const showGeneral=!f||f.includes("profil");
- const showContact=!f||f.includes("identitas")||f.includes("kontak");
+ const showContact=!f||f.includes("profil")||f.includes("identitas")||f.includes("kontak");
  const showLocation=!f||f.includes("lokasi");
  const showAcademic=!f||f.includes("akademik");
  const showBrand=!f||f.includes("branding");

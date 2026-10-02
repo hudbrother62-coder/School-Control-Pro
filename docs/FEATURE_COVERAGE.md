@@ -1,5 +1,7 @@
 # Inventaris setiap submenu School Control
 
+> Catatan 2 Oktober 2026: inventaris di bawah adalah checkpoint sebelum penyederhanaan navigasi. Registry aktif ada di `lib/modules.ts`; daftar layar aktif yang telah diuji ada di `docs/qa/workspace-browser-results.json`, dan panduan pengguna terbaru ada di `public/panduan-school-control.md`. Detail perubahan dan batas QA ada di `docs/NAVIGATION_MOBILE_QA_20261002.md`.
+
 Daftar diambil dari seluruh registry navigasi dan dipetakan ke komponen yang dipanggil router. Ini adalah inventaris kode, bukan klaim bahwa semua alur telah lulus E2E. Kolom Excel hanya mendeteksi adanya pembaca/penulis Excel dalam komponen; belum membuktikan bahwa setiap submenu memiliki import sendiri. Semua baris tetap membutuhkan verifikasi formulir, otorisasi, CRUD/arsip, template, import/export, laporan dan tampilan responsif yang berlaku.
 
 ## Beranda

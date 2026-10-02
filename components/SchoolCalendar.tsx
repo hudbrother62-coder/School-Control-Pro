@@ -31,7 +31,7 @@ export default function SchoolCalendar({schoolId,userId,role,compact=false,focus
  const [attendanceRequired,setAttendanceRequired]=useState(false),[attendanceLocation,setAttendanceLocation]=useState(""),[checkinOpen,setCheckinOpen]=useState(30),[checkinClose,setCheckinClose]=useState(60);
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[importRows,setImportRows]=useState<SheetRows>([]),[importFile,setImportFile]=useState("");
  const focusText=(focus||"").toLowerCase();
- const mode=focusText.includes("pribadi")?"personal":focusText.includes("pengguna")?"users":focusText.includes("kehadiran")?"attendance":focusText.includes("rekap")?"recap":"school";
+ const mode=focusText.includes("pribadi")?"personal":focusText.includes("pengguna")?"users":focusText.includes("kehadiran")?"attendance":focusText.includes("rekap")?"recap":focusText.includes("mengajar")?"teaching":"school";
  const canWrite=role!=="viewer";
 
  async function load(){
@@ -60,7 +60,7 @@ export default function SchoolCalendar({schoolId,userId,role,compact=false,focus
  useEffect(()=>{if(!targetUser)setTargetUser(userId)},[userId,targetUser]);
 
  function resetForm(nextDay=ymd(new Date()),nextScope:"school"|"personal"=mode==="personal"?"personal":"school"){
-  setEditing(null);setTitle("");setDay(nextDay);setStart("07:00");setEnd("");setCategory(nextScope==="personal"?"personal":"school");setNotes("");setLocation("");setScope(nextScope);setSelected([]);
+  setEditing(null);setTitle("");setDay(nextDay);setStart("07:00");setEnd("");setCategory(nextScope==="personal"?"personal":mode==="teaching"?"teaching":"school");setNotes("");setLocation("");setScope(nextScope);setSelected([]);
   setAudienceType(nextScope==="personal"?"personal":"school");setAudienceGrade("");setAudienceClass("");setAttendanceRequired(false);setAttendanceLocation("");setCheckinOpen(30);setCheckinClose(60);
  }
  function openNew(nextDay?:string){const target=nextDay||selectedDay;setSelectedDay(target);resetForm(target,mode==="personal"?"personal":"school");setModal(true)}
@@ -92,7 +92,7 @@ export default function SchoolCalendar({schoolId,userId,role,compact=false,focus
  async function exportAgenda(){await downloadExcel("agenda-sekolah-"+monthKey(cursor)+".xlsx",[{name:"AGENDA",rows:currentMonth.map(x=>({Judul:x.title,Tanggal:x.event_date,Jam_Mulai:(x.start_time||"").slice(0,5),Jam_Selesai:(x.end_time||"").slice(0,5),Kategori:x.category,Sasaran:x.audience_type,Tingkat:x.audience_grade||"",Kelas:className(x.audience_class_id),Lokasi_Agenda:x.location||"",Wajib_Presensi:x.attendance_required?"ya":"tidak",Lokasi_Presensi:locations.find(l=>l.id===x.attendance_location_id)?.name||"",Buka_Checkin_Menit:x.checkin_open_minutes,Tutup_Checkin_Menit:x.checkin_close_minutes,Keterangan:x.notes||""}))}])}
 
  const ownedBy=(x:EventRow,uid:string)=>x.owner_user_id===uid||x.audience_type==="school"||participants.some(p=>p.event_id===x.id&&p.user_id===uid);
- const visible=rows.filter(x=>mode==="personal"?x.owner_user_id===userId:mode==="users"?ownedBy(x,targetUser):mode==="attendance"?ownedBy(x,userId):x.scope==="school");
+ const visible=rows.filter(x=>mode==="teaching"?x.category==="teaching"&&(manager||x.owner_user_id===userId||participants.some(p=>p.event_id===x.id&&p.user_id===userId)):mode==="personal"?x.owner_user_id===userId:mode==="users"?ownedBy(x,targetUser):mode==="attendance"?ownedBy(x,userId):x.scope==="school");
  const selectedRows=visible.filter(x=>x.event_date===selectedDay);
  const currentMonth=visible.filter(x=>x.event_date.startsWith(monthKey(cursor)));
  const levels=[...new Set(classes.map(c=>c.grade).filter(Boolean) as string[])].sort((a,b)=>a.localeCompare(b,"id",{numeric:true}));

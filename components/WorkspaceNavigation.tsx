@@ -1,0 +1,8 @@
+"use client";
+import {ChevronRight,type LucideIcon} from "lucide-react";
+import {visibleFeatures,type FeatureModule,type ModuleKey,type Role} from "@/lib/modules";
+// Declared outside the workspace so refreshes don't recreate the navigation tree.
+export default function WorkspaceNavigation({items,role,module,feature,expanded,icons,onChoose,onExpand}:{items:FeatureModule[];role:Role;module:ModuleKey;feature:string;expanded:ModuleKey|null;icons:Record<ModuleKey,LucideIcon>;onChoose:(m:ModuleKey,f?:string)=>void;onExpand:(m:ModuleKey|null)=>void}){
+ const sections=[...new Set(items.map(m=>m.section))];
+ return <nav aria-label="Menu sekolah" className="workspace-navigation">{sections.map(section=><div key={section}><div className="navgroup">{section}</div>{items.filter(m=>m.section===section).map(m=>{const Icon=icons[m.key],open=expanded===m.key,features=visibleFeatures(m,role);return <div className="navitem" key={m.key}><div className="navrow"><button className={"navbtn "+(module===m.key?"active":"")} aria-current={module===m.key?"page":undefined} onClick={()=>onChoose(m.key)}><Icon size={19}/><span>{m.label}</span></button>{features.length>1&&<button className="navexpand" aria-label={"Submenu "+m.label} aria-expanded={open} aria-controls={"navigation-"+m.key} onClick={()=>onExpand(open?null:m.key)}><ChevronRight className={"navchev "+(open?"open":"")} size={17}/></button>}</div>{open&&features.length>1&&<div className="navchildren" id={"navigation-"+m.key}>{features.map(f=><button key={f} aria-current={module===m.key&&feature===f?"page":undefined} className={module===m.key&&feature===f?"active":""} onClick={()=>onChoose(m.key,f)}>{f}</button>)}</div>}</div>})}</div>)}</nav>
+}

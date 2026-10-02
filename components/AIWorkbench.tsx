@@ -44,6 +44,7 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
  const [template,setTemplate]=useState(""),[context,setContext]=useState(""),[output,setOutput]=useState(""),[title,setTitle]=useState(""),[drafts,setDrafts]=useState<Draft[]>([]);
  const [project,setProject]=useState<ProjectContext>(emptyProject),[toolData,setToolData]=useState<Record<string,string>>({});
  const [classes,setClasses]=useState<SchoolClass[]>([]),[subjects,setSubjects]=useState<Subject[]>([]),[teacherName,setTeacherName]=useState(""),[schoolFacts,setSchoolFacts]=useState<Record<string,string>>({});
+ const [projectOpen,setProjectOpen]=useState(true);
  const [error,setError]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false);
  const focusText=(focus||"").toLowerCase(),historyOnly=focusText.includes("riwayat"),projectOnly=module==="guru_ai"&&focusText.includes("proyek");
  const config=aiTemplates[module].find(t=>t.key===template);
@@ -71,11 +72,11 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
    if(school)setSchoolFacts(Object.fromEntries(Object.entries(school).filter(([,v])=>v!==null&&String(v).trim()!=="").map(([k,v])=>[k,String(v)])));
   }
  }
- useEffect(()=>{void load();if(module==="guru_ai"){try{const saved=localStorage.getItem("school-control-teaching-project-"+schoolId);if(saved)setProject({...emptyProject,...JSON.parse(saved)})}catch{}}},[db,schoolId,module]);
+ useEffect(()=>{void load();if(module==="guru_ai"){try{const saved=localStorage.getItem("school-control-teaching-project-"+schoolId);if(saved){const stored=JSON.parse(saved);setProject({...emptyProject,...stored});if(stored.subject&&stored.topic)setProjectOpen(false)}}catch{}}},[db,schoolId,module]);
  useEffect(()=>{if(!focus)return;const f=focus.toLowerCase();const found=aiTemplates[module].find(t=>t.label.toLowerCase()===f||t.label.toLowerCase().includes(f)||f.includes(t.label.toLowerCase()));if(found)setTemplate(found.key)},[focus,module]);
  useEffect(()=>{setToolData({});setContext("")},[template]);
  function setField<K extends keyof ProjectContext>(k:K,v:ProjectContext[K]){setProject(p=>({...p,[k]:v}))}
- function saveProject(){localStorage.setItem("school-control-teaching-project-"+schoolId,JSON.stringify(project));setOk("Konteks pembelajaran tersimpan. Seluruh generator akan memakai data yang sama.")}
+ function saveProject(){if(!project.subject.trim()||!project.topic.trim()){setError("Lengkapi mata pelajaran dan topik pembelajaran terlebih dahulu.");return}setError("");setProjectOpen(false);localStorage.setItem("school-control-teaching-project-"+schoolId,JSON.stringify(project));setOk("Konteks pembelajaran tersimpan. Seluruh generator akan memakai data yang sama.")}
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
 
  const classOptions:SmartOption[]=useMemo(()=>{
@@ -141,17 +142,17 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
  async function generate(){if(!db||!config)return;await run(async()=>{
   if(module==="guru_ai"&&(!project.level||!project.grade||!project.subject||!project.topic))throw Error("Lengkapi jenjang, kelas, mata pelajaran, dan topik terlebih dahulu.");
   const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Masuk kembali untuk menjalankan AI.");
-  const response=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({school_id:schoolId,module,prompt:config.prompt+"\n\n"+projectText()})});
+  const response=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token,...(localStorage.getItem("school-control-personal-gemini-key")?{"x-user-gemini-key":localStorage.getItem("school-control-personal-gemini-key")!}:{})},body:JSON.stringify({school_id:schoolId,module,prompt:config.prompt+"\n\n"+projectText()})});
   const j=await response.json();if(!response.ok)throw Error(j.error||"AI belum tersedia.");setOutput(j.text||"");setTitle(config.label+(project.topic?" · "+project.topic:""));setOk("Draf selesai dibuat. Tinjau standar output sebelum disimpan.");
  })}
  async function store(){if(!db)return;await run(async()=>{const {error}=await db.rpc("sc_store_ai_draft",{p_school:schoolId,p_module:module,p_template:template,p_title:title,p_prompt:projectText(),p_content:output});if(error)throw error;await load();setOk("Draf disimpan ke riwayat.")})}
  async function removeDraft(id:string){if(!db||!confirm("Hapus draf AI ini?"))return;await run(async()=>{const {error}=await db.rpc("sc_delete_auxiliary",{p_school:schoolId,p_entity:"ai_draft",p_id:id});if(error)throw error;await load();setOk("Draf dihapus.")})}
 
- const showProject=module==="guru_ai"&&(!focus||projectOnly);
+ const showProject=module==="guru_ai"&&!historyOnly;
  const showGenerator=!historyOnly&&!projectOnly;
  return <>
-  {showProject&&<section className="panel teacher-project">
-   <div className="sectionhead"><div><h2>Project Builder Pembelajaran</h2><p className="muted">Standar input diambil dari Guru AI lama. Satu konteks dipakai ulang agar hasil Modul Ajar, LKPD, asesmen, bahan ajar dan rubrik tetap konsisten.</p></div><span className="pill"><Sparkles size={13}/> Workspace Guru</span></div>
+  {showProject&&<section className="panel teacher-project"><details open={projectOpen} onToggle={e=>setProjectOpen(e.currentTarget.open)}><summary className="project-context-toggle"><b>Konteks Pembelajaran</b><span>{[project.level,project.grade,project.subject,project.topic].filter(Boolean).join(" · ")||"Isi jenjang, kelas, mapel dan topik sebelum generate."}</span></summary>
+   <div className="sectionhead"><div><h2>Project Builder Pembelajaran</h2><p className="muted">Lengkapi konteks kelas dan pembelajaran. Data ini dipakai ulang agar hasil Modul Ajar, LKPD, asesmen, bahan ajar dan rubrik tetap konsisten.</p></div><span className="pill"><Sparkles size={13}/> Workspace Guru</span></div>
    <div className="fields">
     <label className="field full">Nama proyek<input value={project.name} onChange={e=>setField("name",e.target.value)} placeholder="Contoh: Relasi & Fungsi – Semester Ganjil"/></label>
     <div className="field"><SmartSelect label="Jenjang" value={project.level} options={levelOptions} onChange={v=>{const g=gradeFor(v)[0]||"";setField("level",v);setField("grade",g);setField("phase",phaseFor(v,g));setField("subject","")}} allowCustom customLabel="Gunakan jenjang ini"/></div>
@@ -178,11 +179,11 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
     <label className="field full">Preferensi asesmen<textarea rows={3} value={project.assessment_preference} onChange={e=>setField("assessment_preference",e.target.value)} placeholder="Produk, performa, tes tertulis, observasi, portofolio, rubrik, atau kombinasi"/></label>
     <label className="field full">Instruksi tambahan proyek<textarea rows={4} value={project.instructions} onChange={e=>setField("instructions",e.target.value)} placeholder="Gaya bahasa, konteks lokal, format khusus, hal yang harus dihindari…"/></label>
    </div>
-   <div className="flow" style={{marginTop:14}}><button className="button" onClick={saveProject}><Save size={15}/> Simpan Konteks Proyek</button></div>
+   <div className="flow" style={{marginTop:14}}><button className="button" onClick={saveProject}><Save size={15}/> Simpan Konteks Proyek</button></div></details>
   </section>}
 
   {showGenerator&&<section className="panel teacher-generator">
-   <div className="sectionhead"><div><h2>{module==="guru_ai"?(config?.label||"Generator Perangkat Ajar"):"Asisten Perencanaan Sekolah"}</h2><p className="muted">{module==="guru_ai"?"Setiap alat memiliki input dan standar output sendiri; konteks proyek tetap dipakai otomatis.":"Pilih dokumen, berikan konteks faktual sekolah, lalu tinjau hasil sebelum dipakai."}</p></div><span className="pill">{module==="guru_ai"?"Perangkat Ajar":"Manajemen"}</span></div>
+   <div className="sectionhead"><div><h2>{module==="guru_ai"?(config?.label||"Generator Perangkat Ajar"):(config?.label||"Perencanaan Sekolah")}</h2><p className="muted">{module==="guru_ai"?"Setiap alat memiliki input dan standar output sendiri; konteks proyek tetap dipakai otomatis.":"Pilih dokumen, berikan konteks faktual sekolah, lalu tinjau hasil sebelum dipakai."}</p></div><span className="pill">{module==="guru_ai"?"Perangkat Ajar":"Manajemen"}</span></div>
    {!focus&&<label className="field full">Jenis generator<select value={template} onChange={e=>setTemplate(e.target.value)}><option value="">Pilih jenis</option>{aiTemplates[module].map(t=><option key={t.key} value={t.key}>{t.label}</option>)}</select></label>}
    {module==="guru_ai"&&<div className="project-summary"><b>{project.name||"Proyek belum diberi nama"}</b><span>{[project.level,project.grade&&"Kelas "+project.grade,project.subject,project.topic].filter(Boolean).join(" · ")||"Lengkapi Project Builder terlebih dahulu."}</span></div>}
    {activeToolConfig&&<>
