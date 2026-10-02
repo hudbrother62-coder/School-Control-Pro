@@ -1,6 +1,6 @@
 # Panduan penggunaan School Control
 
-Diperbarui 2 Oktober 2026. Menu yang tampil mengikuti jabatan dan akses akun di sekolah aktif.
+Diperbarui 3 Oktober 2026. Menu yang tampil mengikuti jabatan dan akses akun di sekolah aktif.
 
 ## Mulai dalam lima langkah
 
@@ -13,7 +13,7 @@ Diperbarui 2 Oktober 2026. Menu yang tampil mengikuti jabatan dan akses akun di 
 ## Navigasi yang lebih sederhana
 
 - Klik nama menu untuk membuka pekerjaan utama; klik panah untuk melihat submenunya.
-- Di ponsel, gunakan Beranda, Agenda, Presensi, Asisten AI dan Menu di bagian bawah. Pilih submenu dari pilihan di bawah header.
+- Di ponsel, gunakan Beranda, Agenda, Presensi, Asisten AI dan Menu di bagian bawah. Buka Menu, tekan panah di samping nama kelompok, lalu pilih pekerjaan. Baris pemilih submenu di bawah header sudah dihapus.
 - Tombol bantuan membuka panduan untuk layar yang sedang digunakan. Petunjuk di setiap layar menjelaskan persiapan, langkah dan hasil.
 - Tombol kembali browser mengembalikan layar sebelumnya. Alamat menu dapat disimpan sebagai penanda.
 - Tutup menu atau formulir dengan tombol tutup; keyboard juga mendukung Escape.
@@ -29,6 +29,17 @@ Diperbarui 2 Oktober 2026. Menu yang tampil mengikuti jabatan dan akses akun di 
 | Riwayat dan cetak slip | Slip Gaji → Riwayat Slip |
 | Identitas serta kontak sekolah | Pengaturan Sekolah → Profil Sekolah |
 | Struktur peran dan izin fitur | Akses & Peran → Struktur Peran & Hak Akses |
+
+## Mengelola data dalam jumlah besar
+
+1. Gunakan import/template Excel di bagian atas layar yang mendukung import. Unduh template sebelum mengisi file; periksa pratinjau sebelum konfirmasi.
+2. Ketik nama, NIS, kode atau keterangan pada pencarian. Di daftar siswa/penugasan dan BK, gunakan filter kelas; gunakan filter status bila tersedia.
+3. Pilih 25, 50 atau 100 data per halaman. Sebelumnya/Berikutnya berpindah halaman tanpa mengubah filter.
+4. Centang beberapa baris. Pilih halaman ini hanya mencentang baris yang dapat ditindak pada halaman yang terlihat; pilihan antarhalaman dapat dipertahankan. Mengganti pencarian/filter membatalkan pilihan sebelumnya.
+5. Tekan Arsipkan, Pulihkan atau Hapus pilihan sesuai tombol yang tersedia, lalu periksa jumlah dan konfirmasi. Data penting mengikuti syarat arsip dan relasi; data final tidak dihapus melalui tindakan draft.
+6. Jika sebagian gagal, lihat rincian kesalahannya. Data yang gagal tetap dipilih dan tidak dianggap berhasil. Perbaiki penyebabnya sebelum mencoba lagi.
+7. Pada dropdown, buka pilihan lalu ketik untuk mencari. Tombol Gunakan teks/Buat kelas baru tersedia pada field yang mendukung nilai baru. Kelas/mapel baru benar-benar dibuat pada Data Induk dan dihubungkan melalui ID saat data disimpan; akun, status proses dan pilihan yang dikunci oleh aturan tetap memakai pilihan sah.
+8. Transaksi keuangan menggunakan Koreksi pilihan dengan alasan. Sistem menyimpan transaksi asli dan membuat penyeimbang; jangan melakukan koreksi kedua untuk transaksi yang sama tanpa pemeriksaan bendahara.
 
 ## Aturan pekerjaan sehari-hari
 

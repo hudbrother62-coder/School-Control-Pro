@@ -238,6 +238,100 @@
       }
     },
     {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_master_save_student_profile",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_id": "55555555-5555-4555-8555-555555555555",
+        "p_payload": {
+          "name": "Siswa Pengujian",
+          "nickname": "",
+          "nis": "1001",
+          "nisn": "",
+          "gender": "L",
+          "birth_date": "",
+          "address": "",
+          "phone": "",
+          "parent_phone": "",
+          "class_id": "44444444-4444-4444-8444-444444444444",
+          "status": "archived",
+          "guardian_name": "",
+          "guardian_phone": ""
+        }
+      }
+    },
+    {
+      "name": "sc_master_save_student_profile",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+        "p_payload": {
+          "name": "Siswa Kedua",
+          "nickname": "",
+          "nis": "1002",
+          "nisn": "",
+          "gender": "L",
+          "birth_date": "",
+          "address": "",
+          "phone": "",
+          "parent_phone": "",
+          "class_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+          "status": "archived",
+          "guardian_name": "",
+          "guardian_phone": ""
+        }
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_master_save_class",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_id": null,
+        "p_name": "VII Khusus",
+        "p_grade": null,
+        "p_year": "2026/2027"
+      }
+    },
+    {
+      "name": "sc_master_save_student_profile",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_id": null,
+        "p_payload": {
+          "name": "Siswa Kelas Baru",
+          "nickname": "",
+          "nis": "",
+          "nisn": "",
+          "gender": "",
+          "birth_date": "",
+          "address": "",
+          "phone": "",
+          "parent_phone": "",
+          "class_id": "640c4ffc-d84b-4459-8681-6dea45c59140",
+          "status": "active",
+          "guardian_name": "",
+          "guardian_phone": ""
+        }
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
       "name": "sc_hr_work_schedules",
       "body": {
         "school_id": "22222222-2222-4222-8222-222222222222",
@@ -400,37 +494,37 @@
       "role": "owner",
       "module": "master",
       "feature": "Siswa",
-      "heading": "Data Siswa | Import / Export Siswa"
+      "heading": "Import / Export Siswa | Data Siswa"
     },
     {
       "role": "owner",
       "module": "master",
       "feature": "Kelas",
-      "heading": "Data Kelas | Import / Export Kelas"
+      "heading": "Import / Export Kelas | Data Kelas"
     },
     {
       "role": "owner",
       "module": "master",
       "feature": "Guru",
-      "heading": "Data Guru | Import / Export Guru"
+      "heading": "Import / Export Guru | Data Guru"
     },
     {
       "role": "owner",
       "module": "master",
       "feature": "Tenaga Kependidikan",
-      "heading": "Data Tenaga Kependidikan | Import / Export Tenaga Kependidikan"
+      "heading": "Import / Export Tenaga Kependidikan | Data Tenaga Kependidikan"
     },
     {
       "role": "owner",
       "module": "master",
       "feature": "Mata Pelajaran",
-      "heading": "Data Mata Pelajaran | Import / Export Mata Pelajaran"
+      "heading": "Import / Export Mata Pelajaran | Data Mata Pelajaran"
     },
     {
       "role": "owner",
       "module": "master",
       "feature": "Penugasan Guru",
-      "heading": "Data Penugasan Guru | Import / Export Penugasan Guru"
+      "heading": "Import / Export Penugasan Guru | Data Penugasan Guru"
     },
     {
       "role": "owner",
@@ -442,25 +536,25 @@
       "role": "owner",
       "module": "calendar",
       "feature": "Kalender Sekolah",
-      "heading": "Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Import, Template & Agenda | Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
       "module": "calendar",
       "feature": "Rekap Agenda",
-      "heading": "Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Import, Template & Agenda | Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
       "module": "calendar",
       "feature": "Agenda Mengajar",
-      "heading": "Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Import, Template & Agenda | Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
       "module": "calendar",
       "feature": "Agenda Pribadi",
-      "heading": "Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Import, Template & Agenda | Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
@@ -1096,13 +1190,13 @@
       "role": "owner",
       "module": "sikas",
       "feature": "Pemasukan",
-      "heading": "Pemasukan"
+      "heading": "Import & Template Transaksi | Pemasukan"
     },
     {
       "role": "owner",
       "module": "sikas",
       "feature": "Pengeluaran",
-      "heading": "Pengeluaran"
+      "heading": "Import & Template Transaksi | Pengeluaran"
     },
     {
       "role": "owner",
@@ -1162,7 +1256,7 @@
       "role": "owner",
       "module": "sikas",
       "feature": "Import/Export",
-      "heading": "Pusat Laporan & Import Keuangan"
+      "heading": "Import & Template Transaksi | Pusat Laporan & Import Keuangan"
     },
     {
       "role": "owner",

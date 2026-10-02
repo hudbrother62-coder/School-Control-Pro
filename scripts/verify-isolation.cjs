@@ -48,7 +48,7 @@ assert(journal.includes('.delete().eq("school_id",schoolId).eq("id",r.id)'),"Tea
 const schoolProfile=fs.readFileSync(path.join(base,"components/SchoolProfile.tsx"),"utf8");
 assert(schoolProfile.includes('allowCustom customLabel="Gunakan jenjang ini"'),"School profile must allow standard and custom education levels.");
 const masterHub=fs.readFileSync(path.join(base,"components/MasterHubV2.tsx"),"utf8");
-assert(masterHub.includes('select("education_level")'),"Class level choices must follow the school education level.");
+assert(masterHub.includes('select("education_level,academic_year")'),"Class level choices must follow the school education level.");
 assert(masterHub.includes('Template Excel')&&masterHub.includes('Export Data'),"Data Induk must keep per-menu import templates and exports.");
 const teacherAi=fs.readFileSync(path.join(base,"components/AIWorkbench.tsx"),"utf8");
 for(const required of ["CP / TP / ATP yang diketahui","Kompetensi awal / prasyarat","Kebutuhan inklusi / dukungan khusus","Preferensi asesmen","Kurikulum / acuan"])assert(teacherAi.includes(required),"Guru AI project context missing: "+required);
@@ -57,7 +57,7 @@ assert(calendar.includes('count>0&&<i aria-label={count+" agenda"}'),"Calendar d
 assert(calendar.includes("REKAP BULANAN")&&calendar.includes("agenda-grade-group"),"Calendar must keep separated monthly agenda recaps.");
 const reportModule=modules.modules.find(x=>x.key==="reports");
 assert(reportModule&&reportModule.features.includes("Arsip Laporan"),"Pusat Laporan must be exposed as a first-class navigation module.");
-assert(dashboard.includes('className="module-tabs"'),"Every module must expose its subfeatures in the visible workspace header.");
+assert(!dashboard.includes('className="module-tabs"')&&dashboard.includes("WorkspaceNavigation"),"Header submenus must be removed while sidebar/drawer navigation remains.");
 const dashboardOverview=fs.readFileSync(path.join(base,"components/DashboardOverview.tsx"),"utf8");
 assert(dashboardOverview.includes("COMMAND CENTER SEKOLAH")&&dashboardOverview.includes("Pusat Laporan"),"Dashboard must render the operational command center and direct report access.");
 const reportCenter=fs.readFileSync(path.join(base,"components/ReportCenter.tsx"),"utf8");

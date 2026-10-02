@@ -1,4 +1,5 @@
 "use client";
+import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import SmartSelect from "@/components/SmartSelect";
@@ -56,7 +57,7 @@ export default function SchoolProfile({schoolId,role,focus}:{schoolId:string;rol
  {input("signature_url","URL Scan Tanda Tangan","PNG transparan disarankan")}
  {input("stamp_url","URL Stempel Sekolah","Opsional")}
  {input("motto","Motto / Tagline")}
- <label className="field">Gaya dokumen<select value={String(setting("layout","formal"))} onChange={e=>setSetting("layout",e.target.value)} disabled={!admin}><option value="formal">Formal Indonesia</option><option value="minimal">Formal Minimal</option></select></label>
+ <label className="field">Gaya dokumen<SearchableSelect label="Gaya dokumen" value={String(setting("layout","formal"))} onChange={e=>setSetting("layout",e.target.value)} disabled={!admin}><option value="formal">Formal Indonesia</option><option value="minimal">Formal Minimal</option></SearchableSelect></label>
  <label className="field">Prefix nomor laporan<input value={String(setting("document_prefix","LAP"))} onChange={e=>setSetting("document_prefix",e.target.value.toUpperCase())} disabled={!admin} placeholder="LAP"/></label>
  <label className="field"><span>Tampilkan tanda tangan pada dokumen</span><input type="checkbox" checked={Boolean(setting("show_signature",true))} onChange={e=>setSetting("show_signature",e.target.checked)} disabled={!admin}/></label>
  <label className="field"><span>Tampilkan stempel pada dokumen</span><input type="checkbox" checked={Boolean(setting("show_stamp",false))} onChange={e=>setSetting("show_stamp",e.target.checked)} disabled={!admin}/></label>

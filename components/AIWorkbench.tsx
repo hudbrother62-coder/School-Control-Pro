@@ -1,4 +1,5 @@
 "use client";
+import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {BookOpenCheck,CheckCircle2,ClipboardList,Save,Sparkles} from "lucide-react";
@@ -159,15 +160,15 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
     <div className="field"><SmartSelect label="Kelas" value={project.grade} options={classOptions} onChange={v=>{const g=v.replace(/^Kelas\s+/i,"");setField("grade",g);setField("phase",phaseFor(project.level,g)||project.phase)}} allowCustom customLabel="Gunakan kelas yang diketik"/></div>
     <div className="field"><SmartSelect label="Fase" value={project.phase} options={["A","B","C","D","E","F"].map(x=>({value:x,label:"Fase "+x}))} onChange={v=>setField("phase",v)} allowCustom customLabel="Gunakan fase ini"/></div>
     <label className="field">Tahun ajaran<input value={project.academic_year} onChange={e=>setField("academic_year",e.target.value)} placeholder="2026/2027"/></label>
-    <label className="field">Semester<select value={project.semester} onChange={e=>setField("semester",e.target.value)}><option>Ganjil</option><option>Genap</option><option>Fleksibel / lainnya</option></select></label>
+    <label className="field">Semester<SearchableSelect label="Semester" value={project.semester} onChange={e=>setField("semester",e.target.value)}><option>Ganjil</option><option>Genap</option><option>Fleksibel / lainnya</option></SearchableSelect></label>
     <label className="field full">Kurikulum / acuan<input value={project.curriculum} onChange={e=>setField("curriculum",e.target.value)} placeholder="Kurikulum Merdeka / kurikulum sekolah / lainnya"/></label>
     <div className="field full"><SmartSelect label="Mata pelajaran" value={project.subject} options={subjectOptions} onChange={v=>setField("subject",v)} allowCustom customLabel="Tambah mata pelajaran ini"/></div>
     <label className="field full">Topik pembelajaran<input value={project.topic} onChange={e=>setField("topic",e.target.value)} placeholder="Materi spesifik yang akan dipelajari"/></label>
     <label className="field">Jumlah siswa<input type="number" min={1} max={200} value={project.student_count} onChange={e=>setField("student_count",e.target.value)} placeholder="Contoh: 32"/></label>
     <label className="field">Jumlah pertemuan<input type="number" min={1} max={40} value={project.meetings} onChange={e=>setField("meetings",e.target.value)}/></label>
     <label className="field">Durasi tiap pertemuan<input value={project.duration} onChange={e=>setField("duration",e.target.value)} placeholder="2 × 45 menit"/></label>
-    <label className="field">Kesulitan menangkap materi<select value={project.difficulty} onChange={e=>setField("difficulty",e.target.value)}>{difficulties.map(x=><option key={x}>{x}</option>)}</select></label>
-    <label className="field">Metode utama<select value={project.method} onChange={e=>setField("method",e.target.value)}>{methods.map(x=><option key={x}>{x}</option>)}</select></label>
+    <label className="field">Kesulitan menangkap materi<SearchableSelect label="Kesulitan menangkap materi" value={project.difficulty} onChange={e=>setField("difficulty",e.target.value)}>{difficulties.map(x=><option key={x}>{x}</option>)}</SearchableSelect></label>
+    <label className="field">Metode utama<SearchableSelect label="Metode utama" value={project.method} onChange={e=>setField("method",e.target.value)}>{methods.map(x=><option key={x}>{x}</option>)}</SearchableSelect></label>
     <label className="field full">Kompetensi awal / prasyarat<textarea rows={3} value={project.initial_competence} onChange={e=>setField("initial_competence",e.target.value)} placeholder="Pengetahuan/kemampuan yang sudah dimiliki siswa sebelum materi ini"/></label>
     <label className="field full">CP / TP / ATP yang diketahui<textarea rows={4} value={project.cp_tp} onChange={e=>setField("cp_tp",e.target.value)} placeholder="Tempel CP/TP/ATP sekolah bila tersedia. Jika kosong AI wajib menandai bagian yang perlu diverifikasi."/></label>
     <label className="field full">Karakter siswa<textarea rows={4} value={project.student_character} onChange={e=>setField("student_character",e.target.value)} placeholder="Kemampuan awal, minat, kebiasaan belajar, variasi kemampuan, motivasi…"/></label>
@@ -184,7 +185,7 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
 
   {showGenerator&&<section className="panel teacher-generator">
    <div className="sectionhead"><div><h2>{module==="guru_ai"?(config?.label||"Generator Perangkat Ajar"):(config?.label||"Perencanaan Sekolah")}</h2><p className="muted">{module==="guru_ai"?"Setiap alat memiliki input dan standar output sendiri; konteks proyek tetap dipakai otomatis.":"Pilih dokumen, berikan konteks faktual sekolah, lalu tinjau hasil sebelum dipakai."}</p></div><span className="pill">{module==="guru_ai"?"Perangkat Ajar":"Manajemen"}</span></div>
-   {!focus&&<label className="field full">Jenis generator<select value={template} onChange={e=>setTemplate(e.target.value)}><option value="">Pilih jenis</option>{aiTemplates[module].map(t=><option key={t.key} value={t.key}>{t.label}</option>)}</select></label>}
+   {!focus&&<label className="field full">Jenis generator<SearchableSelect label="Jenis generator" value={template} onChange={e=>setTemplate(e.target.value)}><option value="">Pilih jenis</option>{aiTemplates[module].map(t=><option key={t.key} value={t.key}>{t.label}</option>)}</SearchableSelect></label>}
    {module==="guru_ai"&&<div className="project-summary"><b>{project.name||"Proyek belum diberi nama"}</b><span>{[project.level,project.grade&&"Kelas "+project.grade,project.subject,project.topic].filter(Boolean).join(" · ")||"Lengkapi Project Builder terlebih dahulu."}</span></div>}
    {activeToolConfig&&<>
     <div className="tool-question-grid">{activeToolConfig.fields.map(f=><label className={"field "+(f.type==="textarea"?"full":"")} key={f.key}>{f.label}{f.type==="select"?<select value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))}><option value="">Pilih</option>{f.options?.map(o=><option key={o}>{o}</option>)}</select>:f.type==="textarea"?<textarea rows={4} value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))} placeholder={f.placeholder}/>:<input type={f.type||"text"} value={toolData[f.key]||""} onChange={e=>setToolData(v=>({...v,[f.key]:e.target.value}))} placeholder={f.placeholder}/>}</label>)}</div>

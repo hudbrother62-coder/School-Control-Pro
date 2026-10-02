@@ -1,0 +1,2 @@
+// Supabase's default response cap is 1,000 rows. Fetch each authorized page explicitly.
+export async function readAllRows<T>(query:{range:(from:number,to:number)=>PromiseLike<{data:T[]|null;error:{message:string}|null}>}){const rows:T[]=[];for(let from=0;;from+=1000){const result=await query.range(from,from+999);if(result.error)return {data:null,error:result.error};const page=result.data||[];rows.push(...page);if(page.length<1000)return {data:rows,error:null};}}

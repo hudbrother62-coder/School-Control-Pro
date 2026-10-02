@@ -1,4 +1,5 @@
 "use client";
+import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {Eye,Save} from "lucide-react";
@@ -36,7 +37,7 @@ export default function DisciplineReportTemplate({schoolId}:{schoolId:string}){
   <label className="field">Jabatan penandatangan<input value={form.signerTitle} onChange={e=>set("signerTitle",e.target.value)}/></label>
   <label className="field">Kota pada dokumen<input value={form.letterCity} onChange={e=>set("letterCity",e.target.value)}/></label>
   <label className="field">Kode klasifikasi<input value={form.classificationCode} onChange={e=>set("classificationCode",e.target.value)} placeholder="Opsional, sesuai tata naskah sekolah/dinas"/></label>
-  <label className="field">Gaya dokumen<select value={form.layout} onChange={e=>set("layout",e.target.value as Form["layout"])}><option value="formal">Formal Indonesia</option><option value="minimal">Formal Minimal</option></select></label>
+  <label className="field">Gaya dokumen<SearchableSelect label="Gaya dokumen" value={form.layout} onChange={e=>set("layout",e.target.value as Form["layout"])}><option value="formal">Formal Indonesia</option><option value="minimal">Formal Minimal</option></SearchableSelect></label>
   <label className="field full">Footer<input value={form.footer} onChange={e=>set("footer",e.target.value)}/></label>
  </div>
  <div className="report-template-options">
