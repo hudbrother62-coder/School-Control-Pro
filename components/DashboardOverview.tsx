@@ -1,9 +1,11 @@
 "use client";
+import SchoolAnalytics from "@/components/SchoolAnalytics";
+import {readAllRows} from "@/lib/read-all-rows";
 import {useSchoolRevision} from "@/lib/school-realtime";
 import {useEffect,useMemo,useState} from "react";
 import {AlertTriangle,ArrowRight,BarChart3,BookOpen,CalendarDays,CheckCircle2,Clock3,GraduationCap,ListChecks,Sparkles,Users,WalletCards} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
-import {canAccess,modules,ROLE_LABELS,type ModuleKey,type Role} from "@/lib/modules";
+import {canAccess,visibleFeatures,modules,ROLE_LABELS,type ModuleKey,type Role} from "@/lib/modules";
 
 type Student={id:string;class_id:string|null;status:string};
 type ClassRow={id:string;name:string};
@@ -25,12 +27,12 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
   const today=new Date(),start=new Date(today);start.setDate(today.getDate()-6);
   const until=new Date(today);until.setDate(today.getDate()+31);
   const r=await Promise.all([
-   db.from("sc_students").select("id,class_id,status").eq("school_id",schoolId),
+   readAllRows(db.from("sc_students").select("id,class_id,status").eq("school_id",schoolId).order("id")),
    db.from("sc_classes").select("id,name").eq("school_id",schoolId).order("name"),
    db.from("sc_staff").select("id").eq("school_id",schoolId),
-   db.from("sc_attendance").select("duty_date,status").eq("school_id",schoolId).gte("duty_date",dayKey(start)).lte("duty_date",dayKey(today)),
-   db.from("sc_calendar_events").select("id,title,event_date,start_time").eq("school_id",schoolId).gte("event_date",dayKey(today)).lte("event_date",dayKey(until)).order("event_date").limit(12),
-   db.from("sc_program_tasks").select("id,title,status,due_at").eq("school_id",schoolId).neq("status","done").order("due_at",{ascending:true}).limit(12)
+   readAllRows(db.from("sc_attendance").select("duty_date,status").eq("school_id",schoolId).gte("duty_date",dayKey(start)).lte("duty_date",dayKey(today)).order("id")),
+   readAllRows(db.from("sc_calendar_events").select("id,title,event_date,start_time").eq("school_id",schoolId).gte("event_date",dayKey(today)).lte("event_date",dayKey(until)).order("event_date").order("id")),
+   readAllRows(db.from("sc_program_tasks").select("id,title,status,due_at").eq("school_id",schoolId).is("archived_at",null).neq("status","done").order("due_at",{ascending:true}).order("id"))
   ]);
   if(!live)return;
   setStudents((r[0].data||[]) as Student[]);setClasses((r[1].data||[]) as ClassRow[]);setStaff((r[2].data||[]) as Staff[]);
@@ -42,7 +44,7 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
  const today=dayKey(new Date());
  const todayAttendance=attendance.filter(x=>x.duty_date===today);
  const presentToday=todayAttendance.filter(x=>["present","late"].includes(x.status)).length;
- const attendanceRate=staff.length?Math.round(presentToday/staff.length*100):0;
+ const attendanceRate=staff.length?Math.round(presentToday/(["owner","principal","vice_principal","hr"].includes(role)?staff.length:1)*100):0;
  const week=Array.from({length:7},(_,i)=>{const d=new Date();d.setDate(d.getDate()-(6-i));const key=dayKey(d);const rows=attendance.filter(x=>x.duty_date===key);return {key,label:d.toLocaleDateString("id-ID",{weekday:"short"}),present:rows.filter(x=>["present","late"].includes(x.status)).length,late:rows.filter(x=>x.status==="late").length}});
  const maxAttend=Math.max(1,staff.length,...week.map(x=>x.present));
  const openTasks=tasks.filter(x=>!["done","completed","verified"].includes(x.status));
@@ -57,6 +59,8 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
  const maxTask=Math.max(1,...taskStatus.map(x=>x.count));
  const showSummary=!focus||mode.includes("ringkasan"),showAnalytics=!focus||mode.includes("analitik"),showAgenda=!focus||mode.includes("agenda")||mode.includes("deadline");
  const actionCatalog:RouteAction[]=[
+  {label:"Jurnal Harian",caption:"Catat kegiatan, kaitkan tugas dan laporkan hasil",module:"journals",feature:"Jurnal Harian",icon:BookOpen},
+  {label:"Ruang Kerja",caption:"Alur terpadu dari data sampai laporan",module:"overview",feature:"Ruang Kerja",icon:ListChecks},
   {label:"Data Siswa",caption:"Kelola siswa, kelas, guru dan import Excel",module:"master",feature:"Siswa",icon:Users},
   {label:"Presensi Siswa",caption:"Absensi harian, riwayat dan rekap kelas",module:"buku_kerja",feature:"Presensi Siswa",icon:GraduationCap},
   {label:"Agenda Sekolah",caption:"Kalender, indikator agenda dan rekap bulanan",module:"calendar",feature:"Kalender Sekolah",icon:CalendarDays},
@@ -65,15 +69,16 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
   {label:"Pusat Laporan",caption:"Laporan standar sekolah Indonesia dan arsip",module:"reports",feature:"Ringkasan Laporan",icon:BookOpen},
   {label:"Keuangan",caption:"Kas, anggaran, tagihan dan laporan resmi",module:"sikas",feature:"Dashboard Keuangan",icon:WalletCards}
  ];
- const actions=actionCatalog.filter(a=>{const m=modules.find(x=>x.key===a.module);return !!m&&canAccess(m,role)});
+ const actions=actionCatalog.filter(a=>{const m=modules.find(x=>x.key===a.module);return !!m&&canAccess(m,role)&&visibleFeatures(m,role).includes(a.feature)});
 
  return <>
+  {(showSummary||showAnalytics)&&<SchoolAnalytics schoolId={schoolId} userId={userId} role={role} onRoute={onRoute}/>}
   {showSummary&&<>
    <section className="command-hero">
     <div>
      <span className="eyebrow">COMMAND CENTER SEKOLAH</span>
      <h2>Kondisi sekolah hari ini</h2>
-     <p>{new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"})} · {ROLE_LABELS[role]}</p>
+     <p>{new Date().toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Jakarta"})} · {ROLE_LABELS[role]}</p>
     </div>
     <div className="command-hero-status">
      <span className={attentionCount?"status-dot attention":"status-dot ok"}>{attentionCount?<AlertTriangle size={14}/>:<CheckCircle2 size={14}/>} {attentionCount?attentionCount+" perhatian":"Operasional normal"}</span>
@@ -83,7 +88,7 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
 
    <div className="grid dashboard-kpis dashboard-kpis-pro">
     <button className="metric-card" onClick={()=>onRoute?.("master","Siswa")}><span><Users size={17}/> Siswa aktif</span><strong>{activeStudents.length}</strong><small>{classes.length} kelas aktif</small></button>
-    <button className="metric-card" onClick={()=>onRoute?.("attendance","Riwayat kehadiran")}><span><Clock3 size={17}/> Kehadiran SDM</span><strong>{attendanceRate}%</strong><small>{presentToday} dari {staff.length||0} tercatat hari ini</small></button>
+    <button className="metric-card" onClick={()=>onRoute?.("attendance","Riwayat kehadiran")}><span><Clock3 size={17}/> Kehadiran SDM</span><strong>{attendanceRate}%</strong><small>{presentToday} dari {["owner","principal","vice_principal","hr"].includes(role)?staff.length:1} tercatat hari ini</small></button>
     <button className="metric-card" onClick={()=>onRoute?.("command","Deadline")}><span><ListChecks size={17}/> Tugas aktif</span><strong>{openTasks.length}</strong><small>{overdue} melewati tenggat</small></button>
     <button className="metric-card" onClick={()=>onRoute?.("calendar","Kalender Sekolah")}><span><CalendarDays size={17}/> Agenda 31 hari</span><strong>{events.length}</strong><small>{upcomingToday.length} berlangsung hari ini</small></button>
    </div>
@@ -107,17 +112,6 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
     </section>
    </div>
   </>}
-
-  {showAnalytics&&<div className="dashboard-charts">
-   <section className="panel"><div className="sectionhead"><div><span className="eyebrow">ANALITIK</span><h2>Tren Kehadiran 7 Hari</h2></div><BarChart3 size={19}/></div>
-    <div className="vertical-chart">{week.map(x=><div className="vbar-col" key={x.key}><div className="vbar-track"><i style={{height:(x.present/maxAttend*100)+"%"}}/><em style={{height:(x.late/maxAttend*100)+"%"}}/></div><b>{x.present}</b><small>{x.label}</small></div>)}</div>
-    <div className="chart-legend"><span><i/>Hadir</span><span><i className="late"/>Terlambat</span></div>
-   </section>
-   <section className="panel"><div className="sectionhead"><div><span className="eyebrow">PROGRAM</span><h2>Status Program & Deadline</h2></div><span className="pill">{openTasks.length} aktif</span></div>
-    <div className="horizontal-chart">{taskStatus.map(x=><div className="hbar-row" key={x.label}><span>{x.label}</span><div><i style={{width:(x.count/maxTask*100)+"%"}}/></div><b>{x.count}</b></div>)}</div>
-    <button className="button secondary dashboard-panel-action" onClick={()=>onRoute?.("command","Progres")}>Buka kontrol program <ArrowRight size={14}/></button>
-   </section>
-  </div>}
 
   {showAgenda&&<div className="dashboard-charts">
    <section className="panel"><div className="sectionhead"><div><h2>Agenda 31 Hari ke Depan</h2><p className="muted">Urutan agenda terdekat.</p></div><span className="pill">{events.length} agenda</span></div>

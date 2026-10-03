@@ -1,0 +1,9 @@
+import type {Role} from './modules';
+export type ChartKey='student'|'staff'|'finance'|'program'|'grades'|'journals';
+export type DailyCount={day:string;present:number;late?:number;sick?:number;leave?:number;absent?:number;total:number};
+export type SchoolAnalytics={period:{start:string;end:string};generated_at:string;scope:string;students:number;classes:number;staff:number;student:DailyCount[];attendance:DailyCount[];finance:{day:string;income:number;expense:number}[];program:{status:string;count:number}[];grades:{subject:string;average:number;count:number}[];journals:{user_id:string;name:string;role:string;daily:number;student:number;teaching:number;days:number}[];journal_trend:{day:string;daily:number;student:number;teaching:number}[]};
+export const chartLabels:Record<ChartKey,string>={student:'Presensi siswa',staff:'Kehadiran guru & staf',finance:'Arus kas sekolah',program:'Progres tugas',grades:'Nilai pembelajaran',journals:'Aktivitas jurnal'};
+export function chartsForRole(role:Role):ChartKey[]{const teaching=['owner','principal','vice_principal','teacher'].includes(role);return [...(teaching?['student' as const,'grades' as const]:[]),'staff',...(['owner','principal','treasurer','finance_staff'].includes(role)?['finance' as const]:[]),'program',...(role!=='viewer'?['journals' as const]:[])];}
+export function monthRange(month:string){if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))throw Error('Bulan tidak valid.');const [y,m]=month.split('-').map(Number);return {start:month+'-01',end:month+'-'+String(new Date(Date.UTC(y,m,0)).getUTCDate()).padStart(2,'0')};}
+export function recordedRate(rows:DailyCount[]){const total=rows.reduce((s,r)=>s+Number(r.total),0),present=rows.reduce((s,r)=>s+Number(r.present),0);return total?Math.round(present/total*100):null;}
+export function chartPreference(raw:string|null,allowed:ChartKey[],fallback:ChartKey){return allowed.includes(raw as ChartKey)?raw as ChartKey:fallback;}

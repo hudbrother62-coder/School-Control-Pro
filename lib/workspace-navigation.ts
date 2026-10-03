@@ -1,6 +1,7 @@
 import {modules,canAccess,visibleFeatures,type ModuleKey,type Role} from "./modules";
 export type WorkspaceRoute={module:ModuleKey;feature:string};
 const aliases:Record<string,WorkspaceRoute>={
+ "journals::Jurnal Mengajar":{module:"buku_kerja",feature:"Jurnal Mengajar"},
  "guru_ai::Ngobrol AI":{module:"assistant",feature:"Asisten Guru"},
  "guru_ai::Koneksi AI":{module:"assistant",feature:"Koneksi AI"},
  "kepsek_ai::Asisten Kepsek":{module:"assistant",feature:"Asisten Kepala Sekolah"},
@@ -30,4 +31,4 @@ export function resolveWorkspaceRoute(module:string,feature:string,role:Role):Wo
 }
 export function routeHash(route:WorkspaceRoute){return "#"+new URLSearchParams({menu:route.module,fitur:route.feature}).toString()}
 export function readRouteHash(hash:string,role:Role){const params=new URLSearchParams(hash.replace(/^#/,""));return resolveWorkspaceRoute(params.get("menu")||"overview",params.get("fitur")||"",role)}
-export function guideFor(module:ModuleKey){return ({overview:"Mulai dari Sini",master:"Data Induk",calendar:"Agenda & Absensi",reports:"Laporan & Arsip",attendance:"Presensi Guru & Staf",performance:"Kinerja & Pengembangan",guru_ai:"Perangkat Ajar AI",assistant:"Asisten AI",buku_kerja:"Jurnal & Penilaian",disiplin:"Disiplin & Prestasi",bk:"Bimbingan Konseling",kepsek_ai:"Perencanaan & Supervisi",command:"Program & Tugas",sikas:"Keuangan",gajian:"SDM & Payroll",payslip:"SDM & Payroll",access:"Akses & Pengaturan",settings:"Akses & Pengaturan",help:"Mulai dari Sini"})[module]}
+export function guideFor(module:ModuleKey){return ({journals:"Jurnal & Penilaian",overview:"Mulai dari Sini",master:"Data Induk",calendar:"Agenda & Absensi",reports:"Laporan & Arsip",attendance:"Presensi Guru & Staf",performance:"Kinerja & Pengembangan",guru_ai:"Perangkat Ajar AI",assistant:"Asisten AI",buku_kerja:"Jurnal & Penilaian",disiplin:"Disiplin & Prestasi",bk:"Bimbingan Konseling",kepsek_ai:"Perencanaan & Supervisi",command:"Program & Tugas",sikas:"Keuangan",gajian:"SDM & Payroll",payslip:"SDM & Payroll",access:"Akses & Pengaturan",settings:"Akses & Pengaturan",help:"Mulai dari Sini"})[module]}

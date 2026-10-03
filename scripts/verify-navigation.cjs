@@ -3,7 +3,7 @@ function load(file,deps={}){const module={exports:{}};const js=ts.transpileModul
 const catalog=load('modules.ts');const nav=load('workspace-navigation.ts',{'./modules':catalog});const help=load('workspace-help.ts');
 let routes=0;
 for(const role of Object.keys(catalog.ROLE_LABELS))for(const module of catalog.modules){for(const feature of catalog.visibleFeatures(module,role)){
- const target=nav.resolveWorkspaceRoute(module.key,feature,role);assert.deepEqual(target,{module:module.key,feature});assert.deepEqual(nav.readRouteHash(nav.routeHash(target),role),target);
+ const target=nav.resolveWorkspaceRoute(module.key,feature,role);assert.deepEqual(target,module.key==="journals"&&feature==="Jurnal Mengajar"?{module:"buku_kerja",feature}:{module:module.key,feature});assert.deepEqual(nav.readRouteHash(nav.routeHash(target),role),target);
  const instructions=help.taskHelp(module.key,feature);assert.ok(instructions.purpose&&instructions.before&&instructions.result);assert.ok(instructions.steps.length>=3);assert.ok(catalog.modules.find(m=>m.key==='help').features.includes(nav.guideFor(module.key)));routes++;
 }}
 assert.deepEqual(nav.resolveWorkspaceRoute('guru_ai','Ngobrol AI','teacher'),{module:'assistant',feature:'Asisten Guru'});

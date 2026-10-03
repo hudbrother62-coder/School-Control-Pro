@@ -1,6 +1,6 @@
 {
   "scope": "Local UI integration with synthetic identity and intercepted APIs; not a live database or merchant E2E test.",
-  "screens": 175,
+  "screens": 183,
   "viewports": [
     320,
     390,
@@ -19,6 +19,24 @@
       "name": "sc_support_contacts",
       "body": {
         "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_dashboard_analytics",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_start": "2026-10-01",
+        "p_end": "2026-10-31",
+        "p_class": null
+      }
+    },
+    {
+      "name": "sc_dashboard_analytics",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_start": "2026-10-01",
+        "p_end": "2026-10-31",
+        "p_class": null
       }
     },
     {
@@ -360,7 +378,7 @@
           "address": "",
           "phone": "",
           "parent_phone": "",
-          "class_id": "7209cfc8-60b1-4f65-8fbf-9be78e82b291",
+          "class_id": "9af6f496-a84b-4c14-bbed-6d6f13496f8b",
           "status": "active",
           "guardian_name": "",
           "guardian_phone": ""
@@ -423,6 +441,140 @@
       }
     },
     {
+      "name": "api/ai",
+      "body": {
+        "school_id": "22222222-2222-4222-8222-222222222222",
+        "module": "guru_ai",
+        "context_month": "2026-10",
+        "include_school_context": true,
+        "prompt": "Gunakan konteks percakapan berikut bila relevan:\n\n\nPesan terbaru:\nBantu susun agenda mengajar"
+      }
+    },
+    {
+      "name": "api/ai",
+      "body": {
+        "school_id": "22222222-2222-4222-8222-222222222222",
+        "module": "guru_ai",
+        "context_month": "2026-10",
+        "include_school_context": true,
+        "prompt": "Gunakan konteks percakapan berikut bila relevan:\n\n\nPesan terbaru:\nBantu susun agenda mengajar"
+      }
+    },
+    {
+      "name": "sc_ai_messages",
+      "body": [
+        {
+          "school_id": "22222222-2222-4222-8222-222222222222",
+          "project_id": null,
+          "module": "guru_ai",
+          "role": "user",
+          "content": "Bantu susun agenda mengajar"
+        },
+        {
+          "school_id": "22222222-2222-4222-8222-222222222222",
+          "project_id": null,
+          "module": "guru_ai",
+          "role": "assistant",
+          "content": "Hasil pengujian lokal"
+        }
+      ]
+    },
+    {
+      "name": "sc_dashboard_analytics",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_start": "2026-10-01",
+        "p_end": "2026-10-31",
+        "p_class": null
+      }
+    },
+    {
+      "name": "sc_support_contacts",
+      "body": {
+        "p_school": null
+      }
+    },
+    {
+      "name": "sc_support_contacts",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_dashboard_analytics",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_start": "2026-10-01",
+        "p_end": "2026-10-31",
+        "p_class": null
+      }
+    },
+    {
+      "name": "sc_save_work_journal",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_id": null,
+        "p_payload": {
+          "kind": "daily",
+          "journal_date": "2026-10-04",
+          "title": "QA Kegiatan Guru",
+          "activity": "Mengamati pembelajaran kelas dan menyusun laporan harian.",
+          "result": "",
+          "reflection": "",
+          "follow_up": "",
+          "class_id": null,
+          "student_id": null,
+          "event_id": null,
+          "task_id": null
+        }
+      }
+    },
+    {
+      "name": "sc_work_journal_action",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_id": "a9ac4d21-957f-45a0-8d3c-2456227ca2fd",
+        "p_action": "submit",
+        "p_note": ""
+      }
+    },
+    {
+      "name": "sc_work_journal_action",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_id": "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",
+        "p_action": "review",
+        "p_note": "Kegiatan dan hasil sudah diperiksa."
+      }
+    },
+    {
+      "name": "sc_work_journal_action",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_id": "a9ac4d21-957f-45a0-8d3c-2456227ca2fd",
+        "p_action": "archive",
+        "p_note": ""
+      }
+    },
+    {
+      "name": "sc_work_journal_action",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_id": "a9ac4d21-957f-45a0-8d3c-2456227ca2fd",
+        "p_action": "restore",
+        "p_note": ""
+      }
+    },
+    {
+      "name": "sc_dashboard_analytics",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_start": "2026-10-01",
+        "p_end": "2026-10-31",
+        "p_class": null
+      }
+    },
+    {
       "name": "sc_team_directory",
       "body": {
         "p_school": "22222222-2222-4222-8222-222222222222"
@@ -447,6 +599,15 @@
       }
     },
     {
+      "name": "sc_dashboard_analytics",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_start": "2026-10-01",
+        "p_end": "2026-10-31",
+        "p_class": null
+      }
+    },
+    {
       "name": "sc_team_directory",
       "body": {
         "p_school": "22222222-2222-4222-8222-222222222222"
@@ -468,6 +629,15 @@
       "name": "sc_account_balances",
       "body": {
         "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_dashboard_analytics",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_start": "2026-10-01",
+        "p_end": "2026-10-31",
+        "p_class": null
       }
     },
     {
@@ -519,12 +689,21 @@
         "p_patch": {
           "templates": {
             "default": {
-              "path": "22222222-2222-4222-8222-222222222222/templates/c128d3ae-b821-4612-b6c6-7074d6458848.docx",
+              "path": "22222222-2222-4222-8222-222222222222/templates/80b94a0c-690a-4198-9d36-d01c143ee962.docx",
               "name": "Template-Sekolah.docx",
-              "updated_at": "2026-10-03T15:45:50.774Z"
+              "updated_at": "2026-10-03T18:03:39.286Z"
             }
           }
         }
+      }
+    },
+    {
+      "name": "sc_dashboard_analytics",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_start": "2026-10-01",
+        "p_end": "2026-10-31",
+        "p_class": null
       }
     }
   ],
@@ -533,13 +712,19 @@
       "role": "owner",
       "module": "overview",
       "feature": "Ringkasan Operasional",
-      "heading": "Kondisi sekolah hari ini | Masuk langsung ke pekerjaan | Perlu ditindak hari ini | Agenda terdekat"
+      "heading": "Grafik aktivitas sekolah | Kondisi sekolah hari ini | Masuk langsung ke pekerjaan | Perlu ditindak hari ini | Agenda terdekat"
     },
     {
       "role": "owner",
       "module": "overview",
       "feature": "Analitik Sekolah",
-      "heading": "Tren Kehadiran 7 Hari | Status Program & Deadline"
+      "heading": "Grafik aktivitas sekolah"
+    },
+    {
+      "role": "owner",
+      "module": "overview",
+      "feature": "Ruang Kerja",
+      "heading": "Satu pekerjaan, satu alur | Mengajar & memantau siswa | Kegiatan & laporan harian | Tagihan & kas | SDM & pengembangan | Perencanaan sampai pelaksanaan"
     },
     {
       "role": "owner",
@@ -627,6 +812,42 @@
     },
     {
       "role": "owner",
+      "module": "journals",
+      "feature": "Jurnal Harian",
+      "heading": "Jurnal Harian"
+    },
+    {
+      "role": "owner",
+      "module": "journals",
+      "feature": "Jurnal Siswa",
+      "heading": "Jurnal Siswa"
+    },
+    {
+      "role": "owner",
+      "module": "journals",
+      "feature": "Jurnal Mengajar",
+      "heading": "Jurnal Mengajar"
+    },
+    {
+      "role": "owner",
+      "module": "journals",
+      "feature": "Rekap Bulanan",
+      "heading": "Rekap Bulanan"
+    },
+    {
+      "role": "owner",
+      "module": "journals",
+      "feature": "Review Jurnal",
+      "heading": "Review Jurnal"
+    },
+    {
+      "role": "owner",
+      "module": "journals",
+      "feature": "Arsip Jurnal",
+      "heading": "Arsip Jurnal"
+    },
+    {
+      "role": "owner",
       "module": "reports",
       "feature": "Ringkasan Laporan",
       "heading": "Laporan resmi sekolah dalam satu tempat | Elemen wajib laporan"
@@ -678,6 +899,12 @@
       "module": "reports",
       "feature": "Supervisi",
       "heading": "Laporan resmi sekolah dalam satu tempat | Supervisi"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Jurnal",
+      "heading": "Laporan resmi sekolah dalam satu tempat | Jurnal"
     },
     {
       "role": "owner",
@@ -767,13 +994,13 @@
       "role": "owner",
       "module": "assistant",
       "feature": "Asisten Guru",
-      "heading": "Ngobrol AI Guru"
+      "heading": "Asisten AI Guru | Apa yang ingin dibantu?"
     },
     {
       "role": "owner",
       "module": "assistant",
       "feature": "Asisten Kepala Sekolah",
-      "heading": "Asisten AI Kepala Sekolah"
+      "heading": "Asisten AI Kepala Sekolah | Apa yang ingin dibantu?"
     },
     {
       "role": "owner",

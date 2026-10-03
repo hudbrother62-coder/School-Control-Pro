@@ -1,0 +1,16 @@
+{
+  "scope": "Real Auth, database, RLS, realtime and browser with isolated temporary school; actual Gemini generation not called.",
+  "root": "http://127.0.0.1:3402",
+  "results": [
+    "Three isolated accounts authenticate through real Auth",
+    "Actual UI saves draft with existing agenda and task relationships",
+    "Owner review reaches teacher automatically without refresh",
+    "Reviewed journal enters authorized AI aggregates without private free text",
+    "Student journal selects assigned class and canonical master student",
+    "Ordinary staff cannot read teacher journals or review another user",
+    "Monthly Word export contains actual journal data and school identity",
+    "Teacher dashboard uses live journal totals and excludes finance choice",
+    "Live mobile dashboard and journal views have no overflow or JavaScript errors"
+  ],
+  "errors": []
+}

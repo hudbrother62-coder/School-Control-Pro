@@ -29,6 +29,8 @@ const FinancePanel=dynamic(()=>import("@/components/FinancePanel"),{loading:Pane
 const PayrollPanel=dynamic(()=>import("@/components/PayrollPanel"),{loading:PanelLoading});
 const BKPanel=dynamic(()=>import("@/components/BKPanel"),{loading:PanelLoading});
 const AcademicAdvanced=dynamic(()=>import("@/components/AcademicAdvanced"),{loading:PanelLoading});
+const WorkJournal=dynamic(()=>import("@/components/WorkJournal"),{loading:PanelLoading});
+const WorkHub=dynamic(()=>import("@/components/WorkHub"),{loading:PanelLoading});
 const TeachingJournal=dynamic(()=>import("@/components/TeachingJournal"),{loading:PanelLoading});
 const GradeBook=dynamic(()=>import("@/components/GradeBook"),{loading:PanelLoading});
 const DisciplinePanel=dynamic(()=>import("@/components/DisciplinePanel"),{loading:PanelLoading});
@@ -56,7 +58,7 @@ const ReportCenter=dynamic(()=>import("@/components/ReportCenter"),{loading:Pane
 type SchoolAccess={school:School;role:Role};
 type Attendance={id:string;duty_date:string;check_in_at:string|null;check_out_at:string|null;status:string;source:string;user_id:string;notes:string|null};
 type Summary={present_days:number;late_days:number;programs:number;trainings:number;verified_events:number};
-const icons={overview:LayoutDashboard,master:Users,calendar:CalendarDays,reports:ReceiptText,attendance:Clock3,performance:Activity,guru_ai:Sparkles,assistant:MessageSquare,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,command:ListChecks,sikas:Wallet,gajian:CreditCard,payslip:ReceiptText,access:KeyRound,settings:Settings,help:CircleHelp};
+const icons={journals:BookOpen,overview:LayoutDashboard,master:Users,calendar:CalendarDays,reports:ReceiptText,attendance:Clock3,performance:Activity,guru_ai:Sparkles,assistant:MessageSquare,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,command:ListChecks,sikas:Wallet,gajian:CreditCard,payslip:ReceiptText,access:KeyRound,settings:Settings,help:CircleHelp};
 const formatDate=(s:string|null|undefined)=>s?new Date(s).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"}):"—";
 const schoolDay=(tz:string)=>{const p=new Intl.DateTimeFormat("en-US",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const get=(k:string)=>p.find(x=>x.type===k)?.value||"";return get("year")+"-"+get("month")+"-"+get("day")};
 function feedback(error:unknown){return errorMessage(error)}
@@ -130,7 +132,8 @@ export default function Home(){
 
   <div className="content" key={schoolId+":"+module+":"+featureFocus} ref={contentRef} tabIndex={-1} aria-label={featureFocus||selected.label}>{error&&<div role="alert" className="banner error">{error}</div>}{message&&<div role="status" className="banner success">{message}</div>}
   {module!=="help"&&<details className="task-help"><summary>Petunjuk {featureFocus||selected.label}</summary><p>{instructions.purpose}</p><p><b>Sebelum mulai:</b> {instructions.before}</p><ol>{instructions.steps.map(s=><li key={s}>{s}</li>)}</ol><p><b>Hasil:</b> {instructions.result}</p><button className="button secondary" onClick={()=>choose("help",guideFor(module))}>Buka panduan lengkap</button></details>}
-  {module==="overview"&&<><DashboardOverview schoolId={schoolId} userId={user.id} role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>{(!featureFocus||featureFocus==="Agenda & Deadline")&&<SchoolCalendar schoolId={schoolId} userId={user.id} role={role} compact/>}</>}
+  {module==="journals"&&<WorkJournal schoolId={schoolId} userId={user.id} role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}
+  {module==="overview"&&<>{featureFocus==="Ruang Kerja"&&<WorkHub role={role} onRoute={(m,f)=>choose(m,f||"")}/>}<DashboardOverview schoolId={schoolId} userId={user.id} role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>{(!featureFocus||featureFocus==="Agenda & Deadline")&&<SchoolCalendar schoolId={schoolId} userId={user.id} role={role} compact/>}</>}
   {module==="master"&&<MasterHubV2 schoolId={schoolId} role={role} focus={featureFocus}/>}
   {module==="calendar"&&<SchoolCalendar schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
   {module==="attendance"&&<>

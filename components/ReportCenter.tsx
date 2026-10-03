@@ -6,6 +6,7 @@ type ReportRoute={title:string;caption:string;module:ModuleKey;feature:string;ic
 
 export default function ReportCenter({role,focus,onRoute}:{schoolId:string;role:Role;focus?:string;onRoute:(module:ModuleKey,feature?:string)=>void}){
  const reportCatalog:ReportRoute[]=[
+  {title:"Laporan Jurnal",caption:"Jurnal harian, jurnal siswa dan rekap bulanan per pengguna.",module:"journals",feature:"Rekap Bulanan",icon:BookOpen,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan Akademik",caption:"Nilai, jurnal, presensi siswa dan rekap kelas.",module:"buku_kerja",feature:"Laporan Lengkap",icon:GraduationCap,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan Kehadiran",caption:"Kehadiran siswa/kelas dan riwayat periode.",module:"buku_kerja",feature:"Laporan Kelas",icon:ClipboardCheck,formats:"PDF · XLSX"},
   {title:"Laporan Disiplin & Prestasi",caption:"Pelanggaran, prestasi, pembinaan dan tindak lanjut.",module:"disiplin",feature:"Template Laporan",icon:ShieldAlert,formats:"PDF · DOCX · XLSX"},

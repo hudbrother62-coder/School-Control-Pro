@@ -1,5 +1,5 @@
 export type Role = "owner"|"principal"|"vice_principal"|"teacher"|"counselor"|"hr"|"treasurer"|"finance_staff"|"supervisor"|"staff"|"viewer";
-export type ModuleKey = "overview"|"master"|"calendar"|"reports"|"attendance"|"performance"|"guru_ai"|"assistant"|"kepsek_ai"|"buku_kerja"|"disiplin"|"bk"|"command"|"sikas"|"gajian"|"payslip"|"access"|"settings"|"help";
+export type ModuleKey = "overview"|"master"|"calendar"|"reports"|"attendance"|"performance"|"guru_ai"|"assistant"|"kepsek_ai"|"buku_kerja"|"disiplin"|"bk"|"command"|"sikas"|"gajian"|"payslip"|"access"|"settings"|"help"|"journals";
 export type School = {id:string;name:string;timezone:string};
 export type Membership = {school_id:string;role:Role};
 export type Staff = {id:string;school_id:string;user_id:string|null;name:string;position:string|null;shift_start:string|null;late_tolerance_minutes?:number|null;staff_type?:string|null};
@@ -9,10 +9,11 @@ export const ROLE_LABELS:Record<Role,string>={
 };
 export const ADMIN_ROLES:Role[]=["owner","principal","vice_principal"];
 export const modules:FeatureModule[]=[
- {key:"overview",label:"Beranda",section:"Utama",description:"Ringkasan operasional sekolah.",features:["Ringkasan Operasional","Analitik Sekolah","Agenda & Deadline"]},
+ {key:"overview",label:"Beranda",section:"Utama",description:"Ringkasan operasional sekolah.",features:["Ringkasan Operasional","Analitik Sekolah","Ruang Kerja","Agenda & Deadline"]},
  {key:"master",label:"Data Induk",section:"Utama",description:"Sumber data utama seluruh sistem.",features:["Siswa","Kelas","Guru","Tenaga Kependidikan","Mata Pelajaran","Penugasan Guru","Import Excel Keseluruhan"]},
  {key:"calendar",label:"Agenda Sekolah",section:"Utama",description:"Kalender sekolah dan agenda setiap pengguna.",features:["Kalender Sekolah","Rekap Agenda","Agenda Mengajar","Agenda Pribadi","Agenda Pengguna","Kehadiran Agenda"]},
- {key:"reports",label:"Pusat Laporan",section:"Utama",description:"Semua laporan resmi sekolah, template standar, ekspor dan arsip.",features:["Ringkasan Laporan","Akademik","Kehadiran","Disiplin","BK","Program & Tugas","Keuangan","SDM & Payroll","Supervisi","Template Laporan Sekolah","Arsip Laporan"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
+ {key:"journals",label:"Jurnal & Pemantauan",section:"Utama",description:"Jurnal kegiatan harian, pengamatan siswa dan rekap bulanan sesuai akses.",features:["Jurnal Harian","Jurnal Siswa","Jurnal Mengajar","Rekap Bulanan","Review Jurnal","Arsip Jurnal"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
+ {key:"reports",label:"Pusat Laporan",section:"Utama",description:"Semua laporan resmi sekolah, template standar, ekspor dan arsip.",features:["Ringkasan Laporan","Akademik","Kehadiran","Disiplin","BK","Program & Tugas","Keuangan","SDM & Payroll","Supervisi","Jurnal","Template Laporan Sekolah","Arsip Laporan"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"guru_ai",label:"Perangkat Ajar AI",section:"Pembelajaran",description:"Workspace perangkat pembelajaran berbasis proyek dan versi.",features:["Proyek Pembelajaran","Modul Ajar","RPP","LKPD","Asesmen Soal","Strategi Pembelajaran","Bahan Ajar","Rubrik Penilaian","Panduan Presentasi","Peta Konsep","Riwayat draf","Dokumen Pembelajaran"],roles:["owner","principal","vice_principal","teacher"]},
  {key:"assistant",label:"Asisten AI",section:"Asisten AI",description:"Bantuan mengajar, pengelolaan kelas, kepala sekolah dan rencana pekerjaan.",features:["Asisten Guru","Asisten Kepala Sekolah","Asisten Kelas","Rencana Pekerjaan","Koneksi AI"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"buku_kerja",label:"Pembelajaran & Penilaian",section:"Pembelajaran",description:"Administrasi kelas, penilaian, agenda dan laporan guru.",features:["Mode Kerja Guru","Presensi Siswa","Lembar Nilai","Jurnal Mengajar","Jadwal Mingguan","Rekap Bulanan","Laporan Lengkap","Import/Export Excel"],roles:["owner","principal","vice_principal","teacher"]},
@@ -38,6 +39,7 @@ const payrollRoles:Role[]=["owner","hr"];
 export function visibleFeatures(m:FeatureModule,role:Role):string[]{
  if(!canAccess(m,role))return [];
  return m.features.filter(f=>{
+  if(m.key==="journals"){if(f==="Review Jurnal")return isAdmin(role);if(f==="Jurnal Siswa")return [...teachingRoles,"counselor"].includes(role);if(f==="Jurnal Mengajar")return teachingRoles.includes(role);}
   if(m.key==="bk"&&role!=="counselor")return ["Analitik BK","Laporan BK"].includes(f);
   if(m.key==="assistant"){
    if(["Asisten Guru","Asisten Kelas"].includes(f))return teachingRoles.includes(role);

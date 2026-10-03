@@ -5,6 +5,7 @@ export type WorkflowPlan={title:string;reason:string;steps:WorkflowStep[]};
 
 type Route={module:ModuleKey;label:string;keywords:string[]};
 const routes:Route[]=[
+ {module:"journals",label:"Jurnal & Pemantauan",keywords:["jurnal harian","jurnal siswa","laporan jurnal","review jurnal","jurnal bulanan"]},
  {module:"payslip",label:"Slip Gaji Saya",keywords:["slip gaji saya","slip gaji","payslip"]},
  {module:"master",label:"Data Induk",keywords:["data siswa","data guru","kelas","mata pelajaran","master data","import siswa","penugasan guru"]},
  {module:"calendar",label:"Agenda Sekolah",keywords:["agenda","kalender","jadwal kegiatan","pertemuan","rapat"]},
@@ -25,6 +26,7 @@ const routes:Route[]=[
 const has=(text:string,...keys:string[])=>keys.some(k=>text.includes(k));
 function featureFor(module:ModuleKey,text:string){
  switch(module){
+  case "journals":return has(text,"bulanan","laporan","rekap")?"Rekap Bulanan":has(text,"review")?"Review Jurnal":has(text,"siswa")?"Jurnal Siswa":"Jurnal Harian";
   case "master": return has(text,"penugasan")?"Penugasan Guru":has(text,"staf","tenaga kependidikan")?"Tenaga Kependidikan":has(text,"guru","sdm")?"Guru":has(text,"kelas")?"Kelas":has(text,"mata pelajaran","mapel")?"Mata Pelajaran":has(text,"import")?"Import Excel Keseluruhan":"Siswa";
   case "calendar": return has(text,"pribadi")?"Agenda Pribadi":has(text,"rekap")?"Rekap Agenda":"Kalender Sekolah";
   case "attendance": return has(text,"cuti")?"Cuti":has(text,"izin")?"Izin":has(text,"jadwal","shift")?"Jadwal/shift":"Check-in/check-out";
@@ -52,6 +54,15 @@ export function planWorkflow(input:string,role:Role):WorkflowPlan{
  const text=input.toLocaleLowerCase("id-ID").normalize("NFKC").trim().split(" ").filter(Boolean).join(" ");
  if(!text)return {title:"Jelaskan pekerjaan",reason:"Tulis tujuan yang ingin diselesaikan.",steps:[]};
 
+ if(has(text,"jurnal harian","jurnal siswa","jurnal bulanan","laporan jurnal","review jurnal")){
+  const student=has(text,"jurnal siswa");return {title:"Jurnal sampai laporan bulanan",reason:"Kegiatan mengikuti data sumber, lalu penulis mengirim dan manajemen meninjau sebelum pemantauan bulanan.",steps:[
+   step(student?"master":"calendar",student?"Penugasan Guru":"Kalender Sekolah","Periksa sumber kegiatan","Pastikan kelas/penugasan atau agenda kegiatan sudah tersedia.",role),
+   step("journals",student?"Jurnal Siswa":"Jurnal Harian","Catat jurnal faktual","Hubungkan jurnal dengan kelas/siswa atau agenda/tugas, lalu simpan draf dan kirim untuk review.",role),
+   step("journals","Review Jurnal","Review oleh manajemen","Pengelola lain meninjau kiriman, memberi catatan dan meminta revisi bila perlu.",role),
+   step("journals","Rekap Bulanan","Pantau dan laporkan","Pilih bulan, pengguna, kelas dan tanggal bila membutuhkan laporan harian. Periksa draf sebelum ekspor.",role),
+   step("overview","Analitik Sekolah","Lihat tren jurnal","Pilih grafik Aktivitas jurnal; hanya kiriman/review masuk agregat jurnal operasional.",role)
+  ]};
+ }
  if(has(text,"sering alpa","sering tidak hadir")&&has(text,"pembinaan","pelanggaran","surat panggilan")){
   return {title:"Penanganan siswa dari kehadiran sampai tindak lanjut",reason:"Data kehadiran perlu dibaca lebih dulu sebelum pembinaan dan komunikasi orang tua.",steps:[
    step("buku_kerja","Presensi Siswa","Periksa riwayat kehadiran","Pastikan tanggal dan status Alpa benar sebelum membuat tindak lanjut.",role,["alpa"]),
