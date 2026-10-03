@@ -85,3 +85,12 @@ Permintaan terbaru diterapkan pada navigasi, bantuan dan kesesuaian layar. Asist
 ## Checkpoint 3 Oktober: pengelolaan data besar
 
 Excel dipindahkan sebelum daftar/kalender; submenu header dihapus. Pencarian, filter, pagination dan centang massal ditambahkan pada koleksi operasional yang relevan, dengan proteksi data final/terkait. Dropdown field dapat dicari; kolom yang mendukung nilai baru dapat diketik. Lihat `LARGE_DATA_QA_20261003.md` dan bukti browser untuk cakupan serta batas pengujian.
+
+
+## Checkpoint 3 October — report templates, single package and AI structural QA
+
+School-specific DOCX template upload and private logo/signature/stamp assets are integrated through Report Engine, with type/module/default precedence and immutable file versions for archives. Pusat Laporan contains Template Laporan Sekolah; sample file, font settings, upload validation and test export are available. Excel has readable widths/filterable per-section tables and safe text handling. School Control Pro now costs IDR199,000/30 days or IDR1,990,000/365 days; landing, billing, paywall, plans API and checkout share one source. Live seven-day trial confirmed and total trial AI quota corrected across month boundaries.
+
+Validation: 13 suites, TypeScript/build, DOCX XML/media/layout checks, rendered fixture inspection, 175 menu screens and four viewport sizes; browser upload/sample/generation workflow exercised with synthetic identity. Two Supabase migrations applied. Detailed evidence and pricing assumptions: REPORT_TEMPLATES_PRICING_QA_20261003.md.
+
+Remaining in this request: live semantic Gemini generation cannot be verified without an authenticated session/provider key. Do not claim live AI passed. Uploaded Word templates are used for DOCX; arbitrary identical PDF conversion is not implemented. Existing original backlog is not silently marked complete by this checkpoint.

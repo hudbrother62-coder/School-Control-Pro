@@ -8,3 +8,9 @@ node_modules
 
 # Local visual QA captures; reproducible by verify-workspace-browser.cjs
 docs/qa/*.png
+
+# Generated template QA fixtures
+docs/qa/*.docx
+docs/qa/*.pdf
+docs/qa/template-render/
+docs/qa/workspace-template-render/

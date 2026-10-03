@@ -20,6 +20,7 @@ export default function ReportCenter({role,focus,onRoute}:{schoolId:string;role:
  const standardItems=["Kop & identitas sekolah","NPSN dan tahun pelajaran","Nomor dokumen","Periode laporan","Tanda tangan kepala sekolah","Status draft / terbit","Arsip revisi","Format cetak A4"];
 
  return <div className="report-center">
+  <button className="button secondary" style={{marginBottom:16}} onClick={()=>onRoute("reports","Template Laporan Sekolah")}>Template & Format Laporan Sekolah</button>
   <section className="report-center-hero">
    <div><span className="eyebrow">PUSAT LAPORAN</span><h2>Laporan resmi sekolah dalam satu tempat</h2><p>Pilih jenis laporan. Data tetap diambil dari modul sumber agar tidak ada input ganda.</p></div>
    <div className="report-standard-card"><BookOpen size={20}/><div><strong>Standar dokumen sekolah Indonesia</strong><small>Kop, identitas, periode, nomor dokumen, tanda tangan, status dan arsip.</small></div></div>

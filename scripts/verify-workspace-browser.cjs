@@ -8,10 +8,10 @@ const testPort=3100+(process.pid%10000);const root=process.env.WORKSPACE_TEST_UR
 const userId='11111111-1111-4111-8111-111111111111',schoolId='22222222-2222-4222-8222-222222222222',staffId='33333333-3333-4333-8333-333333333333',classId='44444444-4444-4444-8444-444444444444',studentId='55555555-5555-4555-8555-555555555555';
 const date=new Date().toISOString().slice(0,10);const month=date.slice(0,7);
 const user={id:userId,aud:'authenticated',role:'authenticated',email:'fixture@example.test',created_at:'2026-01-01T00:00:00Z',app_metadata:{provider:'email',providers:['email']},user_metadata:{}};
-let role='owner';const writes=[];const errors=[];
+let reportSettings={};const storedFiles=new Map();let role='owner';const writes=[];const errors=[];
 const fixtures={
  sc_members:()=>[{school_id:schoolId,user_id:userId,role}],
- sc_schools:()=>[{id:schoolId,name:'Sekolah Pengujian Lokal',timezone:'Asia/Jakarta',education_level:'SMP',academic_year:'2026/2027',semester:'Ganjil',report_settings:{}}],
+ sc_schools:()=>[{id:schoolId,name:'Sekolah Pengujian Lokal',timezone:'Asia/Jakarta',education_level:'SMP',academic_year:'2026/2027',semester:'Ganjil',report_settings:reportSettings}],
  sc_subscriptions:()=>[{status:'active',trial_ends_at:'2027-01-01T00:00:00Z',current_period_end:'2027-12-31T00:00:00Z'}],
  sc_staff:()=>[{id:staffId,school_id:schoolId,user_id:userId,name:'Guru Pengujian',position:'Guru',staff_type:'teacher',status:'active',shift_start:'07:00',late_tolerance_minutes:15}],
  sc_classes:()=>[{id:classId,school_id:schoolId,name:'VII A',grade:'7',academic_year:'2026/2027',status:'active'}],
@@ -24,7 +24,14 @@ const fixtures={
 let testStudents=fixtures.sc_students();const secondStudent='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';const secondClass='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 testStudents.push({...testStudents[0],id:secondStudent,name:'Siswa Kedua',nis:'1002',class_id:secondClass});for(let i=0;i<59;i++)testStudents.push({...testStudents[0],id:'cccccccc-cccc-4ccc-8ccc-'+String(i).padStart(12,'0'),name:'Siswa Massal '+String(i+1).padStart(2,'0'),nis:String(2000+i)});
 fixtures.sc_students=()=>testStudents;const testClasses=fixtures.sc_classes();testClasses.push({...testClasses[0],id:secondClass,name:'VII B'});fixtures.sc_classes=()=>testClasses;
-async function mock(route){const req=route.request(),url=new URL(req.url());const name=url.pathname.split('/').pop();let data;
+async function mock(route){
+ const storageUrl=new URL(route.request().url());
+ if(storageUrl.pathname.includes('/storage/v1/object/')){
+  const request=route.request(),key=decodeURIComponent(storageUrl.pathname.split('/sc-report-assets/')[1]||'');
+  if(request.method()==='POST'){let buffer=request.postDataBuffer();const contentType=request.headers()['content-type']||'';if(contentType.includes('multipart/form-data')){const boundary=contentType.split('boundary=')[1];buffer=buffer.subarray(buffer.indexOf(Buffer.from([80,75,3,4])),buffer.lastIndexOf(Buffer.from('\r\n--'+boundary)));}storedFiles.set(key,buffer);return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({Key:key})});}
+  if(request.method()==='GET')return route.fulfill({status:storedFiles.has(key)?200:404,contentType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',body:storedFiles.get(key)||Buffer.from('missing')});
+ }
+const req=route.request(),url=new URL(req.url());const name=url.pathname.split('/').pop();let data;
  if(url.pathname==='/auth/v1/user')data=user;
  else if(url.pathname.includes('/auth/v1/'))data={};
  else if(url.pathname.includes('/rest/v1/rpc/')){
@@ -33,6 +40,8 @@ async function mock(route){const req=route.request(),url=new URL(req.url());cons
    if(body.p_id===secondStudent)return route.fulfill({status:409,contentType:'application/json',body:JSON.stringify({message:'Data siswa dilindungi dalam pengujian'})});
    const existing=testStudents.find(x=>x.id===body.p_id);if(existing)Object.assign(existing,body.p_payload);else testStudents.push({id:crypto.randomUUID(),...body.p_payload});data=body.p_id||testStudents.at(-1).id;
   }else if(name==='sc_master_save_class'){const body=req.postDataJSON();writes.push({name,body});const id=crypto.randomUUID();testClasses.push({id,name:body.p_name,grade:body.p_grade,academic_year:body.p_year});data=id;
+  }else if(name==='sc_configure_report_templates'){
+   const patch=req.postDataJSON().p_patch;reportSettings={...reportSettings,...patch,templates:{...(reportSettings.templates||{}),...(patch.templates||{})},asset_paths:{...(reportSettings.asset_paths||{}),...(patch.asset_paths||{})}};data=null;
   }else if(name==='sc_team_directory')data=[{user_id:userId,role,staff_name:'Guru Pengujian',email:'fixture@example.test'}];
   else if(name==='sc_is_platform_admin')data=false;
   else if(name==='sc_finance_summary')data={income:0,expense:0,opening:0,budget:0,billed:100000,paid:0};
@@ -65,7 +74,7 @@ async function mock(route){const req=route.request(),url=new URL(req.url());cons
  const smoke=[];
  for(const testRole of (process.env.WORKSPACE_FOCUSED_TEST?[]:['owner','counselor'])){
   role=testRole;if(testRole!=='owner'){await page.reload();await page.locator('.shell').waitFor();}
-  for(const module of catalog.modules){if(testRole==='counselor'&&module.key!=='bk')continue;
+  for(const module of catalog.modules){console.log('Checking '+testRole+' '+module.key);if(testRole==='counselor'&&module.key!=='bk')continue;
    for(const feature of catalog.visibleFeatures(module,testRole)){
     await go(module.key,feature);
     const data=await page.locator('.content').evaluate(el=>({heading:[...el.querySelectorAll('h2,h3')].map(h=>h.textContent).join(' | '),text:el.textContent||'',cards:el.querySelectorAll('.card,.panel').length,width:document.documentElement.scrollWidth,viewport:innerWidth}));
@@ -99,14 +108,21 @@ async function mock(route){const req=route.request(),url=new URL(req.url());cons
  await page.getByRole('button',{name:'Tambah lowongan draft',exact:true}).click();const openingModal=page.getByRole('dialog',{name:'Tambah lowongan'});await openingModal.getByLabel('Nama',{exact:true}).fill('Guru Matematika');await openingModal.getByRole('button',{name:'Simpan perubahan',exact:true}).click();await openingModal.waitFor({state:'hidden'});
  assert.ok(writes.some(w=>w.name==='sc_recruitment_openings'&&w.body.title==='Guru Matematika'&&w.body.status==='draft'),'Recruitment creates a draft opening rather than a schedule');
  for(const feature of ['PBD/EDS','KSP/KOSP','RKJM','RKT','RKAS','SOP']){await go('kepsek_ai',feature);assert.equal(await page.getByRole('heading',{name:'Asisten Perencanaan Sekolah',exact:true}).count(),0);}
- const mobileRoutes=[['overview','Ringkasan Operasional'],['master','Siswa'],['calendar','Kalender Sekolah'],['guru_ai','Modul Ajar'],['assistant','Asisten Guru'],['attendance','Check-in/check-out'],['gajian','Proses Payroll'],['sikas','Pembayaran'],['settings','Branding'],['help','Mulai dari Sini']];
+ const mobileRoutes=[['overview','Ringkasan Operasional'],['master','Siswa'],['calendar','Kalender Sekolah'],['guru_ai','Modul Ajar'],['assistant','Asisten Guru'],['attendance','Check-in/check-out'],['gajian','Proses Payroll'],['sikas','Pembayaran'],['settings','Branding'],['reports','Template Laporan Sekolah'],['help','Mulai dari Sini']];
  for(const width of [320,390,768]){await page.setViewportSize({width,height:844});for(const [m,f] of mobileRoutes){await go(m,f);const overflow=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));assert.ok(overflow.width<=overflow.viewport+2,`Overflow ${width}px ${m}/${f}: ${JSON.stringify(overflow)}`)}if(width<=740){await page.getByRole('button',{name:'Menu',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Menu sekolah'});await dialog.waitFor();const top=await dialog.evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+20,r.y+20)?.closest('[role="dialog"]')===el});assert.ok(top,'Drawer is underneath header');await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});assert.equal(await page.evaluate(()=>document.body.style.overflow),'');}}
  await page.setViewportSize({width:390,height:844});await go('master','Siswa');await page.getByRole('button',{name:/Tambah Siswa|Tambah Data|Tambah Baru/}).first().click();const modal=page.getByRole('dialog').filter({hasText:/Siswa/i});await modal.waitFor();const bounds=await modal.evaluate(el=>{const r=el.getBoundingClientRect();return {x:r.x,right:r.right,y:r.y,bottom:r.bottom,width:innerWidth,height:innerHeight,parent:el.parentElement.parentElement.tagName}});assert.ok(bounds.x>=0&&bounds.right<=bounds.width+1&&bounds.y>=0&&bounds.bottom<=bounds.height+1,'Modal outside viewport');assert.equal(bounds.parent,'BODY','Modal must use body portal');await page.keyboard.press('Escape');
  await go('guru_ai','Modul Ajar');assert.ok(await page.getByText('Konteks Pembelajaran',{exact:true}).isVisible());assert.ok(await page.getByText('Topik pembelajaran',{exact:true}).isVisible());
  await go('sikas','Pemasukan');await go('sikas','Dashboard Keuangan');assert.ok(await page.getByRole('heading',{name:'Ringkasan Keuangan',exact:true}).isVisible());assert.equal(await page.getByRole('button',{name:'Tambah Data',exact:true}).count(),0);
  await go('help','Asisten AI');await page.getByRole('button',{name:'Buka Asisten Guru',exact:true}).first().click();await page.waitForFunction(()=>document.querySelector('.top h1')?.textContent==='Asisten Guru');await page.goBack();await page.waitForFunction(()=>document.querySelector('.top h1')?.textContent==='Asisten AI');
+ await go('reports','Template Laporan Sekolah');
+ const sampleDownload=page.waitForEvent('download',{timeout:15000});await page.getByRole('button',{name:'Unduh contoh DOCX',exact:true}).click();const sampleFile=await sampleDownload;const samplePath=await sampleFile.path();assert.ok(samplePath);fs.copyFileSync(samplePath,'docs/qa/workspace-template-sample.docx');
+ const templateLib=(function(){const m={exports:{}};const js=ts.transpileModule(fs.readFileSync('lib/report-template.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;new Function('require','module','exports',js)(require,m,m.exports);return m.exports;})();assert.ok(templateLib.inspectTemplate(fs.readFileSync(samplePath)).tags.includes('report_body'));
+ await page.locator('input[type="file"][accept=".docx"]').setInputFiles({name:'Template-Sekolah.docx',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',buffer:fs.readFileSync(samplePath)});await page.getByText('Pengaturan laporan tersimpan.',{exact:true}).waitFor();assert.ok(writes.some(w=>w.name==='sc_configure_report_templates'&&w.body.p_patch.templates.default.path.startsWith(schoolId+'/templates/')));
+
+ const docDownload=page.waitForEvent('download',{timeout:15000});await page.getByRole('button',{name:'Uji hasil DOCX',exact:true}).click();const generatedDownload=await docDownload;const generatedPath=await generatedDownload.path();assert.ok(generatedPath&&fs.statSync(generatedPath).size>1000);fs.copyFileSync(generatedPath,'docs/qa/workspace-template-generated.docx');
+ const zip=new (require('pizzip'))(fs.readFileSync(generatedPath));const xml=zip.file('word/document.xml').asText();assert.ok(xml.includes('Peserta Didik A')&&xml.includes('Periksa kop'));assert.ok(!xml.includes('SC_REPORT_BODY')&&!xml.includes('{@report_body}'));assert.ok(zip.file('word/header1.xml').asText().includes('Sekolah Pengujian Lokal'));assert.ok(xml.includes('w:left="1417"'));
  await go('overview','Ringkasan Operasional');fs.mkdirSync('docs/qa',{recursive:true});await page.screenshot({path:'docs/qa/mobile-workspace.png',fullPage:true});await page.setViewportSize({width:1366,height:900});await page.screenshot({path:'docs/qa/desktop-workspace.png',fullPage:true});
- fs.writeFileSync('docs/qa/workspace-browser-results.json',JSON.stringify({scope:'Local UI integration with synthetic identity and intercepted APIs; not a live database or merchant E2E test.',screens:smoke.length,viewports:[320,390,768,1366],errors,writes,smoke},null,2));
+ if(!process.env.WORKSPACE_SKIP_RESULTS)fs.writeFileSync('docs/qa/workspace-browser-results.json',JSON.stringify({scope:'Local UI integration with synthetic identity and intercepted APIs; not a live database or merchant E2E test.',screens:smoke.length,viewports:[320,390,768,1366],errors,writes,smoke},null,2));
  console.log('PASS: '+smoke.length+' menu screens, mobile layouts, overlay/focus/escape, canonical navigation/back, top Excel, search/class filters, pagination, partial batch failures and typed master-class creation.');
  }finally{await browser.close();if(server){try{process.kill(-server.pid,'SIGTERM')}catch{server.kill()}}}
 })().catch(e=>{console.error(e);process.exit(1)});

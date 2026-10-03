@@ -1,9 +1,10 @@
 "use client";
 
+import {templateBlob,resolveReportAssets} from "@/lib/report-template-client";
 import {downloadExcel,type SheetRows} from "@/lib/excel";
 
 export type ReportIdentity={
- name:string;npsn:string|null;address:string|null;academic_year:string|null;education_level:string|null;
+ motto?:string|null;semester?:string|null;school_id?:string;name:string;npsn:string|null;address:string|null;academic_year:string|null;education_level:string|null;
  principal_name:string|null;principal_nip:string|null;phone:string|null;email:string|null;website:string|null;
  province:string|null;city:string|null;postal_code:string|null;logo_url:string|null;signature_url:string|null;
  stamp_url:string|null;report_settings:Record<string,unknown>|null
@@ -25,9 +26,9 @@ const dateId=(v?:string|null)=>v?new Intl.DateTimeFormat("id-ID",{day:"2-digit",
 const currentDate=()=>new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
 
 export async function loadReportIdentity(db:any,schoolId:string):Promise<ReportIdentity>{
- const {data,error}=await db.from("sc_schools").select("name,npsn,address,academic_year,education_level,principal_name,principal_nip,phone,email,website,province,city,postal_code,logo_url,signature_url,stamp_url,report_settings").eq("id",schoolId).single();
+ const {data,error}=await db.from("sc_schools").select("name,npsn,address,academic_year,education_level,motto,semester,principal_name,principal_nip,phone,email,website,province,city,postal_code,logo_url,signature_url,stamp_url,report_settings").eq("id",schoolId).single();
  if(error)throw error;
- return data as ReportIdentity;
+ return await resolveReportAssets(data,schoolId) as ReportIdentity;
 }
 
 export function defaultSignatures(identity:ReportIdentity,preparedBy?:string):ReportSignature[]{
@@ -127,7 +128,7 @@ export async function downloadOfficialExcel(model:OfficialReportModel,documentNu
 
 async function maybeImage(url:string|null|undefined){
  if(!url)return null;
- try{const res=await fetch(url);if(!res.ok)return null;const data=new Uint8Array(await res.arrayBuffer());const type=(res.headers.get("content-type")||"").includes("jpeg")?"jpg":"png";return {data,type}}catch{return null}
+ try{const res=await fetch(url);if(!res.ok)throw Error();const data=new Uint8Array(await res.arrayBuffer());if(data.length>5*1024*1024)throw Error();const type=(res.headers.get("content-type")||"").includes("jpeg")?"jpg":"png";if(!(type==="png"&&data[0]===137&&data[1]===80||type==="jpg"&&data[0]===255&&data[1]===216))throw Error();return {data,type}}catch{throw Error("Gambar laporan tidak dapat dimuat. Periksa logo/tanda tangan/stempel atau unggah PNG/JPG melalui Template Laporan Sekolah.")}
 }
 
 export async function downloadOfficialDocx(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
@@ -136,6 +137,7 @@ export async function downloadOfficialDocx(identity:ReportIdentity,model:Officia
  const settings=identity.report_settings||{};
  const logo=settings.show_logo===false?null:await maybeImage(identity.logo_url);
  const signature=settings.show_signature===false?null:await maybeImage(identity.signature_url);
+ const stamp=settings.show_stamp===true?await maybeImage(identity.stamp_url):null;
  const children:any[]=[];
  const address=schoolAddress(identity),contact=schoolContact(identity);
  if(logo)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:logo.data,transformation:{width:65,height:65},type:logo.type})]}));
@@ -145,23 +147,29 @@ export async function downloadOfficialDocx(identity:ReportIdentity,model:Officia
  children.push(new Paragraph({heading:HeadingLevel.HEADING_1,alignment:AlignmentType.CENTER,children:[new TextRun({text:model.title.toUpperCase(),bold:true})]}));
  if(model.subtitle)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(model.subtitle)]}));
  children.push(new Paragraph({spacing:{before:120,after:160},children:[new TextRun({text:"Nomor: "+(documentNumber||"DRAFT / BELUM DITERBITKAN"),bold:true}),new TextRun("   |   Tahun Pelajaran: "+(identity.academic_year||"—"))]}));
+ const beginMarker=new Paragraph("SC_REPORT_BODY_START"),endMarker=new Paragraph("SC_REPORT_BODY_END");children.push(beginMarker);
  for(const m of model.metrics||[])children.push(new Paragraph({children:[new TextRun({text:m.label+": ",bold:true}),new TextRun(m.value+(m.note?" · "+m.note:""))]}));
- if(model.notes?.length){children.push(new Paragraph({heading:HeadingLevel.HEADING_2,children:[new TextRun("Catatan / Keterangan")]}));for(const n of model.notes)children.push(new Paragraph({bullet:{level:0},children:[new TextRun(n)]}))}
+ if(model.notes?.length){children.push(new Paragraph({heading:HeadingLevel.HEADING_2,children:[new TextRun("Catatan / Keterangan")]}));for(const n of model.notes)children.push(new Paragraph({children:[new TextRun("• "+n)]}))}
  for(const sec of model.sections){
   children.push(new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:220,after:80},children:[new TextRun(sec.title)]}));
   const rows=[new TableRow({tableHeader:true,children:sec.columns.map(c=>new TableCell({children:[new Paragraph({children:[new TextRun({text:c,bold:true})]})]}))}),...sec.rows.map(row=>new TableRow({children:sec.columns.map((_,i)=>new TableCell({children:[new Paragraph(String(row[i]??"—"))]}))}))];
   children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows}));
  }
+ children.push(endMarker);
  const signs=model.signatures?.length?model.signatures:defaultSignatures(identity);
  children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[new TableRow({children:signs.map((s,idx)=>new TableCell({borders:{top:{style:"nil"},bottom:{style:"nil"},left:{style:"nil"},right:{style:"nil"},insideHorizontal:{style:"nil"},insideVertical:{style:"nil"}},children:[
   new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(s.role)]}),
   new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:80},children:idx===signs.length-1&&signature?[new ImageRun({data:signature.data,transformation:{width:90,height:55},type:signature.type})]:[new TextRun("\n\n")]}),
+  ...(idx===signs.length-1&&stamp?[new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:stamp.data,type:stamp.type,transformation:{width:55,height:55}})]})]:[]),
   new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:s.name||"........................",bold:true,underline:{}})]}),
   ...(s.identifier?[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(s.identifier)]})]:[])
  ]}))})]}));
  const footer=new Footer({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun(model.title.slice(0,70)+" · Halaman "),new TextRun({children:[PageNumber.CURRENT]})]})]});
- const doc=new Document({creator:"School Control",title:model.title,sections:[{properties:{page:{size:{orientation:model.orientation==="landscape"?PageOrientation.LANDSCAPE:PageOrientation.PORTRAIT},margin:{top:850,right:800,bottom:850,left:800}}},footers:{default:footer},children}]});
- const blob=await Packer.toBlob(doc);
+ const configuredTemplate=(settings.templates as any)?.[model.documentType]||(settings.templates as any)?.[model.moduleKey]||(settings.templates as any)?.default;
+ if(!configuredTemplate){children.splice(children.indexOf(beginMarker),1);children.splice(children.indexOf(endMarker),1);}
+ if(configuredTemplate)for(const [key,url] of [["LOGO",identity.logo_url],["SIGNATURE",settings.show_signature===false?null:identity.signature_url],["STAMP",settings.show_stamp===true?identity.stamp_url:null]]){const img=await maybeImage(url as string|null);if(img)children.push(new Paragraph({children:[new TextRun("SC_ASSET_"+key),new ImageRun({data:img.data,type:img.type,transformation:{width:65,height:65}})]}));}
+ const doc=new Document({creator:"School Control",title:model.title,styles:{default:{document:{run:{font:String(settings.body_font||"Times New Roman"),size:Number(settings.body_font_size||11)*2}}}},sections:[{properties:{page:{size:{orientation:model.orientation==="landscape"?PageOrientation.LANDSCAPE:PageOrientation.PORTRAIT},margin:{top:850,right:800,bottom:850,left:800}}},footers:{default:footer},children}]});
+ const blob=await templateBlob(await Packer.toBlob(doc),identity,{title:model.title,subtitle:model.subtitle,documentType:model.documentType,moduleKey:model.moduleKey,period:model.periodLabel,number:documentNumber,status:model.status,confidentiality:model.confidentiality});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=safe(model.title+(documentNumber?" "+documentNumber.replaceAll("/","-"):""))+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 
@@ -183,14 +191,21 @@ export async function downloadNarrativeDocx(identity:ReportIdentity,doc:{title:s
  children.push(new Paragraph({alignment:AlignmentType.CENTER,border:{bottom:{style:"double",size:8,color:"111111"}},spacing:{after:260},children:[new TextRun({text:[schoolAddress(identity),schoolContact(identity)].filter(Boolean).join(" · "),size:17})]}));
  children.push(new Paragraph({heading:HeadingLevel.HEADING_1,alignment:AlignmentType.CENTER,children:[new TextRun({text:doc.title.toUpperCase(),bold:true})]}));
  children.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:220},children:[new TextRun(doc.kind+" · Revisi "+doc.revision+" · "+doc.status)]}));
+ const beginMarker=new Paragraph("SC_REPORT_BODY_START"),endMarker=new Paragraph("SC_REPORT_BODY_END");children.push(beginMarker);
  for(const block of doc.content.split(/\n{2,}/)){const text=block.trim();if(!text)continue;const isHeading=/^(BAB|BAGIAN|LAMPIRAN|[A-Z][A-Z\s/&-]{5,})/.test(text)&&text.length<120;children.push(new Paragraph({heading:isHeading?HeadingLevel.HEADING_2:undefined,alignment:isHeading?AlignmentType.LEFT:AlignmentType.JUSTIFIED,spacing:{after:120},children:[new TextRun({text,bold:isHeading})]}))}
+ children.push(endMarker);
  children.push(new Paragraph({alignment:AlignmentType.RIGHT,spacing:{before:300},children:[new TextRun((identity.city||"................")+", "+currentDate())]}));
  children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:"Kepala Sekolah",bold:true})]}));
  if(signature)children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new ImageRun({data:signature.data,transformation:{width:90,height:55},type:signature.type})]})); else children.push(new Paragraph("\n\n"));
+ const stamp=settings.show_stamp===true?await maybeImage(identity.stamp_url):null;if(stamp)children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new ImageRun({data:stamp.data,type:stamp.type,transformation:{width:55,height:55}})]}));
  children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:identity.principal_name||"........................",bold:true,underline:{}})]}));
  if(identity.principal_nip)children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun("NIP. "+identity.principal_nip)]}));
  const footer=new Footer({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun(doc.title.slice(0,70)+" · Halaman "),new TextRun({children:[PageNumber.CURRENT]})]})]});
- const out=new Document({creator:"School Control",title:doc.title,sections:[{footers:{default:footer},children}]});const blob=await Packer.toBlob(out),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=safe(doc.title)+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+ const moduleKey=/^(PBD|KSP|KOSP|RKJM|RKT|RKAS|SOP|SUPERVISION)$/i.test(doc.kind)?"kepsek_ai":"guru_ai";
+ const configuredTemplate=(settings.templates as any)?.[doc.kind]||(settings.templates as any)?.[moduleKey]||(settings.templates as any)?.default;
+ if(!configuredTemplate){children.splice(children.indexOf(beginMarker),1);children.splice(children.indexOf(endMarker),1);}
+ if(configuredTemplate)for(const [key,url] of [["LOGO",identity.logo_url],["SIGNATURE",settings.show_signature===false?null:identity.signature_url],["STAMP",settings.show_stamp===true?identity.stamp_url:null]]){const img=await maybeImage(url as string|null);if(img)children.push(new Paragraph({children:[new TextRun("SC_ASSET_"+key),new ImageRun({data:img.data,type:img.type,transformation:{width:65,height:65}})]}));}
+ const out=new Document({creator:"School Control",title:doc.title,styles:{default:{document:{run:{font:String(settings.body_font||"Times New Roman"),size:Number(settings.body_font_size||11)*2}}}},sections:[{footers:{default:footer},children}]});const blob=await templateBlob(await Packer.toBlob(out),identity,{title:doc.title,documentType:doc.kind,moduleKey,status:doc.status}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=safe(doc.title)+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
 
 export async function issueAndExport(db:any,schoolId:string,identity:ReportIdentity,model:OfficialReportModel,format:"pdf"|"docx"|"xlsx"){

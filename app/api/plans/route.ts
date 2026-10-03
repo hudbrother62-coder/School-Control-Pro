@@ -1,1 +1,1 @@
-import {NextResponse} from "next/server";import {plans} from "@/lib/pricing";export const revalidate=3600;export function GET(){return NextResponse.json(plans,{headers:{"Cache-Control":"public,max-age=600"}})}
+import {NextResponse} from "next/server";import {plans} from "@/lib/pricing";export const revalidate=0;export function GET(){return NextResponse.json(plans,{headers:{"Cache-Control":"no-store"}})}

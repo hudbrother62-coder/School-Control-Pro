@@ -48,6 +48,7 @@ const CommandLegacyParity=dynamic(()=>import("@/components/CommandLegacyParity")
 const WorkspaceTools=dynamic(()=>import("@/components/WorkspaceTools"),{loading:PanelLoading});
 const SupervisorLegacyParity=dynamic(()=>import("@/components/SupervisorLegacyParity"),{loading:PanelLoading});
 const ReportArchive=dynamic(()=>import("@/components/ReportArchive"),{loading:PanelLoading});
+const ReportTemplateManager=dynamic(()=>import("@/components/ReportTemplateManager"),{loading:PanelLoading});
 const ReportCenter=dynamic(()=>import("@/components/ReportCenter"),{loading:PanelLoading});
 
 type SchoolAccess={school:School;role:Role};
@@ -139,7 +140,7 @@ export default function Home(){
  {(!featureFocus||["Partisipasi program","Pelatihan","Bukti capaian"].includes(featureFocus))&&<StaffWorkflows focus={featureFocus} kind="performance" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>}
  {(!featureFocus||["Evaluasi","Tanggapan guru"].includes(featureFocus))&&<PerformanceReviews schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>}
  </>}
- {module==="reports"&&<>{featureFocus==="Arsip Laporan"?<ReportArchive schoolId={schoolId} role={role}/>:<ReportCenter schoolId={schoolId} role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}</>}
+ {module==="reports"&&<>{featureFocus==="Template Laporan Sekolah"?<ReportTemplateManager schoolId={schoolId} role={role}/>:featureFocus==="Arsip Laporan"?<ReportArchive schoolId={schoolId} role={role}/>:<ReportCenter schoolId={schoolId} role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}</>}
  {module==="access"&&<AccessPanel schoolId={schoolId} role={role} focus={featureFocus}/>}
  {module==="help"&&<GuideCenter role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}
  {module==="settings"&&<>

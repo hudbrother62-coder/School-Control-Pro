@@ -1,6 +1,6 @@
 {
   "scope": "Local UI integration with synthetic identity and intercepted APIs; not a live database or merchant E2E test.",
-  "screens": 174,
+  "screens": 175,
   "viewports": [
     320,
     390,
@@ -318,7 +318,7 @@
           "address": "",
           "phone": "",
           "parent_phone": "",
-          "class_id": "640c4ffc-d84b-4459-8681-6dea45c59140",
+          "class_id": "99dd2180-228a-4806-bac2-a9e2d654819b",
           "status": "active",
           "guardian_name": "",
           "guardian_phone": ""
@@ -469,6 +469,21 @@
       "body": {
         "p_school": "22222222-2222-4222-8222-222222222222"
       }
+    },
+    {
+      "name": "sc_configure_report_templates",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_patch": {
+          "templates": {
+            "default": {
+              "path": "22222222-2222-4222-8222-222222222222/templates/c0393f31-71d9-48cd-9d6b-01c2396439a4.docx",
+              "name": "Template-Sekolah.docx",
+              "updated_at": "2026-10-03T10:07:21.808Z"
+            }
+          }
+        }
+      }
     }
   ],
   "smoke": [
@@ -536,7 +551,7 @@
       "role": "owner",
       "module": "calendar",
       "feature": "Kalender Sekolah",
-      "heading": "Import, Template & Agenda | Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Import, Template & Agenda | Oktober 2026 | Sabtu, 3 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
@@ -548,19 +563,19 @@
       "role": "owner",
       "module": "calendar",
       "feature": "Agenda Mengajar",
-      "heading": "Import, Template & Agenda | Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Import, Template & Agenda | Oktober 2026 | Sabtu, 3 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
       "module": "calendar",
       "feature": "Agenda Pribadi",
-      "heading": "Import, Template & Agenda | Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Import, Template & Agenda | Oktober 2026 | Sabtu, 3 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
       "module": "calendar",
       "feature": "Agenda Pengguna",
-      "heading": "Agenda Pengguna | Oktober 2026 | Jumat, 2 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Agenda Pengguna | Oktober 2026 | Sabtu, 3 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
@@ -621,6 +636,12 @@
       "module": "reports",
       "feature": "Supervisi",
       "heading": "Laporan resmi sekolah dalam satu tempat | Supervisi"
+    },
+    {
+      "role": "owner",
+      "module": "reports",
+      "feature": "Template Laporan Sekolah",
+      "heading": "Template Laporan Sekolah | Template aktif"
     },
     {
       "role": "owner",
@@ -1316,13 +1337,13 @@
       "role": "owner",
       "module": "settings",
       "feature": "Langganan",
-      "heading": "Berlangganan School Control"
+      "heading": "School Control Pro"
     },
     {
       "role": "owner",
       "module": "settings",
       "feature": "Riwayat pembayaran",
-      "heading": "Berlangganan School Control | Riwayat Pesanan"
+      "heading": "School Control Pro | Riwayat Pesanan"
     },
     {
       "role": "owner",

@@ -3019,3 +3019,26 @@ Hasil: Anda mengetahui langkah, hasil yang harus muncul dan cara mengatasi masal
 - GPS tidak terbaca: aktifkan lokasi dan izin browser, gunakan koneksi aman serta pastikan berada di area yang ditentukan.
 - AI belum tersedia: periksa Koneksi AI, akses layanan dan konteks pembelajaran. Jangan menyimpan kunci API dalam catatan sekolah.
 - Status payroll belum dapat dilanjutkan: selesaikan tahap sebelumnya dan gunakan akun yang memiliki kewenangan.
+
+
+## Template laporan sekolah (3 Oktober 2026)
+
+Buka **Pusat Laporan → Template Laporan Sekolah**. Pemilik/kepala sekolah/wakil yang berwenang dapat mengunggah template dan aset; anggota membaca konfigurasi tanpa mengubahnya.
+
+1. Unduh contoh DOCX. Edit kop, header/footer, margin, font dan tata letak di Microsoft Word.
+2. Pertahankan `{@report_body}` dalam satu paragraf tersendiri. Placeholder teks antara lain `{school_name}`, `{address}`, `{npsn}`, `{academic_year}`, `{report_title}`, `{document_number}`, `{period}`, `{date}`, `{principal_name}` dan `{principal_nip}`.
+3. Gunakan `{@signatories}` dalam paragraf tersendiri agar semua penanggung jawab/nama/peran dari modul ikut tampil. Untuk gambar, gunakan `{@logo}`, `{@signature}`, `{@stamp}` masing-masing dalam paragraf tersendiri; gambar tetap yang sudah dimasukkan di Word juga dipertahankan.
+4. Pilih cakupan semua laporan, modul, atau ketik kode jenis dokumen dari arsip. Prioritas: jenis dokumen → modul → semua laporan → bawaan formal. Dokumen perangkat ajar memakai cakupan Perangkat Ajar AI.
+5. Unggah DOCX maksimal 5 MB. Makro/objek tertanam ditolak. Upload logo, tanda tangan dan stempel PNG/JPG maksimal 2 MB. File disimpan privat untuk sekolah.
+6. Atur font/ukuran isi bila diperlukan. Gunakan **Uji hasil DOCX**, buka file di Word dan periksa kop, tabel, nomor/status, gambar serta pemenggalan halaman sebelum menerbitkan. Uji berisi dua peserta didik contoh, tidak mengubah data sekolah.
+7. **Lepas** menghapus pemakaian template aktif; file versi sebelumnya dipertahankan untuk snapshot arsip. Unggah ulang membuat versi baru.
+
+Template unggahan diterapkan pada ekspor Word. Preview/cetak PDF memakai tata letak formal aplikasi dan aset sekolah; tata letak Word unggahan tidak dirender identik ke PDF di browser. Sekolah dapat menyimpan hasil Word sebagai PDF dari Word bila membutuhkan layout unggahan yang sama. Excel memakai lembar ringkasan dan tabel per bagian, lebar kolom otomatis dan filter, tanpa kop/gambar Word. Kepala sekolah menetapkan standar format; dokumen pemerintah tetap mengikuti ketentuan instansi terkait.
+
+## School Control Pro dan masa uji coba
+
+Satu paket per sekolah: **Rp199.000 / 30 hari** atau **Rp1.990.000 / 365 hari**, dengan fitur yang sama. Tahunan hemat setara dua pembayaran bulanan. Trial **7 hari** dihitung sejak sekolah dibuat. Kuota generator perangkat ajar/perencanaan adalah 15 permintaan selama trial, kemudian 200 permintaan per bulan kalender UTC, dipakai bersama anggota sekolah. Permintaan dihitung ketika akses provider dijalankan; percobaan provider yang gagal dapat tetap mengurangi kuota. Tarif yang tampil pada checkout adalah sumber tagihan baru; pesanan lama mempertahankan nominalnya.
+
+## Pemeriksaan hasil generator AI
+
+Jenis generator dan instruksi standar divalidasi server. Hasil terpotong ditolak. Bagian standar yang tidak terdeteksi diberi catatan pemeriksaan. Pemeriksaan otomatis hanya memeriksa struktur, bukan membuktikan kebenaran pedagogis, regulasi, perhitungan, atau sumber. Guru/kepala sekolah meninjau ketepatan tujuan, aktivitas, asesmen, konteks, angka dan fakta sebelum memakai atau menerbitkan.

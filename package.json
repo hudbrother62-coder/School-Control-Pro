@@ -7,16 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
-    "test": "node scripts/verify-isolation.cjs && node scripts/verify-errors.cjs && node scripts/verify-excel.cjs && node scripts/verify-hr-validation.cjs && node scripts/verify-midtrans.cjs && node scripts/verify-staff-import.cjs && node scripts/verify-url.cjs && node scripts/verify-registration.cjs && node scripts/verify-navigation.cjs && node scripts/verify-orchestrator-api.cjs && node scripts/verify-record-lists.cjs"
+    "test": "node scripts/verify-isolation.cjs && node scripts/verify-errors.cjs && node scripts/verify-excel.cjs && node scripts/verify-hr-validation.cjs && node scripts/verify-midtrans.cjs && node scripts/verify-staff-import.cjs && node scripts/verify-url.cjs && node scripts/verify-registration.cjs && node scripts/verify-navigation.cjs && node scripts/verify-orchestrator-api.cjs && node scripts/verify-record-lists.cjs && node scripts/verify-report-templates.cjs && node scripts/verify-ai-output.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
+    "docx": "^9.7.1",
+    "docxtemplater": "^3.71.0",
     "lucide-react": "^0.468.0",
     "next": "^15.5.0",
+    "pizzip": "^3.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "xlsx": "^0.18.5",
-    "docx": "^9.7.1"
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

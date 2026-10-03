@@ -35,9 +35,15 @@ export async function readWorkbook(file:File):Promise<Record<string,SheetRows>>{
 export async function downloadExcel(filename:string,sheets:{name:string;rows:SheetRows}[]){
  const XLSX=await import("xlsx");
  const wb=XLSX.utils.book_new();
+ const names=new Set<string>();
  for(const sheet of sheets){
-  const ws=XLSX.utils.json_to_sheet(sheet.rows);
-  XLSX.utils.book_append_sheet(wb,ws,sheet.name.slice(0,31));
+  const rows=sheet.rows.map(row=>Object.fromEntries(Object.entries(row).map(([k,v])=>[k,typeof v==="string"&&/^[=+@-]/.test(v)?"'"+v:v])));
+  const ws=XLSX.utils.json_to_sheet(rows);
+  const headers=Object.keys(rows[0]||{});
+  ws["!cols"]=headers.map(k=>({wch:Math.min(60,Math.max(12,k.length+2,...rows.slice(0,100).map(r=>String(r[k]??"").length+2)))}));
+  if(ws["!ref"]&&headers.length)ws["!autofilter"]={ref:ws["!ref"]};
+  const base=(sheet.name.replace(/[\\/?*\[\]:]/g," ").trim()||"Data").slice(0,31);let name=base,index=2;while(names.has(name.toLowerCase()))name=base.slice(0,27)+" "+index++;names.add(name.toLowerCase());
+  XLSX.utils.book_append_sheet(wb,ws,name);
  }
  XLSX.writeFile(wb,filename);
 }
