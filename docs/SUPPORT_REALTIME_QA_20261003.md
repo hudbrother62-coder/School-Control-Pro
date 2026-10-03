@@ -32,3 +32,10 @@
 Live tests are explicitly opt-in: supply `SC_QA_FIXTURE_FILE` pointing outside the repository to isolated temporary users/schools; never use customer credentials. `verify-support-live.cjs` also requires a valid WebM fixture through `SC_QA_AUDIO_FILE`. `verify-support-browser.cjs` accepts `SC_QA_SITE_URL` for the deployed site, and a valid `CHROMIUM_EXECUTABLE_PATH`. The browser uses a fake microphone, while encoding/upload/playback remain real.
 
 Screenshots and generated QA documents are excluded from git. Live result files contain assertions only, not tokens or passwords.
+
+## Production release verification
+
+- Commit `30dc1b18b002812c6bbfc1a18fdfff3c733fced4` deployed READY to the canonical site.
+- All eight live browser checks also passed on `https://school-control-pro.vercel.app`, including actual voice recording/playback and cross-session student updates.
+- Removed all five QA audio objects and all five temporary users, two schools, four conversations and two school-change rows. Verified zero matching fixtures remain.
+- Cleanup exposed a pre-existing audit trigger bug that blocked school deletion during child cascades. Added a parent-deletion guard; verified ordinary student deletion still creates its audit entry, and school deletion cascades cleanly. The extra audit regression transaction was rolled back.
