@@ -17,3 +17,5 @@ AI receives authorized aggregate operational context plus curated school memory.
 ## Practical limits
 
 Live Gemini output quality was not measured: no provider credential was used in this verification. Mocked provider contract checks verify context, error handling and output standards, not external model accuracy. Payment charging was not exercised. Menu smoke coverage does not claim that every possible business scenario or external service was exhaustively tested.
+
+Production verification: canonical deployment ecb66586904c51482a458e59c0c5bd547687de14 READY. All ten real Auth/database/browser assertions passed (qa/journal-production-results.json). Landing annual pricing contrast and mobile widths passed. QA school, users, journals, reports and change signals verified absent after cleanup. Final numbered reports still resist direct deletion; parent school cascade guard permits school removal.
