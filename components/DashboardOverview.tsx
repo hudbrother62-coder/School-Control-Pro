@@ -1,4 +1,5 @@
 "use client";
+import {useSchoolRevision} from "@/lib/school-realtime";
 import {useEffect,useMemo,useState} from "react";
 import {AlertTriangle,ArrowRight,BarChart3,BookOpen,CalendarDays,CheckCircle2,Clock3,GraduationCap,ListChecks,Sparkles,Users,WalletCards} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -15,6 +16,7 @@ type RouteAction={label:string;caption:string;module:ModuleKey;feature:string;ic
 const dayKey=(d:Date)=>d.toLocaleDateString("en-CA",{timeZone:"Asia/Jakarta"});
 
 export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{schoolId:string;userId:string;role:Role;focus?:string;onRoute?:(module:ModuleKey,feature?:string)=>void}){
+ const revision=useSchoolRevision(schoolId);
  const db=useMemo(()=>browserDb(),[]);
  const [students,setStudents]=useState<Student[]>([]),[classes,setClasses]=useState<ClassRow[]>([]),[staff,setStaff]=useState<Staff[]>([]);
  const [attendance,setAttendance]=useState<Attendance[]>([]),[events,setEvents]=useState<EventRow[]>([]),[tasks,setTasks]=useState<Task[]>([]),[error,setError]=useState("");
@@ -34,7 +36,7 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
   setStudents((r[0].data||[]) as Student[]);setClasses((r[1].data||[]) as ClassRow[]);setStaff((r[2].data||[]) as Staff[]);
   setAttendance((r[3].data||[]) as Attendance[]);setEvents((r[4].data||[]) as EventRow[]);setTasks((r[5].data||[]) as Task[]);
   const first=r.find(x=>x.error);if(first?.error)setError(first.error.message);
- })();return()=>{live=false}},[db,schoolId]);
+ })();return()=>{live=false}},[db,schoolId,revision]);
 
  const activeStudents=students.filter(x=>x.status==="active");
  const today=dayKey(new Date());

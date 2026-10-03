@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -53,7 +54,8 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
  const principalConfig=module==="kepsek_ai"?principalToolConfig[template]:undefined;
  const activeToolConfig=teacherConfig||principalConfig;
 
- async function load(){
+ useRealtimeRefresh(schoolId,()=>load(true));
+ async function load(background=false){
   if(!db)return;
   const {data:d}=await db.from("sc_ai_drafts").select("id,template_key,title,content,created_at").eq("school_id",schoolId).eq("module_key",module).order("created_at",{ascending:false}).limit(40);setDrafts((d||[]) as Draft[]);
   if(module==="guru_ai"){
@@ -65,7 +67,7 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
    ]);
    setClasses((c||[]) as SchoolClass[]);setSubjects((s||[]) as Subject[]);
    let hasSaved=false;try{hasSaved=!!localStorage.getItem("school-control-teaching-project-"+schoolId)}catch{}
-   if(!hasSaved&&school){const lv=String(school.education_level||emptyProject.level),gr=gradeFor(lv)[0]||emptyProject.grade;setProject(p=>({...p,level:lv,grade:gr,phase:phaseFor(lv,gr)||p.phase,academic_year:String(school.academic_year||p.academic_year),semester:String(school.semester||p.semester)}))}
+   if(!background&&!hasSaved&&school){const lv=String(school.education_level||emptyProject.level),gr=gradeFor(lv)[0]||emptyProject.grade;setProject(p=>({...p,level:lv,grade:gr,phase:phaseFor(lv,gr)||p.phase,academic_year:String(school.academic_year||p.academic_year),semester:String(school.semester||p.semester)}))}
    if(user){const {data:st}=await db.from("sc_staff").select("name").eq("school_id",schoolId).eq("user_id",user.id).maybeSingle();setTeacherName(st?.name||"")}
   }
   if(module==="kepsek_ai"){

@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -20,6 +21,7 @@ export default function Supervision({schoolId,role,staff,userId}:{schoolId:strin
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[modal,setModal]=useState(false),[importRows,setImportRows]=useState<SheetRows>([]),[importFile,setImportFile]=useState("");
  const active=items.find(s=>s.id===selected);const inst=instruments[active?.instrument||instrument];
  const answered=answers.filter(a=>a.supervision_id===selected);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [{data:s,error:e},{data:a}]=await Promise.all([db.from("sc_supervisions").select("id,teacher_id,instrument,scheduled_on,status,notes,conclusion,follow_up").eq("school_id",schoolId).order("scheduled_on",{ascending:false}).limit(100),db.from("sc_supervision_answers").select("id,supervision_id,item_key,grade,remark").eq("school_id",schoolId)]);if(e)setError(e.message);setItems((s||[]) as Sup[]);setAnswers((a||[]) as Answer[])}
  useEffect(()=>{void load()},[db,schoolId]);
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Data supervisi tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}

@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -20,6 +21,7 @@ export default function DisciplineLegacyParity({schoolId,userId,role,focus}:{sch
  const db=useMemo(()=>browserDb(),[]),[students,setStudents]=useState<Student[]>([]),[classes,setClasses]=useState<C[]>([]),[events,setEvents]=useState<EventRow[]>([]),[master,setMaster]=useState<Master[]>([]),[docs,setDocs]=useState<Doc[]>([]),[school,setSchool]=useState<any>(null);
  const [selected,setSelected]=useState(""),[fileName,setFileName]=useState(""),[preview,setPreview]=useState<Record<string,unknown>[]>([]),[docType,setDocType]=useState("notice"),[reportMonth,setReportMonth]=useState(today().slice(0,7)),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
  const canWrite=["owner","principal","vice_principal","teacher","counselor"].includes(role);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [s,c,e,m,d,sc]=await Promise.all([
   db.from("sc_students").select("id,name,nis,class_id,status,archived_at").eq("school_id",schoolId).order("name"),
   db.from("sc_classes").select("id,name").eq("school_id",schoolId).order("name"),

@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
@@ -26,6 +27,7 @@ export default function FinancePanel({schoolId,userId,focus}:{schoolId:string;us
  const [accounts,setAccounts]=useState<Account[]>([]),[tx,setTx]=useState<Tx[]>([]),[budgets,setBudgets]=useState<Budget[]>([]),[students,setStudents]=useState<Student[]>([]),[bills,setBills]=useState<Bill[]>([]),[payments,setPayments]=useState<Payment[]>([]),[totals,setTotals]=useState<Totals|null>(null),[balances,setBalances]=useState<Balance[]>([]);
  const [tab,setTab]=useState("overview"),[modal,setModal]=useState<ModalKind>(null),[name,setName]=useState(""),[accountKind,setAccountKind]=useState("cash"),[opening,setOpening]=useState("0"),[accountId,setAccountId]=useState(""),[txKind,setTxKind]=useState("income"),[category,setCategory]=useState(""),[activityName,setActivityName]=useState(""),[sourceFund,setSourceFund]=useState(""),[amount,setAmount]=useState(""),[description,setDescription]=useState(""),[date,setDate]=useState(localDay()),[year,setYear]=useState(String(new Date().getFullYear())),[period,setPeriod]=useState(localDay().slice(0,7)),[studentId,setStudentId]=useState(""),[billTitle,setBillTitle]=useState(""),[billId,setBillId]=useState(""),[receipt,setReceipt]=useState(""),[paymentMethod,setPaymentMethod]=useState("Tunai"),[proofFile,setProofFile]=useState<File|null>(null);
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[financePreview,setFinancePreview]=useState<Record<string,unknown>[]>([]),[importFile,setImportFile]=useState(""),[reportKind,setReportKind]=useState("financial");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const r=await Promise.all([
  readAllRows(db.from("sc_finance_accounts").select("id,name,kind,opening_balance").eq("school_id",schoolId).order("name").order("id")),
  readAllRows(db.from("sc_finance_transactions").select("id,occurred_at,kind,category,amount,account_id,description,number,activity_name,proof_path").eq("school_id",schoolId).order("occurred_at",{ascending:false}).order("id")),

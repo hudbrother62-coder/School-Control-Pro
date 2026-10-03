@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -17,6 +18,7 @@ export default function MasterAdvanced({schoolId,role}:{schoolId:string;role:Rol
  const [preview,setPreview]=useState<{nis:string;name:string;class_name:string;academic_year:string}[]>([]),[fileName,setFileName]=useState("");
  const [subject,setSubject]=useState(""),[teacher,setTeacher]=useState(""),[classId,setClassId]=useState(""),[subjectId,setSubjectId]=useState(""),[assignMode,setAssignMode]=useState("subject");
  const [err,setErr]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [{data:c},{data:s},{data:m},{data:su},{data:a}]=await Promise.all([
  db.from("sc_classes").select("id,name,grade,academic_year").eq("school_id",schoolId).order("name"),
  db.from("sc_students").select("id,name,nis,class_id,status").eq("school_id",schoolId).order("name"),

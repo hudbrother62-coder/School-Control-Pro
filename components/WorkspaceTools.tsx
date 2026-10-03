@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {useEffect,useMemo,useState} from "react";
 import {Bell,CalendarClock,Search,X} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
@@ -11,6 +12,7 @@ const plusDays=(n:number)=>{const d=new Date();d.setDate(d.getDate()+n);return d
 
 export default function WorkspaceTools({schoolId,role,onRoute}:{schoolId:string;role:Role;onRoute:(m:ModuleKey,f?:string)=>void}){
  const db=useMemo(()=>browserDb(),[]),[open,setOpen]=useState<"search"|"notice"|null>(null),[q,setQ]=useState(""),[hits,setHits]=useState<Hit[]>([]),[notices,setNotices]=useState<Notice[]>([]),[busy,setBusy]=useState(false);
+ useRealtimeRefresh(schoolId,()=>loadNotices());
  async function loadNotices(){if(!db)return;const end=plusDays(31);const out:Notice[]=[];const add=(x:Notice)=>out.push(x);
  const calls=await Promise.allSettled([
   db.from("sc_calendar_events").select("id,title,event_date,category").eq("school_id",schoolId).gte("event_date",today()).lte("event_date",end).order("event_date").limit(30),

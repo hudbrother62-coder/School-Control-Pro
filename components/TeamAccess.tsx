@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
@@ -7,6 +8,7 @@ type Row={user_id:string;email:string|null;role:string;staff_name:string|null};
 const roles=["principal","vice_principal","teacher","counselor","hr","treasurer","staff","viewer"];
 export default function TeamAccess({schoolId,role}:{schoolId:string;role:Role}){
  const db=useMemo(()=>browserDb(),[]);const [rows,setRows]=useState<Row[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const {data,error}=await db.rpc("sc_team_directory",{p_school:schoolId});if(error)setError(error.message);else setRows((data||[]) as Row[])}
  useEffect(()=>{void load()},[db,schoolId]);
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Hak akses tim diperbarui.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}

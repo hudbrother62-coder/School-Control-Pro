@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {errorMessage} from "@/lib/error-message";
 
 import {useEffect,useMemo,useState} from "react";
@@ -19,6 +20,7 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
  const [activeRunId,setActiveRunId]=useState(""),[savedRuns,setSavedRuns]=useState<WorkflowRun[]>([]);
  const [busy,setBusy]=useState(false),[planning,setPlanning]=useState(false),[status,setStatus]=useState("");
 
+ useRealtimeRefresh(schoolId||"",()=>loadRuns());
  async function loadRuns(){
   if(!db||!schoolId)return;
   const {data,error}=await db.from("sc_workflow_runs").select("id,title,request,status,updated_at").eq("school_id",schoolId).order("updated_at",{ascending:false}).limit(10);

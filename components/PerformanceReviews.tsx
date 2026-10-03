@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {downloadExcel,readExcel,type SheetRows} from "@/lib/excel";
 import {errorMessage} from "@/lib/error-message";
@@ -12,6 +13,7 @@ const periodNow=()=>{const d=new Date();return d.toLocaleDateString("en-CA",{tim
 export default function PerformanceReviews({schoolId,userId,role,staff,focus}:{schoolId:string;userId:string;role:Role;staff:Staff[];focus?:string}){
  const db=useMemo(()=>browserDb(),[]),manager=isAdmin(role)||role==="hr";
  const [rows,setRows]=useState<Review[]>([]),[selected,setSelected]=useState(""),[target,setTarget]=useState(""),[period,setPeriod]=useState(periodNow()),[summary,setSummary]=useState(""),[response,setResponse]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[modal,setModal]=useState(false);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const {data,error}=await db.from("sc_performance_reviews").select("id,user_id,period,summary,status,response,created_at,updated_at").eq("school_id",schoolId).order("created_at",{ascending:false}).limit(100);if(error)setError(error.message);else setRows((data||[]) as Review[])}
  useEffect(()=>{void load()},[db,schoolId]);
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Evaluasi kinerja tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}

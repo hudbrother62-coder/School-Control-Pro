@@ -1,0 +1,14 @@
+{
+  "tested_at": "2026-10-03T16:03:11.309Z",
+  "live": true,
+  "results": [
+    "Actual user/admin UI sends and receives text without reload",
+    "Actual MediaRecorder voice note records, uploads, arrives and plays in admin browser",
+    "Chat fits 320, 390, 768 and 1366 pixel screens",
+    "A separate client changes a student; the mounted list updates through realtime without navigation or refresh",
+    "Realtime list updates preserve an open unsaved entry form",
+    "Super admin shows customer countdowns, identity and every school account",
+    "Admin mobile contact list and room navigation work",
+    "No browser JavaScript errors"
+  ]
+}

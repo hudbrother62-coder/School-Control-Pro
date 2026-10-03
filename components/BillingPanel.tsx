@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {useEffect,useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
 type Order={order_id:string;gross_amount:number;period_days:number;status:string;paid_at:string|null;created_at:string};
@@ -8,6 +9,7 @@ const rupiah=(v:number)=>new Intl.NumberFormat("id-ID",{style:"currency",currenc
 const date=(s:string|null)=>s?new Date(s).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"}):"—";
 export default function BillingPanel({schoolId,isOwner,busy,onCheckout,focus}:{schoolId:string;isOwner:boolean;busy:boolean;onCheckout:(p:"monthly"|"yearly")=>void;focus?:string}){
  const db=useMemo(()=>browserDb(),[]);const [sub,setSub]=useState<Sub|null>(null),[orders,setOrders]=useState<Order[]>([]),[plans,setPlans]=useState<Plans|null>(null),[error,setError]=useState("");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [s,o]=await Promise.all([db.from("sc_subscriptions").select("status,trial_ends_at,current_period_end").eq("school_id",schoolId).maybeSingle(),db.from("sc_payment_orders").select("order_id,gross_amount,period_days,status,paid_at,created_at").eq("school_id",schoolId).order("created_at",{ascending:false}).limit(30)]);if(s.error)setError(s.error.message);if(o.error)setError(o.error.message);setSub(s.data||null);setOrders((o.data||[]) as Order[])}
  useEffect(()=>{void load();void fetch("/api/plans").then(r=>r.json()).then(setPlans).catch(()=>{})},[db,schoolId]);
  const f=(focus||"").toLowerCase();const historyOnly=f.includes("riwayat");const subscriptionOnly=f.includes("langganan");

@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -16,6 +17,7 @@ const blank:Form={title:"LAPORAN DISIPLIN & PRESTASI SISWA",subtitle:"Rekap keja
 export default function DisciplineReportTemplate({schoolId}:{schoolId:string}){
  const db=useMemo(()=>browserDb(),[]);
  const [identity,setIdentity]=useState<ReportIdentity|null>(null),[form,setForm]=useState<Form>(blank),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ useRealtimeRefresh(schoolId,async()=>{if(db)setIdentity(await loadReportIdentity(db,schoolId));});
  async function load(){if(!db)return;try{const i=await loadReportIdentity(db,schoolId),s=i.report_settings||{};setIdentity(i);setForm({
   title:String(s.discipline_title||blank.title),subtitle:String(s.discipline_subtitle||blank.subtitle),signerTitle:String(s.signer_title||blank.signerTitle),letterCity:String(s.letter_city||i.city||""),
   footer:String(s.discipline_footer||blank.footer),classificationCode:String(s.classification_code||""),showLogo:s.show_logo!==false,showNpsn:s.show_npsn!==false,showPhone:s.show_phone!==false,

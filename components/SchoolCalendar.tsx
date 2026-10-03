@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -35,6 +36,7 @@ export default function SchoolCalendar({schoolId,userId,role,compact=false,focus
  const mode=focusText.includes("pribadi")?"personal":focusText.includes("pengguna")?"users":focusText.includes("kehadiran")?"attendance":focusText.includes("rekap")?"recap":focusText.includes("mengajar")?"teaching":"school";
  const canWrite=role!=="viewer";
 
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){
   if(!db)return;
   const from=ymd(new Date(cursor.getFullYear(),cursor.getMonth()-1,1)),to=ymd(new Date(cursor.getFullYear(),cursor.getMonth()+2,0));

@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -20,6 +21,7 @@ export default function AcademicLegacyParity({schoolId,userId,role,focus}:{schoo
  const [mode,setMode]=useState("gabungan"),[assignmentId,setAssignmentId]=useState(""),[weekday,setWeekday]=useState(1),[start,setStart]=useState("07:00"),[end,setEnd]=useState("08:00"),[room,setRoom]=useState(""),[note,setNote]=useState("");
  const [assistant,setAssistant]=useState(""),[answer,setAnswer]=useState(""),[month,setMonth]=useState(today().slice(0,7)),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
  const manager=["owner","principal","vice_principal"].includes(role);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [a,c,s,sc,p]=await Promise.all([
   db.from("sc_teacher_assignments").select("id,teacher_id,class_id,subject_id,mode").eq("school_id",schoolId).order("created_at"),
   db.from("sc_classes").select("id,name,grade").eq("school_id",schoolId).order("name"),

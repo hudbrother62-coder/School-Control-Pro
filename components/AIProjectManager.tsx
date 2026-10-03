@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -16,6 +17,7 @@ export default function AIProjectManager({schoolId,module="guru_ai",mode}:{schoo
  const db=useMemo(()=>browserDb(),[]),[projects,setProjects]=useState<Project[]>([]),[drafts,setDrafts]=useState<Draft[]>([]),[outputs,setOutputs]=useState<Output[]>([]),[messages,setMessages]=useState<Msg[]>([]);
  const [projectId,setProjectId]=useState(""),[name,setName]=useState(""),[prompt,setPrompt]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
  const [key,setKey]=useState(()=>typeof window!=="undefined"?localStorage.getItem(KEY)||"":"");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [p,d,o,m]=await Promise.all([
   db.from("sc_ai_projects").select("id,name,module,context,status,created_at,updated_at").eq("school_id",schoolId).eq("module",module).order("updated_at",{ascending:false}),
   db.from("sc_ai_drafts").select("id,template_key,title,prompt,content,created_at").eq("school_id",schoolId).eq("module_key",module).order("created_at",{ascending:false}).limit(100),

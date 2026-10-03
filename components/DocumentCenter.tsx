@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
@@ -14,6 +15,7 @@ const kinds=["PBD","KSP","KOSP","RKJM","RKT","RKAS","SOP","SUPERVISION","TEACHIN
 export default function DocumentCenter({schoolId,userId,role,teacherOnly=false,focus}:{schoolId:string;userId:string;role:Role;teacherOnly?:boolean;focus?:string}){
  const db=useMemo(()=>browserDb(),[]),manager=isAdmin(role);
  const [docs,setDocs]=useState<Doc[]>([]),[selected,setSelected]=useState(""),[kind,setKind]=useState(teacherOnly?"TEACHING":"RKT"),[title,setTitle]=useState(""),[body,setBody]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[modal,setModal]=useState(false);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const {data,error}=await readAllRows(db.from("sc_documents").select("id,kind,title,content,status,revision,created_by").eq("school_id",schoolId).order("updated_at",{ascending:false}).order("id"));if(error)setError(error.message);else setDocs((data||[]) as Doc[])}
  useEffect(()=>{void load()},[db,schoolId]);
  function choose(id:string,open=true){setSelected(id);const d=docs.find(x=>x.id===id);setKind(d?.kind||(teacherOnly?"TEACHING":"RKT"));setTitle(d?.title||"");setBody(d?.content||"");if(open)setModal(true)}

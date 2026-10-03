@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -17,6 +18,7 @@ export default function Operations({mode,schoolId,userId,role,staff}:{mode:Mode;
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
  const manager=isAdmin(role),counselor=role==="counselor";const canWrite=mode==="bk"?counselor:mode==="sikas"?["owner","principal","treasurer"].includes(role):mode==="gajian"?["owner","hr"].includes(role):mode==="command"?manager:manager||role==="teacher"||counselor;
  const student=(id:unknown)=>students.find(s=>s.id===id)?.name||"Siswa";const staffName=(id:unknown)=>staff.find(s=>s.id===id)?.name||"SDM";
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;if(mode==="bk"||mode==="disiplin"){const {data}=await db.from("sc_students").select("id,name,nis").eq("school_id",schoolId).eq("status","active").order("name");setStudents((data||[]) as Student[])}
  const {data,error:e}=await db.from(tableFor[mode]).select("*").eq("school_id",schoolId).limit(80);
  if(e)setError(e.message);else setRows((data||[]) as Row[]);}

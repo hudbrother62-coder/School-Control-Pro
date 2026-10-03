@@ -3042,3 +3042,21 @@ Satu paket per sekolah: **Rp199.000 / 30 hari** atau **Rp1.990.000 / 365 hari**,
 ## Pemeriksaan hasil generator AI
 
 Jenis generator dan instruksi standar divalidasi server. Hasil terpotong ditolak. Bagian standar yang tidak terdeteksi diberi catatan pemeriksaan. Pemeriksaan otomatis hanya memeriksa struktur, bukan membuktikan kebenaran pedagogis, regulasi, perhitungan, atau sumber. Guru/kepala sekolah meninjau ketepatan tujuan, aktivitas, asesmen, konteks, angka dan fakta sebelum memakai atau menerbitkan.
+
+## Chat langsung dengan Super Admin
+
+Di setiap akun, tekan tombol telepon hijau di pojok kanan bawah. Tuliskan pesan lalu tekan tombol kirim. Untuk voice note, tekan mikrofon, izinkan akses mikrofon, lalu tekan tombol berhenti. Dengarkan pratinjau sebelum mengirim; tombol tempat sampah membatalkan rekaman. Batas rekaman adalah dua menit dan 5 MB.
+
+Chat ini privat untuk akun Anda. Nama sekolah menjadi identitas kontak, disertai identitas pengguna agar beberapa pengguna satu sekolah tidak tertukar. Chat tetap dapat digunakan saat trial atau langganan berakhir, bahkan sebelum akun bergabung dengan sekolah. Pesan masuk dan jumlah pesan belum dibaca diperbarui otomatis saat koneksi tersedia.
+
+Super Admin membuka **Chat Pelanggan**, mencari nama sekolah atau pengguna, lalu memilih kontak. Pada ponsel, tombol panah kiri mengembalikan tampilan ke daftar kontak. Pesan lama dapat dibuka melalui **Muat pesan sebelumnya**.
+
+## Detail langganan bagi Super Admin
+
+Buka **Sekolah & Langganan**, cari sekolah atau pilih filter status, lalu tekan **Detail**. Tersedia sisa trial, tenggat perpanjangan, waktu menuju nonaktif atau lama sudah nonaktif, identitas sekolah, seluruh akun beserta peran dan status verifikasi email, login terakhir, ringkasan penggunaan, pembayaran, dan audit aktivitas.
+
+Tenggat nonaktif mengikuti tanggal akhir trial atau masa berbayar yang tersimpan di server. Tidak ada masa tenggang tambahan maupun penghapusan otomatis data. Akses chat dukungan dan pembayaran tetap tersedia setelah tenggat tersebut.
+
+## Data diperbarui otomatis
+
+Perubahan data yang tersimpan langsung tersinkron ke tampilan lain sesuai hak akses akun. Navigasi, pencarian, pilihan filter, dan formulir yang sedang diedit tetap dipertahankan. Saat koneksi kembali atau aplikasi dibuka kembali, data diperiksa ulang otomatis; Anda tidak perlu me-refresh halaman. Perubahan pada profil sekolah yang belum disimpan tidak ditimpa oleh pembaruan dari pengguna lain.

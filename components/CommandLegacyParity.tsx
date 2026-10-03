@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -17,6 +18,7 @@ export default function CommandLegacyParity({schoolId,userId,role,staff,focus}:{
  const db=useMemo(()=>browserDb(),[]),manager=["owner","principal","vice_principal"].includes(role);
  const [programs,setPrograms]=useState<P[]>([]),[tasks,setTasks]=useState<T[]>([]),[meetings,setMeetings]=useState<M[]>([]),[evidence,setEvidence]=useState<E[]>([]);
  const [meetingId,setMeetingId]=useState(""),[programId,setProgramId]=useState(""),[title,setTitle]=useState(""),[pic,setPic]=useState(""),[due,setDue]=useState(day()),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [p,t,m,e]=await Promise.all([
   db.from("sc_programs").select("id,title,status,deadline,pic_id").eq("school_id",schoolId).is("archived_at",null).order("created_at",{ascending:false}),
   db.from("sc_program_tasks").select("id,program_id,title,status,pic_id,due_at,problem,result").eq("school_id",schoolId).is("archived_at",null).order("created_at",{ascending:false}),

@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -21,6 +22,7 @@ export default function SchoolData({mode,schoolId,userId,role,focus}:{mode:"mast
  const [subject,setSubject]=useState(""),[assessment,setAssessment]=useState(""),[score,setScore]=useState(""),[topic,setTopic]=useState(""),[notes,setNotes]=useState("");
  const [tab,setTab]=useState("grades"),[modal,setModal]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false),[editGradeId,setEditGradeId]=useState(""),[editScore,setEditScore]=useState(""),[editNote,setEditNote]=useState(""),[importKind,setImportKind]=useState<"attendance"|"grades">("grades"),[preview,setPreview]=useState<Record<string,unknown>[]>([]),[importFile,setImportFile]=useState("");
  const manager=isAdmin(role);const canTeach=manager||role==="teacher";const student=students.find(s=>s.id===studentId);const name=(id:string)=>students.find(s=>s.id===id)?.name||"Siswa";
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [{data:c},{data:s}]=await Promise.all([db.from("sc_classes").select("id,name,grade,academic_year").eq("school_id",schoolId).order("name"),db.from("sc_students").select("id,class_id,nis,name,status").eq("school_id",schoolId).order("name")]);setClasses((c||[]) as C[]);setStudents((s||[]) as S[]);
  if(mode==="academic"){const [{data:a},{data:g},{data:j},{data:ag}]=await Promise.all([db.from("sc_student_attendance").select("id,student_id,attendance_date,lesson_key,mark").eq("school_id",schoolId).order("attendance_date",{ascending:false}).limit(100),db.from("sc_grades").select("id,student_id,subject,assessment_name,score,assessment_date").eq("school_id",schoolId).order("assessment_date",{ascending:false}).limit(100),db.from("sc_teacher_journals").select("id,class_id,subject,topic,lesson_date").eq("school_id",schoolId).order("lesson_date",{ascending:false}).limit(100),db.from("sc_calendar_events").select("id,title,event_date,notes,created_by").eq("school_id",schoolId).eq("category","teaching").order("event_date",{ascending:false}).limit(100)]);setAtt((a||[]) as A[]);setGrades((g||[]) as G[]);setJournals((j||[]) as J[]);setAgenda((ag||[]) as Agenda[])}}
  useEffect(()=>{void load()},[db,schoolId,mode]);

@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -35,7 +36,8 @@ export default function MasterHubV2({schoolId,role,focus}:{schoolId:string;role:
  const f=(focus||"Siswa").toLowerCase();
  const view:View=f.includes("import excel keseluruhan")?"all":f.includes("penugasan")?"assignments":f.includes("mata")?"subjects":f.includes("tenaga")?"staff":f==="guru"||f.includes("guru")?"teachers":f.includes("kelas")?"classes":"students";
 
- async function load(){if(!db)return;const r=await Promise.all([
+ useRealtimeRefresh(schoolId,()=>load(true));
+ async function load(background=false){if(!db)return;const r=await Promise.all([
   readAllRows(db.from("sc_classes").select("id,name,grade,academic_year").eq("school_id",schoolId).order("name").order("id")),
   readAllRows(db.from("sc_students").select("id,name,nis,nisn,gender,class_id,status,nickname,birth_date,address,phone,parent_phone").eq("school_id",schoolId).neq("status","deleted").order("name").order("id")),
   readAllRows(db.from("sc_student_contacts").select("student_id,guardian_name,guardian_phone").eq("school_id",schoolId).order("student_id")),
@@ -44,7 +46,7 @@ export default function MasterHubV2({schoolId,role,focus}:{schoolId:string;role:
   readAllRows(db.from("sc_members").select("user_id,role").eq("school_id",schoolId).order("user_id")),
   readAllRows(db.from("sc_teacher_assignments").select("id,teacher_id,class_id,subject_id,mode").eq("school_id",schoolId).order("id")),
   db.from("sc_schools").select("education_level,academic_year").eq("id",schoolId).maybeSingle()
- ]);setClasses((r[0].data||[]) as C[]);setStudents((r[1].data||[]) as S[]);setContacts((r[2].data||[]) as Contact[]);setStaff((r[3].data||[]) as Staff[]);setSubjects((r[4].data||[]) as Subject[]);setMembers((r[5].data||[]) as Member[]);setAssignments((r[6].data||[]) as A[]);setEducationLevel(String(r[7].data?.education_level||"SMP"));setSchoolYear(String(r[7].data?.academic_year||"2026/2027"));setYear(String(r[7].data?.academic_year||"2026/2027"));
+ ]);setClasses((r[0].data||[]) as C[]);setStudents((r[1].data||[]) as S[]);setContacts((r[2].data||[]) as Contact[]);setStaff((r[3].data||[]) as Staff[]);setSubjects((r[4].data||[]) as Subject[]);setMembers((r[5].data||[]) as Member[]);setAssignments((r[6].data||[]) as A[]);setEducationLevel(String(r[7].data?.education_level||"SMP"));setSchoolYear(String(r[7].data?.academic_year||"2026/2027"));if(!background||!modal)setYear(String(r[7].data?.academic_year||"2026/2027"));
  if(admin){const d=await db.rpc("sc_team_directory",{p_school:schoolId});if(!d.error&&d.data)setMembers(d.data as Member[])}
  const first=r.find(x=>x.error);if(first?.error)setError(first.error.message)}
  useEffect(()=>{void load();setImportRows([]);setWorkbook({});setImportFile("");setModal(false)},[db,schoolId,focus]);

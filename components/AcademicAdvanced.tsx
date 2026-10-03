@@ -1,7 +1,8 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import {Check,ChevronLeft,ChevronRight,Search} from "lucide-react";
 import SmartSelect from "@/components/SmartSelect";
 import {browserDb} from "@/lib/supabase";
@@ -24,11 +25,14 @@ export default function AcademicAdvanced({schoolId,userId,role,focus}:{schoolId:
  const [classes,setClasses]=useState<C[]>([]),[students,setStudents]=useState<S[]>([]),[subjects,setSubjects]=useState<Subject[]>([]),[att,setAtt]=useState<A[]>([]),[grades,setGrades]=useState<G[]>([]);
  const [classId,setClassId]=useState(""),[date,setDate]=useState(today()),[lesson,setLesson]=useState("Harian"),[marks,setMarks]=useState<Record<string,string>>({}),[notes,setNotes]=useState<Record<string,string>>({}),[query,setQuery]=useState(""),[month,setMonth]=useState(today().slice(0,7));
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ const edited=useRef(false);
+ useEffect(()=>{edited.current=false},[date,lesson]);
  const allowedIds=useMemo(()=>new Set(classes.map(c=>c.id)),[classes]);
  const baseRoster=students.filter(s=>s.status==="active"&&s.class_id&&allowedIds.has(s.class_id)&&(!classId||s.class_id===classId));
  const roster=baseRoster.filter(s=>(s.name+" "+(s.nis||"")).toLowerCase().includes(query.toLowerCase()));
  const selectedRecords=att.filter(a=>a.attendance_date===date&&a.lesson_key===lesson&&(!classId||a.class_id===classId));
 
+ useRealtimeRefresh(schoolId,async()=>{await load();await refreshMonth();});
  async function load(){
   if(!db)return;
   const [cl,st,as,su]=await Promise.all([
@@ -55,7 +59,7 @@ export default function AcademicAdvanced({schoolId,userId,role,focus}:{schoolId:
   if(date.slice(0,7)!==month)setMonth(date.slice(0,7));
   const mm:Record<string,string>={},nn:Record<string,string>={};
   for(const a of att.filter(x=>x.attendance_date===date&&x.lesson_key===lesson)){mm[a.student_id]=a.mark;nn[a.student_id]=a.notes||""}
-  setMarks(mm);setNotes(nn);
+  if(!edited.current){setMarks(mm);setNotes(nn);}
  },[date,lesson,att,month]);
 
  async function save(){
@@ -64,12 +68,12 @@ export default function AcademicAdvanced({schoolId,userId,role,focus}:{schoolId:
    const rows=baseRoster.map(s=>({student_id:s.id,mark:marks[s.id]||selectedRecords.find(a=>a.student_id===s.id)?.mark||"",notes:notes[s.id]??selectedRecords.find(a=>a.student_id===s.id)?.notes??""})).filter(x=>x.mark);
    if(!rows.length)throw Error("Pilih setidaknya satu status kehadiran.");
    const r=await db.rpc("sc_bulk_attendance",{p_school:schoolId,p_day:date,p_lesson:lesson,p_rows:rows});if(r.error)throw r.error;
-   await refreshMonth();setOk(rows.length+" absensi berhasil disimpan.");
+   edited.current=false;await refreshMonth();setOk(rows.length+" absensi berhasil disimpan.");
   }catch(e){setError(errorMessage(e))}finally{setBusy(false)}
  }
  function currentMark(id:string){return marks[id]||selectedRecords.find(a=>a.student_id===id)?.mark||""}
  function currentNote(id:string){return notes[id]??selectedRecords.find(a=>a.student_id===id)?.notes??""}
- function setAll(mark:string){setMarks(Object.fromEntries(baseRoster.map(s=>[s.id,mark])))}
+ function setAll(mark:string){edited.current=true;setMarks(Object.fromEntries(baseRoster.map(s=>[s.id,mark])))}
  const count=(m:string)=>roster.filter(s=>currentMark(s.id)===m).length;
  const marked=roster.filter(s=>currentMark(s.id)).length;
  const reportOnly=(focus||"").toLowerCase().includes("rekap")||(focus||"").toLowerCase().includes("laporan");
@@ -104,7 +108,7 @@ export default function AcademicAdvanced({schoolId,userId,role,focus}:{schoolId:
       <button className="button secondary" onClick={()=>setAll("present")}><Check size={15}/> Tandai semua hadir</button>
      </div>
      <div className="attendance-summary-pro">{[["present","Hadir"],["permission","Izin"],["sick","Sakit"],["absent","Alpa"]].map(x=><div key={x[0]}><strong>{count(x[0])}</strong><span>{x[1]}</span></div>)}<div><strong>{Math.max(0,roster.length-marked)}</strong><span>Belum ditandai</span></div></div>
-     <section className="panel attendance-table-panel"><div className="table-caption"><strong>Daftar hadir · {new Date(date+"T00:00:00").toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"})}</strong><span>{roster.length} siswa · klik tanggal lain di kalender untuk membuka riwayat.</span></div><div className="tablewrap"><table className="data-table"><thead><tr><th>Siswa</th><th>NIS</th><th>Kelas</th><th>Status Kehadiran</th><th>Catatan Opsional</th></tr></thead><tbody>{roster.map(s=><tr key={s.id}><td><div className="student-cell"><span>{s.name.slice(0,1)}</span><strong>{s.name}</strong></div></td><td>{s.nis||"—"}</td><td>{classes.find(c=>c.id===s.class_id)?.name||"—"}</td><td><select className="attendance-status" value={currentMark(s.id)} onChange={e=>setMarks(v=>({...v,[s.id]:e.target.value}))}><option value="">Pilih status</option><option value="present">Hadir</option><option value="permission">Izin</option><option value="sick">Sakit</option><option value="absent">Alpa</option></select></td><td><input className="attendance-note" value={currentNote(s.id)} onChange={e=>setNotes(v=>({...v,[s.id]:e.target.value}))} placeholder="—"/></td></tr>)}</tbody></table></div>{!roster.length&&<div className="empty">Tidak ada siswa aktif untuk filter ini.</div>}</section>
+     <section className="panel attendance-table-panel"><div className="table-caption"><strong>Daftar hadir · {new Date(date+"T00:00:00").toLocaleDateString("id-ID",{day:"numeric",month:"short",year:"numeric"})}</strong><span>{roster.length} siswa · klik tanggal lain di kalender untuk membuka riwayat.</span></div><div className="tablewrap"><table className="data-table"><thead><tr><th>Siswa</th><th>NIS</th><th>Kelas</th><th>Status Kehadiran</th><th>Catatan Opsional</th></tr></thead><tbody>{roster.map(s=><tr key={s.id}><td><div className="student-cell"><span>{s.name.slice(0,1)}</span><strong>{s.name}</strong></div></td><td>{s.nis||"—"}</td><td>{classes.find(c=>c.id===s.class_id)?.name||"—"}</td><td><select className="attendance-status" value={currentMark(s.id)} onChange={e=>{edited.current=true;setMarks(v=>({...v,[s.id]:e.target.value}))}}><option value="">Pilih status</option><option value="present">Hadir</option><option value="permission">Izin</option><option value="sick">Sakit</option><option value="absent">Alpa</option></select></td><td><input className="attendance-note" value={currentNote(s.id)} onChange={e=>{edited.current=true;setNotes(v=>({...v,[s.id]:e.target.value}))}} placeholder="—"/></td></tr>)}</tbody></table></div>{!roster.length&&<div className="empty">Tidak ada siswa aktif untuk filter ini.</div>}</section>
     </div>
    </div>
   </section>

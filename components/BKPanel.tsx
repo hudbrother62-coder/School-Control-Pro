@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
@@ -42,6 +43,7 @@ export default function BKPanel({schoolId,userId,role,focus}:{schoolId:string;us
  const f=(focus||"").toLowerCase();
  const view=f.includes("analitik")?"analytics":f.includes("laporan")?"report":f.includes("riwayat")||f.includes("360")?"history":f.includes("kasus")?"cases":f.includes("tindak lanjut")?"followup":"service";
  useEffect(()=>{const m=Object.entries(kindLabels).find(([,v])=>f.includes(v.toLowerCase()));if(m)setKind(m[0])},[f]);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;if(isCounselor){const c=await db.from("sc_classes").select("id,name").eq("school_id",schoolId).order("name");if(c.error){setError(c.error.message);return}setClasses(c.data||[])}if(manager&&!isCounselor){const a=await db.rpc("sc_bk_aggregate",{p_school:schoolId});if(!a.error)setAggregate(a.data);return}const [s,c,r,a]=await Promise.all([
   readAllRows(db.from("sc_students").select("id,name,nis,class_id,status").eq("school_id",schoolId).order("name").order("id")),
   readAllRows(db.from("sc_bk_cases").select("id,student_id,category,status,follow_up_date,confidential_notes,assigned_counselor,assessment").eq("school_id",schoolId).order("created_at",{ascending:false}).order("id")),

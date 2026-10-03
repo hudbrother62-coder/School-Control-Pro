@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import DataEntryModal from "@/components/DataEntryModal";
 import type {Role} from "@/lib/modules";
@@ -15,6 +16,7 @@ export default function ReportArchive({schoolId,role}:{schoolId:string;role:Role
  const manager=["owner","principal","vice_principal"].includes(role);
  const [selected,setSelected]=useState<Row|null>(null),[reason,setReason]=useState(""),[statusFilter,setStatusFilter]=useState(""),[message,setMessage]=useState("");
  const db=useMemo(()=>browserDb(),[]),[rows,setRows]=useState<Row[]>([]),[query,setQuery]=useState(""),[module,setModule]=useState(""),[error,setError]=useState(""),[busy,setBusy]=useState(false);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const {data,error}=await db.from("sc_report_documents").select("id,module_key,document_type,document_number,title,status,period_start,period_end,content_snapshot,issued_at,archived_reason,archived_previous_status").eq("school_id",schoolId).order("issued_at",{ascending:false}).limit(500);if(error)setError(error.message);else setRows((data||[]) as Row[])}
  useEffect(()=>{void load()},[db,schoolId]);
  const modules=Array.from(new Set(rows.map(r=>r.module_key))).sort();

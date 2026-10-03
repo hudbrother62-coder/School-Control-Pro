@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -24,6 +25,7 @@ export default function MasterHub({schoolId,role,focus}:{schoolId:string;role:Ro
  const [subId,setSubId]=useState<string|null>(null),[subName,setSubName]=useState(""),[subCode,setSubCode]=useState("");
  const [assignId,setAssignId]=useState<string|null>(null),[teacher,setTeacher]=useState(""),[classId,setClassId]=useState(""),[subjectId,setSubjectId]=useState(""),[mode,setMode]=useState("subject");
  const [importKind,setImportKind]=useState<"students"|"classes"|"staff"|"subjects">("students"),[preview,setPreview]=useState<Record<string,unknown>[]>([]),[filename,setFilename]=useState("");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const r=await Promise.all([
   db.from("sc_classes").select("id,name,grade,academic_year").eq("school_id",schoolId).order("name"),
   db.from("sc_students").select("id,name,nis,nisn,gender,class_id,status").eq("school_id",schoolId).order("name"),

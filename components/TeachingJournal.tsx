@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -23,6 +24,7 @@ export default function TeachingJournal({schoolId,userId,role}:{schoolId:string;
  const [teacher,setTeacher]=useState(userId),[teacherText,setTeacherText]=useState(""),[classValue,setClassValue]=useState(""),[subjectValue,setSubjectValue]=useState(""),[date,setDate]=useState(today()),[topic,setTopic]=useState(""),[activity,setActivity]=useState(""),[reflection,setReflection]=useState(""),[followUp,setFollowUp]=useState("");
  const [filterTeacher,setFilterTeacher]=useState(""),[filterClass,setFilterClass]=useState(""),[filterSubject,setFilterSubject]=useState("");
 
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){
   if(!db)return;
   const [cl,su,st,j]=await Promise.all([

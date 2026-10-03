@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -19,6 +20,7 @@ export default function SupervisorLegacyParity({schoolId,userId,role,staff,focus
  const db=useMemo(()=>browserDb(),[]),manager=["owner","hr"].includes(role);
  const [assignments,setAssignments]=useState<Assign[]>([]),[directory,setDirectory]=useState<Directory[]>([]),[attendance,setAttendance]=useState<Attendance[]>([]),[requests,setRequests]=useState<Request[]>([]);
  const [staffId,setStaffId]=useState(""),[accountId,setAccountId]=useState(""),[supervisorId,setSupervisorId]=useState(""),[month,setMonth]=useState(monthNow()),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const from=month+"-01",d=new Date(from+"T00:00:00");d.setMonth(d.getMonth()+1);const to=d.toISOString().slice(0,10);const [a,dir,att,req]=await Promise.all([
   db.from("sc_supervisor_assignments").select("id,supervisor_user_id,staff_id").eq("school_id",schoolId),
   db.rpc("sc_team_directory",{p_school:schoolId}),

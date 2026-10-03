@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import SearchableSelect from "@/components/SearchableSelect";
 import {scheduleValues,locationValues,nonnegativeAmount} from "@/lib/hr-validation";
@@ -42,6 +43,7 @@ export default function HRLegacyParity({schoolId,userId,role,staff,focus}:{schoo
  const [effectiveDate,setEffectiveDate]=useState(today());
  useEffect(()=>{setEditing(null);setName("");setAddress("");setNotes("")},[focus]);
  const [kind,setKind]=useState("overtime"),[from,setFrom]=useState(nowLocal()),[to,setTo]=useState(nowLocal()),[amount,setAmount]=useState("0"),[reason,setReason]=useState(""),[name,setName]=useState(""),[start,setStart]=useState("07:00"),[end,setEnd]=useState("16:00"),[tolerance,setTolerance]=useState("15"),[address,setAddress]=useState(""),[lat,setLat]=useState(""),[lng,setLng]=useState(""),[radius,setRadius]=useState("150"),[staffId,setStaffId]=useState(""),[scheduleId,setScheduleId]=useState(""),[locationId,setLocationId]=useState(""),[compKind,setCompKind]=useState("earning"),[taxable,setTaxable]=useState(false),[openingId,setOpeningId]=useState(""),[stage,setStage]=useState("new"),[contact,setContact]=useState(""),[notes,setNotes]=useState(""),[scheduledAt,setScheduledAt]=useState(nowLocal()),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[importRows,setImportRows]=useState<SheetRows>([]),[importFile,setImportFile]=useState("");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const reads=await Promise.all([
   readAllRows(db.from("sc_hr_requests").select("id,user_id,kind,from_at,to_at,amount,reason,status,decision_note,created_at").eq("school_id",schoolId).order("created_at",{ascending:false}).order("id")),
   readAllRows(db.from("sc_hr_work_schedules").select("id,name,weekday,start_time,end_time,late_tolerance_minutes,active").eq("school_id",schoolId).order("name").order("id")),

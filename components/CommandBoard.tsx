@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
@@ -24,6 +25,7 @@ export default function CommandBoard({schoolId,role,staff,userId,focus}:{schoolI
  const [editingId,setEditingId]=useState<string|null>(null),[taskStatus,setTaskStatus]=useState("todo"),[taskProblem,setTaskProblem]=useState(""),[taskResult,setTaskResult]=useState("");
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[importRows,setImportRows]=useState<SheetRows>([]),[importFile,setImportFile]=useState("");
  const staffName=(id:string|null)=>staff.find(x=>x.user_id===id)?.name||"Belum ditugaskan";
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const results=await Promise.all([
   readAllRows(db.from("sc_programs").select("id,title,status,deadline,pic_id,owner_id,archived_at").eq("school_id",schoolId).order("created_at",{ascending:false}).order("id")),
   readAllRows(db.from("sc_program_tasks").select("id,program_id,title,status,pic_id,due_at,problem,result,archived_at").eq("school_id",schoolId).order("created_at",{ascending:false}).order("id")),

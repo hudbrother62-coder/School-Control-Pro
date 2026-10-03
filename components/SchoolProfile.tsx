@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -29,15 +30,17 @@ const educationOptions=[
 export default function SchoolProfile({schoolId,role,focus}:{schoolId:string;role:Role;focus?:string}){
  const db=useMemo(()=>browserDb(),[]),admin=isAdmin(role);
  const [profile,setProfile]=useState<Profile>(blank),[facts,setFacts]=useState<Fact[]>([]),[key,setKey]=useState(""),[value,setValue]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ const [dirty,setDirty]=useState(false);
+ useRealtimeRefresh(schoolId,()=>{if(!dirty)return load();});
  const f=(focus||"").toLowerCase();
  async function load(){if(!db)return;const cols="name,npsn,address,academic_year,timezone,school_type,education_level,accreditation,principal_name,principal_nip,phone,email,website,province,city,district,village,postal_code,semester,motto,logo_url,signature_url,stamp_url,report_settings";const [{data:p},{data:fs}]=await Promise.all([db.from("sc_schools").select(cols).eq("id",schoolId).maybeSingle(),db.from("sc_school_facts").select("key,value,updated_at").eq("school_id",schoolId).order("key")]);if(p)setProfile({...blank,...p} as Profile);setFacts((fs||[]) as Fact[])}
  useEffect(()=>{void load()},[db,schoolId]);
- async function run(fn:()=>Promise<void>){setError("");setOk("");setBusy(true);try{await fn();await load();setOk("Pengaturan sekolah tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
+ async function run(fn:()=>Promise<void>){setError("");setOk("");setBusy(true);try{await fn();setDirty(false);await load();setOk("Pengaturan sekolah tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function rpc(fn:string,args:Record<string,unknown>){if(!db)throw Error("Database belum siap.");const {error}=await db.rpc(fn,args);if(error)throw error}
- function set<K extends keyof Profile>(k:K,v:Profile[K]){setProfile(p=>({...p,[k]:v}))}
+ function set<K extends keyof Profile>(k:K,v:Profile[K]){setDirty(true);setProfile(p=>({...p,[k]:v}))}
  const input=(k:Exclude<keyof Profile,"report_settings">,label:string,placeholder="")=><label className="field">{label}<input value={String(profile[k]||"")} onChange={e=>set(k,e.target.value as never)} placeholder={placeholder} disabled={!admin}/></label>;
  const setting=(k:string,fallback:unknown)=>profile.report_settings?.[k]??fallback;
- const setSetting=(k:string,v:unknown)=>setProfile(p=>({...p,report_settings:{...(p.report_settings||{}),[k]:v}}));
+ const setSetting=(k:string,v:unknown)=>{setDirty(true);setProfile(p=>({...p,report_settings:{...(p.report_settings||{}),[k]:v}}));};
  const save=<button className="button" disabled={!admin||busy||profile.name.trim().length<3} onClick={()=>void run(()=>rpc("sc_edit_school_details",{p_school:schoolId,p_payload:profile}))}>Simpan Pengaturan</button>;
  const showGeneral=!f||f.includes("profil");
  const showContact=!f||f.includes("profil")||f.includes("identitas")||f.includes("kontak");

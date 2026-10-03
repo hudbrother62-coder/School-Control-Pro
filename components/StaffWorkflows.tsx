@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import SearchableSelect from "@/components/SearchableSelect";
 import {downloadExcel,readExcel,type SheetRows} from "@/lib/excel";
@@ -29,6 +30,7 @@ export default function StaffWorkflows({kind,schoolId,userId,role,staff,onChange
  useEffect(()=>{if(focusedEvent)setEventType(focusedEvent);setLeaveKind(focus==="Cuti"?"annual":"permission");setModal(false)},[focus]);
  const [importRows,setImportRows]=useState<SheetRows>([]),[importFile,setImportFile]=useState(""),[importIssues,setImportIssues]=useState<{Baris:number;Kesalahan:string}[]>([]);
  useEffect(()=>{setImportRows([]);setImportFile("");setImportIssues([])},[kind,schoolId]);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;if(kind==="performance"){const {data,error:e}=await readAllRows(db.from("sc_staff_events").select("id,staff_user_id,event_type,title,occurred_at,verified_at").eq("school_id",schoolId).order("occurred_at",{ascending:false}).order("id"));if(e)setError(e.message);setItems((data||[]) as Evidence[])}
  if(kind==="leave"){const {data,error:e}=await readAllRows(db.from("sc_leave_requests").select("id,user_id,kind,from_date,to_date,reason,status").eq("school_id",schoolId).order("created_at",{ascending:false}).order("id"));if(e)setError(e.message);setLeave((data||[]) as Leave[])}}
  useEffect(()=>{void load();setModal(false)},[db,kind,schoolId]);

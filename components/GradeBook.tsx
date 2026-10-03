@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -23,6 +24,7 @@ export default function GradeBook({schoolId,userId,role}:{schoolId:string;userId
  const [classValue,setClassValue]=useState(""),[studentValue,setStudentValue]=useState(""),[subjectValue,setSubjectValue]=useState(""),[assessment,setAssessment]=useState(""),[category,setCategory]=useState("TUGAS"),[date,setDate]=useState(today()),[score,setScore]=useState(""),[maxScore,setMaxScore]=useState("100"),[notes,setNotes]=useState("");
  const [filterClass,setFilterClass]=useState(""),[filterSubject,setFilterSubject]=useState("");
 
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){
   if(!db)return;
   const [cl,st,su,gr,as]=await Promise.all([

@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
@@ -34,6 +35,7 @@ export default function DisciplinePanel({schoolId,userId,role,focus}:{schoolId:s
  const tab=f.includes("master")?"master":f.includes("pembinaan")?"coaching":f.includes("tindak")?"action":f.includes("rekap")||f.includes("laporan")?"report":"events";
  const activeKind=f.includes("prestasi")?"achievement":"violation";
 
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){
   if(!db)return;
   const r=await Promise.all([

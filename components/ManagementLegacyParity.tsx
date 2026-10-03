@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {readAllRows} from "@/lib/read-all-rows";
 import SearchableSelect from "@/components/SearchableSelect";
 import {downloadExcel,readExcel,type SheetRows} from "@/lib/excel";
@@ -23,6 +24,7 @@ export default function ManagementLegacyParity({schoolId,userId,role,staff,focus
  const [importRows,setImportRows]=useState<SheetRows>([]),[importFile,setImportFile]=useState(""),[importIssues,setImportIssues]=useState<{Baris:number;Kesalahan:string}[]>([]);
  useEffect(()=>{setImportRows([]);setImportIssues([]);setImportFile("");setEditTemplate(null);setEditSource(null);setEditPerf(null);setShowArchive(false);setTitle("");setDescription("");setUrl("");setFile(null)},[focus,schoolId]);
  const [category,setCategory]=useState("Perencanaan & Laporan"),[title,setTitle]=useState(""),[description,setDescription]=useState(""),[url,setUrl]=useState(""),[file,setFile]=useState<File|null>(null),[docId,setDocId]=useState(""),[sourceType,setSourceType]=useState("note"),[day,setDay]=useState(today()),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [t,d,s,p]=await Promise.all([
   readAllRows(db.from("sc_template_library").select("id,scope,category,title,description,storage_path,url,archived_at").or("scope.eq.platform,school_id.eq."+schoolId).order("created_at",{ascending:false}).order("id")),
   readAllRows(db.from("sc_documents").select("id,kind,title,status,revision,source_notes,review_notes,readiness,assumptions").eq("school_id",schoolId).order("updated_at",{ascending:false}).order("id")),

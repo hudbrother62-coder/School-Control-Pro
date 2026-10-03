@@ -1,4 +1,5 @@
 'use client';
+import {useRealtimeRefresh} from '@/lib/school-realtime';
 import {useEffect,useMemo,useState} from 'react';
 import {browserDb} from '@/lib/supabase';
 import {isAdmin,type Role} from '@/lib/modules';
@@ -10,6 +11,7 @@ const scopes=[['default','Semua laporan / dokumen'],['guru_ai','Perangkat ajar A
 export default function ReportTemplateManager({schoolId,role}:{schoolId:string;role:Role}){
  const db=useMemo(()=>browserDb(),[]),admin=isAdmin(role);
  const [identity,setIdentity]=useState<any>(null),[scope,setScope]=useState('default'),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState('');
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){const {data,error}=await db.from('sc_schools').select('*').eq('id',schoolId).single();if(error)throw error;setIdentity(await resolveReportAssets(data,schoolId));}
  useEffect(()=>{load().catch(e=>setError(errorMessage(e)));},[schoolId,db]);
  async function run(fn:()=>Promise<void>){setBusy(true);setError('');setMessage('');try{await fn();await load();setMessage('Pengaturan laporan tersimpan.')}catch(e){setError(errorMessage(e));}finally{setBusy(false);}}

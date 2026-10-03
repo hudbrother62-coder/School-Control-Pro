@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -22,6 +23,7 @@ export default function PayrollPanel({schoolId,role,staff,selfOnly=false,focus}:
  const [comp,setComp]=useState<Comp[]>([]),[payroll,setPayroll]=useState<Payroll[]>([]),[adjustments,setAdjustments]=useState<Adjustment[]>([]),[slips,setSlips]=useState<Slip[]>([]);
  const [staffId,setStaffId]=useState(""),[base,setBase]=useState(""),[allowance,setAllowance]=useState("0"),[deduct,setDeduct]=useState("0"),[period,setPeriod]=useState(periodNow()),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[compModal,setCompModal]=useState(false);
  const [selectedPayroll,setSelectedPayroll]=useState(""),[adjLabel,setAdjLabel]=useState(""),[adjKind,setAdjKind]=useState<"earning"|"deduction">("earning"),[adjAmount,setAdjAmount]=useState(""),[adjNote,setAdjNote]=useState("");
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;if(manage){const [{data:c},{data:p},{data:a}]=await Promise.all([
   db.from("sc_hr_compensation").select("staff_id,base_salary,allowance,deduction").eq("school_id",schoolId),
   db.from("sc_payroll_records").select("id,staff_id,period,gross,deductions,base_deductions,base_salary,allowances,status,staff_snapshot").eq("school_id",schoolId).order("period",{ascending:false}).limit(300),

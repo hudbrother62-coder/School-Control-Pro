@@ -1,0 +1,25 @@
+{
+  "tested_at": "2026-10-03T15:59:14.274Z",
+  "live": true,
+  "results": [
+    "Five isolated identities authenticate through the real Auth service",
+    "Concurrent room creation is idempotent; same-school users have separate rooms",
+    "Cannot impersonate another account or school",
+    "Different school cannot write another conversation",
+    "Same-school colleague cannot write another user conversation",
+    "Empty messages rejected",
+    "Oversized text rejected",
+    "Real WebSocket delivery in both directions without refresh (10228 ms)",
+    "RLS prevents REST and realtime leakage to other schools and same-school users",
+    "Unread counters clear only through the authorized read cursor",
+    "Expired trial, viewer role and unassigned accounts retain support access",
+    "Private voice note uploads, arrives live and downloads byte-for-byte through authorized signing",
+    "Other school cannot sign private audio",
+    "Same-school colleague cannot sign private audio",
+    "Missing audio object rejected",
+    "Voice notes over 120 seconds rejected",
+    "Anonymous users cannot list contacts",
+    "Anonymous users cannot read messages",
+    "Database RPC mutation emits a real school signal without private data fields"
+  ]
+}

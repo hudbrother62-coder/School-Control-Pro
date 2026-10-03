@@ -1,4 +1,5 @@
 "use client";
+import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
@@ -20,6 +21,7 @@ export default function FinanceLegacyParity({schoolId,userId,role,focus}:{school
  const db=useMemo(()=>browserDb(),[]),[tx,setTx]=useState<Tx[]>([]),[budgets,setBudgets]=useState<Budget[]>([]),[bills,setBills]=useState<Bill[]>([]),[payments,setPayments]=useState<Payment[]>([]),[students,setStudents]=useState<Student[]>([]),[contacts,setContacts]=useState<Contact[]>([]),[accounts,setAccounts]=useState<Account[]>([]),[team,setTeam]=useState<any[]>([]);
  const [month,setMonth]=useState(monthNow()),[reportType,setReportType]=useState("periodic"),[selected,setSelected]=useState(""),[file,setFile]=useState<File|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
  const manager=["owner","principal","treasurer"].includes(role);
+ useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const [t,b,bi,p,s,c,a,tm]=await Promise.all([
   db.from("sc_finance_transactions").select("id,occurred_at,kind,category,amount,description,account_id,number,activity_name,proof_path,status,void_reason").eq("school_id",schoolId).order("occurred_at",{ascending:false}).limit(1000),
   db.from("sc_budget_lines").select("id,fiscal_year,category,amount,notes,source_fund,activity_name").eq("school_id",schoolId).order("fiscal_year",{ascending:false}),
