@@ -8,8 +8,9 @@ const testPort=3100+(process.pid%10000);const root=process.env.WORKSPACE_TEST_UR
 const userId='11111111-1111-4111-8111-111111111111',schoolId='22222222-2222-4222-8222-222222222222',staffId='33333333-3333-4333-8333-333333333333',classId='44444444-4444-4444-8444-444444444444',studentId='55555555-5555-4555-8555-555555555555';
 const date=new Date().toISOString().slice(0,10);const month=date.slice(0,7);
 const user={id:userId,aud:'authenticated',role:'authenticated',email:'fixture@example.test',created_at:'2026-01-01T00:00:00Z',app_metadata:{provider:'email',providers:['email']},user_metadata:{}};
-let reportSettings={};const storedFiles=new Map();let role='owner';const writes=[];const errors=[];
+let aiFailure=false;const aiMessages=[];let reportSettings={};const storedFiles=new Map();let role='owner';const writes=[];const errors=[];
 const fixtures={
+ sc_ai_messages:()=>aiMessages,
  sc_members:()=>[{school_id:schoolId,user_id:userId,role}],
  sc_schools:()=>[{id:schoolId,name:'Sekolah Pengujian Lokal',timezone:'Asia/Jakarta',education_level:'SMP',academic_year:'2026/2027',semester:'Ganjil',report_settings:reportSettings}],
  sc_subscriptions:()=>[{status:'active',trial_ends_at:'2027-01-01T00:00:00Z',current_period_end:'2027-12-31T00:00:00Z'}],
@@ -51,7 +52,7 @@ const req=route.request(),url=new URL(req.url());const name=url.pathname.split('
   if(req.method()==='POST'&&!['sc_is_platform_admin','sc_finance_summary','sc_performance_summary','sc_bk_aggregate','sc_master_save_student_profile','sc_master_save_class'].includes(name))writes.push({name,body:req.postDataJSON()});
  }else{
   let rows=fixtures[name]?.()||[];
-  if(req.method()!=='GET'&&req.method()!=='HEAD'){writes.push({name,body:req.postDataJSON()});rows=[{id:crypto.randomUUID(),...(req.postDataJSON()||{})}];}
+  if(req.method()!=='GET'&&req.method()!=='HEAD'){writes.push({name,body:req.postDataJSON()});if(name==='sc_ai_messages'){rows=req.postDataJSON().map((m,i)=>({id:crypto.randomUUID(),created_at:new Date(Date.now()+i).toISOString(),...m}));aiMessages.push(...rows)}else rows=[{id:crypto.randomUUID(),...(req.postDataJSON()||{})}];}
   for(const [key,value] of url.searchParams){if(value.startsWith('eq.'))rows=rows.filter(r=>r[key]===undefined||String(r[key])===value.slice(3));}
   data=req.headers().accept?.includes('vnd.pgrst.object')?(rows[0]||null):rows;
  }
@@ -65,7 +66,7 @@ const req=route.request(),url=new URL(req.url());const name=url.pathname.split('
  try{
  const context=await browser.newContext({viewport:{width:1366,height:900}});
  await context.route('https://*.supabase.co/**',mock);
- await context.route('**/api/ai',route=>{writes.push({name:'api/ai',body:route.request().postDataJSON()});return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'Hasil pengujian lokal'})})});
+ await context.route('**/api/ai',route=>{writes.push({name:'api/ai',body:route.request().postDataJSON()});return route.fulfill({status:aiFailure?403:200,contentType:'application/json',body:JSON.stringify(aiFailure?{error:'Google menolak API key pribadi.'}:{text:'Hasil pengujian lokal'})})});
  await context.route('**/api/orchestrator',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({plan:{title:'Alur pengujian',reason:'Pengujian lokal',steps:[]},source:'deterministic'})}));
  await context.addInitScript(({user})=>{const claims={sub:user.id,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+3600,iat:Math.floor(Date.now()/1000)};const token=btoa(JSON.stringify({alg:'HS256',typ:'JWT'}))+'.'+btoa(JSON.stringify(claims))+'.local-fixture';localStorage.setItem('sb-sfzaexzpbcvynkhglndi-auth-token',JSON.stringify({access_token:token,refresh_token:'local-fixture-only',token_type:'bearer',expires_in:3600,expires_at:claims.exp,user}));}, {user});
  const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
@@ -108,6 +109,9 @@ const req=route.request(),url=new URL(req.url());const name=url.pathname.split('
  await page.getByRole('button',{name:'Tambah lowongan draft',exact:true}).click();const openingModal=page.getByRole('dialog',{name:'Tambah lowongan'});await openingModal.getByLabel('Nama',{exact:true}).fill('Guru Matematika');await openingModal.getByRole('button',{name:'Simpan perubahan',exact:true}).click();await openingModal.waitFor({state:'hidden'});
  assert.ok(writes.some(w=>w.name==='sc_recruitment_openings'&&w.body.title==='Guru Matematika'&&w.body.status==='draft'),'Recruitment creates a draft opening rather than a schedule');
  for(const feature of ['PBD/EDS','KSP/KOSP','RKJM','RKT','RKAS','SOP']){await go('kepsek_ai',feature);assert.equal(await page.getByRole('heading',{name:'Asisten Perencanaan Sekolah',exact:true}).count(),0);}
+ await go('assistant','Asisten Guru');aiFailure=true;
+ await page.getByLabel('Pesan',{exact:true}).fill('Bantu susun agenda mengajar');await page.getByRole('button',{name:'Kirim pesan',exact:true}).click();await page.getByRole('alert').filter({hasText:'Google menolak'}).waitFor();assert.equal(await page.getByLabel('Pesan',{exact:true}).inputValue(),'Bantu susun agenda mengajar');assert.equal(aiMessages.length,0,'Failed request must not persist orphan message');
+ aiFailure=false;await page.getByRole('button',{name:'Kirim pesan',exact:true}).click();await page.locator('.ai-chat-bubble.assistant').filter({hasText:'Hasil pengujian lokal'}).waitFor();assert.equal(aiMessages.length,2);assert.equal(await page.getByLabel('Pesan',{exact:true}).inputValue(),'');assert.equal(await page.locator('.ai-chat-bubble.user').count(),1);
  const mobileRoutes=[['overview','Ringkasan Operasional'],['master','Siswa'],['calendar','Kalender Sekolah'],['guru_ai','Modul Ajar'],['assistant','Asisten Guru'],['attendance','Check-in/check-out'],['gajian','Proses Payroll'],['sikas','Pembayaran'],['settings','Branding'],['reports','Template Laporan Sekolah'],['help','Mulai dari Sini']];
  for(const width of [320,390,768]){await page.setViewportSize({width,height:844});for(const [m,f] of mobileRoutes){await go(m,f);const overflow=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));assert.ok(overflow.width<=overflow.viewport+2,`Overflow ${width}px ${m}/${f}: ${JSON.stringify(overflow)}`)}if(width<=740){await page.getByRole('button',{name:'Menu',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Menu sekolah'});await dialog.waitFor();const top=await dialog.evaluate(el=>{const r=el.getBoundingClientRect();return document.elementFromPoint(r.x+20,r.y+20)?.closest('[role="dialog"]')===el});assert.ok(top,'Drawer is underneath header');await page.keyboard.press('Escape');await dialog.waitFor({state:'hidden'});assert.equal(await page.evaluate(()=>document.body.style.overflow),'');}}
  await page.setViewportSize({width:390,height:844});await go('master','Siswa');await page.getByRole('button',{name:/Tambah Siswa|Tambah Data|Tambah Baru/}).first().click();const modal=page.getByRole('dialog').filter({hasText:/Siswa/i});await modal.waitFor();const bounds=await modal.evaluate(el=>{const r=el.getBoundingClientRect();return {x:r.x,right:r.right,y:r.y,bottom:r.bottom,width:innerWidth,height:innerHeight,parent:el.parentElement.parentElement.tagName}});assert.ok(bounds.x>=0&&bounds.right<=bounds.width+1&&bounds.y>=0&&bounds.bottom<=bounds.height+1,'Modal outside viewport');assert.equal(bounds.parent,'BODY','Modal must use body portal');await page.keyboard.press('Escape');

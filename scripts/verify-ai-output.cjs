@@ -19,5 +19,13 @@ const keys=['NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY','G
  }
  finish='MAX_TOKENS';assert.equal((await api.POST(request('guru_ai','rpp'))).status,422);
  delete process.env.GEMINI_API_KEY;assert.equal((await api.POST(request('guru_ai','rpp'))).status,503);
- assert.ok(budget===checked+1);console.log('PASS: '+checked+' generator standards enforced server-side; missing sections detected, auth/role/school boundaries, unknown tool rejected, truncated output rejected and missing provider reported. Live provider output remains unverified.');
+ assert.ok(budget===checked+1);
+ const authKey='AQ.'+'synthetic_fixture_'.repeat(3);
+ const dotRequest=request('guru_ai','rpp');dotRequest.headers.set('x-user-gemini-key',authKey);finish='STOP';
+ let forwarded=false;global.fetch=async(url,options)=>{assert.ok(!url.includes(authKey));forwarded=options.headers['x-goog-api-key']===authKey;return {ok:true,json:async()=>({candidates:[{content:{parts:[{thought:true,text:'private thinking'},{text:'Jawaban uji'}]}}]})}};
+ const authResult=await api.POST(dotRequest);assert.equal(authResult.status,200);assert.equal(forwarded,true);assert.equal(authResult.body.text,'Jawaban uji');
+ for(const status of [400,401,403,429]){global.fetch=async()=>({ok:false,status});const r=await api.POST(dotRequest);assert.equal(r.status,status===401?403:status);assert.ok(!r.body.error.includes(authKey));assert.ok(/Google|Gemini/.test(r.body.error));}
+ const malformed=request('guru_ai','rpp');malformed.headers.set('x-user-gemini-key','invalid key with spaces');assert.equal((await api.POST(malformed)).status,400);
+ console.log('PASS: authorization key with dot forwarded only in header, whitespace rejected, provider errors actionable, thought content excluded.');
+console.log('PASS: '+checked+' generator standards enforced server-side; missing sections detected, auth/role/school boundaries, unknown tool rejected, truncated output rejected and missing provider reported. Live provider output remains unverified.');
  }finally{global.fetch=originalFetch;for(const k of keys)if(old[k]===undefined)delete process.env[k];else process.env[k]=old[k];}})().catch(e=>{console.error(e);process.exit(1)});

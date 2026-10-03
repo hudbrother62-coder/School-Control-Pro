@@ -31,7 +31,7 @@ export async function POST(req:NextRequest){
   const {data:facts}=await db.from("sc_school_facts").select("key,value").eq("school_id",schoolId).limit(20);
   const memory=(facts||[]).map(x=>x.key+": "+x.value).join("\n").slice(0,6000);
   const personalKey=req.headers.get("x-user-gemini-key")?.trim();
-  if(personalKey&&!/^[A-Za-z0-9_-]{20,200}$/.test(personalKey))return NextResponse.json({error:"Format kunci AI pribadi tidak valid."},{status:400,headers});
+  if(personalKey&&!/^[\x21-\x7E]{20,512}$/.test(personalKey))return NextResponse.json({error:"Format kunci AI pribadi tidak valid."},{status:400,headers});
   const apiKey=personalKey||process.env.GEMINI_API_KEY;
   if(!apiKey)return NextResponse.json({error:"Kunci AI server belum dikonfigurasi. Hubungi pengelola platform."},{status:503,headers});
   const {error:budgetError}=await db.rpc("sc_consume_ai_budget",{p_school:schoolId,p_module:module});
@@ -44,9 +44,14 @@ export async function POST(req:NextRequest){
   for(const model of models){
    try{
     const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body,signal:AbortSignal.timeout(28000),cache:"no-store"});
-    if(!response.ok){if([429,500,502,503,504].includes(response.status))continue;return NextResponse.json({error:"Layanan AI sedang tidak tersedia."},{status:503,headers})}
+    if(!response.ok){
+     if(response.status===429)return NextResponse.json({error:"Kuota Gemini habis atau batas permintaan tercapai. Periksa kuota dan billing di Google AI Studio, lalu coba lagi."},{status:429,headers});
+     if([500,502,503,504].includes(response.status))continue;
+     if([400,401,403].includes(response.status))return NextResponse.json({error:personalKey?"Google menolak API key pribadi. Periksa apakah key masih aktif, izin Generative Language API tersedia, dan key tidak diblokir. Perbarui melalui Koneksi AI Pribadi.":"Koneksi Gemini server ditolak Google. Hubungi pengelola platform."},{status:response.status===400?400:403,headers});
+     return NextResponse.json({error:"Model Gemini tidak tersedia untuk koneksi ini. Hubungi pengelola platform."},{status:503,headers});
+    }
     const result=await response.json();
-    const text=(result?.candidates?.[0]?.content?.parts||[]).map((x:{text?:string})=>x.text||"").join("\n").trim();
+    const text=(result?.candidates?.[0]?.content?.parts||[]).filter((x:{thought?:boolean})=>!x.thought).map((x:{text?:string})=>x.text||"").join("\n").trim();
     if(result?.candidates?.[0]?.finishReason==="MAX_TOKENS")return NextResponse.json({error:"Dokumen AI terpotong. Persempit cakupan atau pecah menjadi beberapa bagian sebelum mencoba lagi."},{status:422,headers});
     if(text)return NextResponse.json({text,model,quality:evaluateAiOutput(module,template,text)},{headers});
    }catch{/* coba fallback */}
