@@ -1,6 +1,6 @@
 {
   "scope": "Local UI integration with synthetic identity and intercepted APIs; not a live database or merchant E2E test.",
-  "screens": 183,
+  "screens": 180,
   "viewports": [
     320,
     390,
@@ -28,27 +28,6 @@
         "p_start": "2026-10-01",
         "p_end": "2026-10-31",
         "p_class": null
-      }
-    },
-    {
-      "name": "sc_dashboard_analytics",
-      "body": {
-        "p_school": "22222222-2222-4222-8222-222222222222",
-        "p_start": "2026-10-01",
-        "p_end": "2026-10-31",
-        "p_class": null
-      }
-    },
-    {
-      "name": "sc_team_directory",
-      "body": {
-        "p_school": "22222222-2222-4222-8222-222222222222"
-      }
-    },
-    {
-      "name": "sc_team_directory",
-      "body": {
-        "p_school": "22222222-2222-4222-8222-222222222222"
       }
     },
     {
@@ -378,7 +357,7 @@
           "address": "",
           "phone": "",
           "parent_phone": "",
-          "class_id": "9af6f496-a84b-4c14-bbed-6d6f13496f8b",
+          "class_id": "8e6b7f23-61e0-4933-8e04-440cf4815b42",
           "status": "active",
           "guardian_name": "",
           "guardian_phone": ""
@@ -533,7 +512,7 @@
       "name": "sc_work_journal_action",
       "body": {
         "p_school": "22222222-2222-4222-8222-222222222222",
-        "p_id": "a9ac4d21-957f-45a0-8d3c-2456227ca2fd",
+        "p_id": "9aeb312b-a1cb-45cf-a8ee-6d05fb1c39fe",
         "p_action": "submit",
         "p_note": ""
       }
@@ -551,7 +530,7 @@
       "name": "sc_work_journal_action",
       "body": {
         "p_school": "22222222-2222-4222-8222-222222222222",
-        "p_id": "a9ac4d21-957f-45a0-8d3c-2456227ca2fd",
+        "p_id": "9aeb312b-a1cb-45cf-a8ee-6d05fb1c39fe",
         "p_action": "archive",
         "p_note": ""
       }
@@ -560,9 +539,86 @@
       "name": "sc_work_journal_action",
       "body": {
         "p_school": "22222222-2222-4222-8222-222222222222",
-        "p_id": "a9ac4d21-957f-45a0-8d3c-2456227ca2fd",
+        "p_id": "9aeb312b-a1cb-45cf-a8ee-6d05fb1c39fe",
         "p_action": "restore",
         "p_note": ""
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_save_calendar_event_v4",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_event": null,
+        "p_payload": {
+          "title": "Agenda Target Uji",
+          "event_date": "2026-10-04",
+          "start_time": "07:00",
+          "end_time": null,
+          "category": "school",
+          "notes": "",
+          "location": "",
+          "scope": "school",
+          "participants": [],
+          "audience_type": "school",
+          "audience_grade": null,
+          "audience_class_id": null,
+          "attendance_required": true,
+          "attendance_target": "roles",
+          "attendance_roles": [
+            "teacher"
+          ],
+          "attendance_users": [],
+          "attendance_address": "Alamat Kampus Uji",
+          "attendance_latitude": 0,
+          "attendance_longitude": 0,
+          "checkin_open_minutes": 30,
+          "checkin_close_minutes": 60
+        }
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_team_directory",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
+    },
+    {
+      "name": "sc_dashboard_analytics",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222",
+        "p_start": "2026-10-01",
+        "p_end": "2026-10-31",
+        "p_class": null
       }
     },
     {
@@ -689,9 +745,9 @@
         "p_patch": {
           "templates": {
             "default": {
-              "path": "22222222-2222-4222-8222-222222222222/templates/80b94a0c-690a-4198-9d36-d01c143ee962.docx",
+              "path": "22222222-2222-4222-8222-222222222222/templates/1a2a0d6b-c3ad-4ba2-a8c2-8d6b90fa300b.docx",
               "name": "Template-Sekolah.docx",
-              "updated_at": "2026-10-03T18:03:39.286Z"
+              "updated_at": "2026-10-04T01:13:11.125Z"
             }
           }
         }
@@ -705,6 +761,36 @@
         "p_end": "2026-10-31",
         "p_class": null
       }
+    },
+    {
+      "name": "sc_support_contacts",
+      "body": {
+        "p_school": null
+      }
+    },
+    {
+      "name": "sc_platform_summary",
+      "body": {}
+    },
+    {
+      "name": "sc_platform_schools",
+      "body": {}
+    },
+    {
+      "name": "sc_platform_orders",
+      "body": {}
+    },
+    {
+      "name": "sc_support_contacts",
+      "body": {
+        "p_school": null
+      }
+    },
+    {
+      "name": "sc_platform_school_detail",
+      "body": {
+        "p_school": "22222222-2222-4222-8222-222222222222"
+      }
     }
   ],
   "smoke": [
@@ -717,20 +803,8 @@
     {
       "role": "owner",
       "module": "overview",
-      "feature": "Analitik Sekolah",
-      "heading": "Grafik aktivitas sekolah"
-    },
-    {
-      "role": "owner",
-      "module": "overview",
       "feature": "Ruang Kerja",
       "heading": "Satu pekerjaan, satu alur | Mengajar & memantau siswa | Kegiatan & laporan harian | Tagihan & kas | SDM & pengembangan | Perencanaan sampai pelaksanaan"
-    },
-    {
-      "role": "owner",
-      "module": "overview",
-      "feature": "Agenda & Deadline",
-      "heading": "Agenda 31 Hari ke Depan | Deadline Program | Agenda Terdekat"
     },
     {
       "role": "owner",
@@ -778,37 +852,31 @@
       "role": "owner",
       "module": "calendar",
       "feature": "Kalender Sekolah",
-      "heading": "Import, Template & Agenda | Oktober 2026 | Sabtu, 3 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Kalender Sekolah | Import, Template & Agenda | Oktober 2026 | Minggu, 4 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
       "module": "calendar",
       "feature": "Rekap Agenda",
-      "heading": "Import, Template & Agenda | Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Rekap Agenda | Import, Template & Agenda | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
       "module": "calendar",
       "feature": "Agenda Mengajar",
-      "heading": "Import, Template & Agenda | Oktober 2026 | Sabtu, 3 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Agenda Mengajar | Import, Template & Agenda | Jadwal mengajar mingguan | Senin | Selasa | Rabu | Kamis | Jumat | Sabtu | Minggu | Oktober 2026 | Minggu, 4 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
       "module": "calendar",
       "feature": "Agenda Pribadi",
-      "heading": "Import, Template & Agenda | Oktober 2026 | Sabtu, 3 Oktober 2026 | Rekap Agenda · Oktober 2026"
-    },
-    {
-      "role": "owner",
-      "module": "calendar",
-      "feature": "Agenda Pengguna",
-      "heading": "Agenda Pengguna | Oktober 2026 | Sabtu, 3 Oktober 2026 | Rekap Agenda · Oktober 2026"
+      "heading": "Agenda Pribadi | Import, Template & Agenda | Oktober 2026 | Minggu, 4 Oktober 2026 | Rekap Agenda · Oktober 2026"
     },
     {
       "role": "owner",
       "module": "calendar",
       "feature": "Kehadiran Agenda",
-      "heading": "Kehadiran Agenda"
+      "heading": "Kehadiran Agenda | Kehadiran Agenda"
     },
     {
       "role": "owner",

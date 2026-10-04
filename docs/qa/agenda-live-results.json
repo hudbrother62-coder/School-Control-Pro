@@ -1,0 +1,15 @@
+{
+  "root": "http://127.0.0.1:3505",
+  "scope": "Real Auth, database, server GPS/time validation, realtime and browser with isolated temporary school. Device GPS positions simulated by browser permission API.",
+  "results": [
+    "Real owner, teacher and staff authenticate",
+    "Owner UI saves teacher-only attendance, address and canonical coordinates with radius 100",
+    "Targeted teacher receives agenda without refresh",
+    "Browser GPS outside 100 m fails and writes no attendance",
+    "Real teacher check-in/check-out persists server timestamps and GPS",
+    "Creator and non-target staff cannot check in or read colleague attendance",
+    "Management detail shows actual attendance and receives live status",
+    "Mobile attendance and live page have no overflow or JavaScript errors"
+  ],
+  "errors": []
+}

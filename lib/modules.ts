@@ -9,9 +9,9 @@ export const ROLE_LABELS:Record<Role,string>={
 };
 export const ADMIN_ROLES:Role[]=["owner","principal","vice_principal"];
 export const modules:FeatureModule[]=[
- {key:"overview",label:"Beranda",section:"Utama",description:"Ringkasan operasional sekolah.",features:["Ringkasan Operasional","Analitik Sekolah","Ruang Kerja","Agenda & Deadline"]},
+ {key:"overview",label:"Beranda",section:"Utama",description:"Ringkasan operasional sekolah.",features:["Ringkasan Operasional","Ruang Kerja"]},
  {key:"master",label:"Data Induk",section:"Utama",description:"Sumber data utama seluruh sistem.",features:["Siswa","Kelas","Guru","Tenaga Kependidikan","Mata Pelajaran","Penugasan Guru","Import Excel Keseluruhan"]},
- {key:"calendar",label:"Agenda Sekolah",section:"Utama",description:"Kalender sekolah dan agenda setiap pengguna.",features:["Kalender Sekolah","Rekap Agenda","Agenda Mengajar","Agenda Pribadi","Agenda Pengguna","Kehadiran Agenda"]},
+ {key:"calendar",label:"Agenda Sekolah",section:"Utama",description:"Kalender sekolah dan agenda setiap pengguna.",features:["Kalender Sekolah","Rekap Agenda","Agenda Mengajar","Agenda Pribadi","Kehadiran Agenda"]},
  {key:"journals",label:"Jurnal & Pemantauan",section:"Utama",description:"Jurnal kegiatan harian, pengamatan siswa dan rekap bulanan sesuai akses.",features:["Jurnal Harian","Jurnal Siswa","Jurnal Mengajar","Rekap Bulanan","Review Jurnal","Arsip Jurnal"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"reports",label:"Pusat Laporan",section:"Utama",description:"Semua laporan resmi sekolah, template standar, ekspor dan arsip.",features:["Ringkasan Laporan","Akademik","Kehadiran","Disiplin","BK","Program & Tugas","Keuangan","SDM & Payroll","Supervisi","Jurnal","Template Laporan Sekolah","Arsip Laporan"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"guru_ai",label:"Perangkat Ajar AI",section:"Pembelajaran",description:"Workspace perangkat pembelajaran berbasis proyek dan versi.",features:["Proyek Pembelajaran","Modul Ajar","RPP","LKPD","Asesmen Soal","Strategi Pembelajaran","Bahan Ajar","Rubrik Penilaian","Panduan Presentasi","Peta Konsep","Riwayat draf","Dokumen Pembelajaran"],roles:["owner","principal","vice_principal","teacher"]},

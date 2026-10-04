@@ -9,7 +9,7 @@ export default function DataEntryModal({open,title,subtitle,onClose,children,wid
  if(!open||typeof document==="undefined")return null;
  return createPortal(<div className="modalbackdrop data-modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}>
   <section ref={dialogRef} className={"modalcard data-modal-card "+(wide?"wide":"")} role="dialog" aria-modal="true" aria-label={title}>
-   <div className="data-modal-head"><div><span>INPUT DATA</span><h2>{title}</h2>{subtitle&&<p>{subtitle}</p>}</div><button type="button" className="iconbutton" aria-label="Tutup" onClick={onClose}><X size={18}/></button></div>
+   <div className="data-modal-head"><div><span>SCHOOL CONTROL</span><h2>{title}</h2>{subtitle&&<p>{subtitle}</p>}</div><button type="button" className="iconbutton" aria-label="Tutup" onClick={onClose}><X size={18}/></button></div>
    <div className="data-modal-body">{children}</div>
   </section>
  </div>,document.body);

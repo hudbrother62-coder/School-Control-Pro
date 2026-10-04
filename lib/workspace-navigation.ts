@@ -1,6 +1,9 @@
 import {modules,canAccess,visibleFeatures,type ModuleKey,type Role} from "./modules";
 export type WorkspaceRoute={module:ModuleKey;feature:string};
 const aliases:Record<string,WorkspaceRoute>={
+ "overview::Analitik Sekolah":{module:"overview",feature:"Ringkasan Operasional"},
+ "overview::Agenda & Deadline":{module:"calendar",feature:"Kalender Sekolah"},
+ "calendar::Agenda Pengguna":{module:"calendar",feature:"Rekap Agenda"},
  "journals::Jurnal Mengajar":{module:"buku_kerja",feature:"Jurnal Mengajar"},
  "guru_ai::Ngobrol AI":{module:"assistant",feature:"Asisten Guru"},
  "guru_ai::Koneksi AI":{module:"assistant",feature:"Koneksi AI"},
