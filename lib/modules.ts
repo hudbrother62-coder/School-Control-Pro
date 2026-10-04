@@ -21,7 +21,7 @@ export const modules:FeatureModule[]=[
  {key:"bk",label:"Bimbingan Konseling",section:"Kesiswaan",description:"Administrasi BK lengkap dengan privasi konselor.",features:["Kasus & Asesmen","Pemetaan Kebutuhan","Konseling Individu","Konseling Kelompok","Layanan Klasikal","RPL Layanan","Program BK","Agenda BK","Tindak Lanjut","Kunjungan Rumah","Rujukan","Perencanaan Karier","Dokumen BK","Siswa 360°","Analitik BK","Laporan BK"],roles:["owner","principal","counselor"]},
  {key:"kepsek_ai",label:"Perencanaan & Supervisi",section:"Manajemen",description:"Perencanaan sekolah, dokumen, pustaka, kinerja kepala sekolah dan supervisi.",features:["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Kinerja Kepala Sekolah","Supervisi guru","Pusat dokumen","Workflow Dokumen","Sumber Dokumen","Pustaka Format","Persetujuan dokumen"],roles:["owner","principal","vice_principal"]},
  {key:"command",label:"Program & Tugas",section:"Manajemen",description:"Eksekusi program dari PIC sampai bukti terverifikasi dan laporan.",features:["Program Kerja","PIC","Tugas","Deadline","Progres","Kendala","Hasil Rapat","Tindak Lanjut Rapat","Bukti Kegiatan","Verifikasi Bukti","Laporan Program"]},
- {key:"attendance",label:"Presensi Realtime",section:"SDM",description:"Presensi berbasis waktu server dan lokasi perangkat.",features:["Check-in/check-out","Jadwal/shift","Riwayat kehadiran","Koreksi beralasan","Izin","Cuti"]},
+ {key:"attendance",label:"Presensi Realtime",section:"SDM",description:"Presensi berbasis waktu server dan lokasi perangkat.",features:["Check-in/check-out","Jadwal/shift","Riwayat kehadiran","Koreksi beralasan","Izin","Cuti"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"performance",label:"Kinerja & Pengembangan",section:"SDM",description:"Rekap kinerja dan pengembangan berbasis bukti.",features:["Kehadiran","Partisipasi program","Pelatihan","Bukti capaian","Evaluasi","Tanggapan guru"]},
  {key:"gajian",label:"SDM, Payroll & Kompensasi",section:"SDM",description:"Pengajuan pegawai, tim, jadwal, lokasi presensi, payroll dan rekrutmen sekolah.",features:["Pengajuan SDM","Lembur","Kasbon","Reimburse","Tim SDM","Tim Saya","Kehadiran Tim","Approval Tim","Rekap Tim","Jadwal Kerja","Lokasi Presensi","Komponen Dinamis","Komponen Gaji","Proses Payroll","Rekrutmen","Laporan HR"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"payslip",label:"Slip Gaji Saya",section:"SDM",description:"Riwayat slip gaji pribadi.",features:["Riwayat Slip"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
@@ -46,8 +46,8 @@ export function visibleFeatures(m:FeatureModule,role:Role):string[]{
    if(f==="Asisten Kepala Sekolah")return ADMIN_ROLES.includes(role);
    if(f==="Koneksi AI")return teachingRoles.includes(role);
   }
-  if(m.key==="calendar"&&f==="Agenda Pengguna")return isAdmin(role);
   if(m.key==="calendar"&&f==="Agenda Mengajar")return teachingRoles.includes(role);
+  if(m.key==="calendar"&&["Agenda Pribadi","Kehadiran Agenda"].includes(f))return role!=="viewer";
   if(m.key==="attendance"&&f==="Koreksi beralasan")return managerRoles.includes(role);
   if(m.key==="gajian"){
    if(["Komponen Gaji","Komponen Dinamis","Proses Payroll"].includes(f))return payrollRoles.includes(role);
