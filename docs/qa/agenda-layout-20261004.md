@@ -19,3 +19,8 @@
 
 ## Batas cakupan
 Agenda lama yang belum mempunyai alamat/koordinat perlu dilengkapi pengelola sebelum presensi. Uji ini tidak mengklaim verifikasi hardware GPS semua perangkat, transaksi gateway pembayaran atau keluaran model AI eksternal.
+
+## Hasil website publik
+Deployment aplikasi a9f18ff8c7f7758a4ceaf4cfd60a9702c70ba0ce READY pada https://school-control-pro.vercel.app/.
+Uji Auth/database/browser pada domain publik lulus delapan pemeriksaan dalam agenda-production-results.json. Landing page baru, anchor dan lebar 320/390/768/1366 juga lulus. Direktori tim diperbaiki dengan cast email varchar ke text sehingga pilihan anggota dan tabel pemantauan terisi.
+Sekolah internal sementara, tiga akun, agenda, presensi serta sinyal perubahan sudah dihapus; seluruh hitungan terkait kembali nol. Fixture lokal berisi kredensial dihapus.
