@@ -305,3 +305,9 @@ body[data-theme=dark] .risk-critical{color:#ff9ba5;background:#4a1e26}
 @media(prefers-reduced-motion:reduce){
  .uao-thinking svg,.card,.button,.uao-progress i,.uao-step{animation:none!important;transition:none!important}
 }
+
+
+/* Full approved logo treatment */
+.lp-brand-full{display:flex!important;align-items:center!important;min-width:150px}
+.lp-full-logo{display:block;width:154px!important;height:auto!important;max-height:58px;object-fit:contain}
+@media(max-width:560px){.lp-full-logo{width:132px!important;max-height:50px}}
