@@ -1,29 +1,32 @@
 "use client";
+
 import {useRealtimeRefresh} from "@/lib/school-realtime";
 import {errorMessage} from "@/lib/error-message";
-
 import {useEffect,useMemo,useState} from "react";
-import {Check,ChevronRight,RotateCcw,Sparkles} from "lucide-react";
+import {AlertTriangle,Check,ChevronRight,Clock3,Database,Eye,FileCheck2,GitBranch,Layers3,LockKeyhole,Play,RotateCcw,ShieldCheck,Sparkles} from "lucide-react";
 import {resolveWorkspaceRoute} from "@/lib/workspace-navigation";
-import {planWorkflow,type WorkflowPlan,type WorkflowStep} from "@/lib/orchestrator";
+import {planWorkflow,type WorkflowPlan,type WorkflowRisk,type WorkflowStep,type ExecutionMode} from "@/lib/orchestrator";
 import {browserDb} from "@/lib/supabase";
-import {modules,canAccess,visibleFeatures,type ModuleKey,type Role} from "@/lib/modules";
+import type {ModuleKey,Role} from "@/lib/modules";
 
-type WorkflowRun={id:string;title:string;request:string;status:string;updated_at:string};
-type SavedStep={id:string;step_order:number;module_key:ModuleKey;feature:string;title:string;instruction:string;status:string};
+type WorkflowRun={id:string;title:string;request:string;status:string;updated_at:string;source?:string;context?:any};
+type SavedStep={id:string;step_order:number;module_key:ModuleKey;feature:string;title:string;instruction:string;status:string;context?:any};
+const riskLabel:Record<WorkflowRisk,string>={low:"Rendah",medium:"Sedang",high:"Tinggi",critical:"Kritis"};
+const riskClass:Record<WorkflowRisk,string>={low:"risk-low",medium:"risk-medium",high:"risk-high",critical:"risk-critical"};
+const compact=(value:string,max=52)=>value.length>max?value.slice(0,max-1)+"…":value;
 
 export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role;schoolId?:string;onRoute:(m:ModuleKey,feature?:string)=>void}){
  const db=useMemo(()=>browserDb(),[]);
- const [request,setRequest]=useState(""),[submitted,setSubmitted]=useState("");
- const [plan,setPlan]=useState<WorkflowPlan|null>(null),[source,setSource]=useState("");
- const [done,setDone]=useState<Record<number,boolean>>({}),[stepRows,setStepRows]=useState<SavedStep[]>([]);
+ const [request,setRequest]=useState(""),[sources,setSources]=useState(""),[executionMode,setExecutionMode]=useState<ExecutionMode>("guided");
+ const [submitted,setSubmitted]=useState(""),[plan,setPlan]=useState<WorkflowPlan|null>(null),[source,setSource]=useState("");
+ const [done,setDone]=useState<Record<number,boolean>>({}),[approvals,setApprovals]=useState<Record<number,boolean>>({}),[stepRows,setStepRows]=useState<SavedStep[]>([]);
  const [activeRunId,setActiveRunId]=useState(""),[savedRuns,setSavedRuns]=useState<WorkflowRun[]>([]);
  const [busy,setBusy]=useState(false),[planning,setPlanning]=useState(false),[status,setStatus]=useState("");
 
  useRealtimeRefresh(schoolId||"",()=>loadRuns());
  async function loadRuns(){
   if(!db||!schoolId)return;
-  const {data,error}=await db.from("sc_workflow_runs").select("id,title,request,status,updated_at").eq("school_id",schoolId).order("updated_at",{ascending:false}).limit(10);
+  const {data,error}=await db.from("sc_workflow_runs").select("id,title,request,status,updated_at,source,context").eq("school_id",schoolId).order("updated_at",{ascending:false}).limit(8);
   if(error){setStatus(error.message);return;}
   setSavedRuns((data||[]) as WorkflowRun[]);
  }
@@ -31,14 +34,14 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
 
  async function analyze(value:string){
   const clean=value.trim();if(clean.length<3)return;
-  setSubmitted(clean);setPlan(null);setDone({});setStepRows([]);setActiveRunId("");setStatus("");setPlanning(true);
+  setSubmitted(clean);setPlan(null);setDone({});setApprovals({});setStepRows([]);setActiveRunId("");setStatus("");setPlanning(true);
   try{
    const {data:{session}}=db?await db.auth.getSession():{data:{session:null}};
-   if(!session){setPlan(planWorkflow(clean,role));setSource("rencana lokal");return;}
-   const response=await fetch("/api/orchestrator",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({school_id:schoolId,request:clean})});
+   if(!session){setPlan({...planWorkflow(clean,role),executionMode});setSource("rencana lokal");return;}
+   const response=await fetch("/api/orchestrator",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({school_id:schoolId,request:clean,context_sources:sources.trim(),execution_mode:executionMode})});
    const result=await response.json();if(!response.ok||!result.plan)throw Error(result.error||"Perencana AI belum tersedia.");
-   setPlan(result.plan as WorkflowPlan);setSource(result.source==="ai"?"dibantu AI":"rencana sistem");
-  }catch{setPlan(planWorkflow(clean,role));setSource("rencana lokal");}
+   setPlan(result.plan as WorkflowPlan);setSource(result.source==="ai"?"AI + policy engine":"deterministic policy engine");
+  }catch{setPlan({...planWorkflow(clean,role),executionMode});setSource("rencana lokal aman");}
   finally{setPlanning(false);}
  }
 
@@ -47,11 +50,13 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
   setBusy(true);setStatus("");
   try{
    const {data:{user}}=await db.auth.getUser();if(!user)throw Error("Sesi berakhir.");
-   const {data:run,error}=await db.from("sc_workflow_runs").insert({school_id:schoolId,user_id:user.id,request:submitted,title:plan.title,source}).select("id").single();if(error)throw error;
-   const {data:rows,error:stepError}=await db.from("sc_workflow_steps").insert(plan.steps.map((x,i)=>({run_id:run.id,school_id:schoolId,step_order:i+1,module_key:x.module,feature:x.feature,title:x.title,instruction:x.instruction,status:i===0?"active":"pending"}))).select("id,step_order,module_key,feature,title,instruction,status").order("step_order");
+   const runContext={uao_version:"2.0",execution_mode:plan.executionMode,sources:sources.trim(),plan:{title:plan.title,objective:plan.objective,reason:plan.reason,riskLevel:plan.riskLevel,autonomyLevel:plan.autonomyLevel,executionMode:plan.executionMode,acceptanceCriteria:plan.acceptanceCriteria,impact:plan.impact,safeguards:plan.safeguards}};
+   const {data:run,error}=await db.from("sc_workflow_runs").insert({school_id:schoolId,user_id:user.id,request:submitted,title:plan.title,source,context:runContext,current_step_order:1,status:"active"}).select("id").single();if(error)throw error;
+   const rowsToInsert=plan.steps.map((x,i)=>({run_id:run.id,school_id:schoolId,step_order:i+1,module_key:x.module,feature:x.feature,title:x.title,instruction:x.instruction,status:i===0?"active":"pending",depends_on:i?[i]:[],context:{action:x.action,risk:x.risk,requiresApproval:x.requiresApproval,reversible:x.reversible,verification:x.verification,precondition:x.precondition,impact:x.impact}}));
+   const {data:rows,error:stepError}=await db.from("sc_workflow_steps").insert(rowsToInsert).select("id,step_order,module_key,feature,title,instruction,status,context").order("step_order");
    if(stepError)throw stepError;
    setActiveRunId(run.id);setStepRows((rows||[]) as SavedStep[]);await loadRuns();
-   setStatus("Workflow tersimpan. Progres bisa dilanjutkan nanti.");
+   setStatus("Workflow tersimpan sebagai run yang dapat dilanjutkan dan diaudit.");
   }catch(e){setStatus(errorMessage(e))}finally{setBusy(false)}
  }
 
@@ -59,39 +64,122 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
   if(!db)return;
   setBusy(true);setStatus("");
   try{
-   const {data,error}=await db.from("sc_workflow_steps").select("id,step_order,module_key,feature,title,instruction,status").eq("run_id",run.id).order("step_order");
+   const {data,error}=await db.from("sc_workflow_steps").select("id,step_order,module_key,feature,title,instruction,status,context").eq("run_id",run.id).order("step_order");
    if(error)throw error;
-   const rows=(data||[]) as SavedStep[];
-   const steps:WorkflowStep[]=rows.map(row=>{const target=resolveWorkspaceRoute(row.module_key,row.feature,role);return {module:target?.module||row.module_key,feature:target?.feature||row.feature,title:row.title,instruction:row.instruction,permitted:!!target,matched:[]}});
-   setRequest(run.request);setSubmitted(run.request);setPlan({title:run.title,reason:"Lanjutkan langkah yang belum selesai. Data yang sudah tersimpan tetap mengikuti izin tiap modul.",steps});
-   setActiveRunId(run.id);setStepRows(rows);setDone(Object.fromEntries(rows.map((row,i)=>[i,row.status==="done"])));setSource("workflow tersimpan");
+   const rows=(data||[]) as SavedStep[],meta=run.context?.plan||{};
+   const steps:WorkflowStep[]=rows.map((row,index)=>{
+    const target=resolveWorkspaceRoute(row.module_key,row.feature,role),ctx=row.context||{};
+    return {module:target?.module||row.module_key,feature:target?.feature||row.feature,title:row.title,instruction:row.instruction,permitted:!!target,matched:[],action:String(ctx.action||row.module_key+"."+row.feature),risk:(ctx.risk||"medium") as WorkflowRisk,requiresApproval:Boolean(ctx.requiresApproval),reversible:ctx.reversible!==false,verification:String(ctx.verification||"Verifikasi hasil pada modul tujuan."),precondition:String(ctx.precondition||"Langkah sebelumnya harus selesai."),impact:String(ctx.impact||"Perubahan terbatas pada ruang kerja tujuan.")};
+   });
+   const restored:WorkflowPlan={title:run.title,objective:String(meta.objective||run.request),reason:String(meta.reason||"Lanjutkan workflow dari checkpoint terakhir."),riskLevel:(meta.riskLevel||"medium") as WorkflowRisk,autonomyLevel:meta.autonomyLevel||"A2",executionMode:(meta.executionMode||"guided") as ExecutionMode,acceptanceCriteria:Array.isArray(meta.acceptanceCriteria)?meta.acceptanceCriteria:[],impact:Array.isArray(meta.impact)?meta.impact:[],safeguards:Array.isArray(meta.safeguards)?meta.safeguards:[],steps};
+   setRequest(run.request);setSubmitted(run.request);setSources(String(run.context?.sources||""));setExecutionMode(restored.executionMode);setPlan(restored);
+   setActiveRunId(run.id);setStepRows(rows);setDone(Object.fromEntries(rows.map((row,i)=>[i,row.status==="done"])));setApprovals(Object.fromEntries(rows.map((row,i)=>[i,Boolean(row.context?.approved_at)])));setSource(run.source||"workflow tersimpan");
+  }catch(e){setStatus(errorMessage(e))}finally{setBusy(false)}
+ }
+
+ async function approveStep(index:number){
+  const row=stepRows[index],step=plan?.steps[index];if(!db||!row||!step||!activeRunId)return;
+  setBusy(true);setStatus("");
+  try{
+   const {data:{user}}=await db.auth.getUser();if(!user)throw Error("Sesi berakhir.");
+   const nextContext={...(row.context||{}),approved_at:new Date().toISOString(),approved_by:user.id};
+   const {error}=await db.from("sc_workflow_steps").update({context:nextContext,updated_at:new Date().toISOString()}).eq("id",row.id);if(error)throw error;
+   setStepRows(rows=>rows.map((item,i)=>i===index?{...item,context:nextContext}:item));setApprovals(v=>({...v,[index]:true}));setStatus("Approval langkah tercatat. Lanjutkan ke fitur tujuan dan verifikasi hasilnya.");
   }catch(e){setStatus(errorMessage(e))}finally{setBusy(false)}
  }
 
  async function toggleStep(index:number){
+  const step=plan?.steps[index];if(!step)return;
+  if(!step.permitted){setStatus("Langkah ini diblokir oleh policy akses untuk peran aktif.");return;}
+  if(index>0&&!done[index-1]){setStatus("Selesaikan dan verifikasi langkah sebelumnya terlebih dahulu.");return;}
+  if(step.requiresApproval&&!approvals[index]){setStatus("Langkah berisiko ini memerlukan approval sebelum dapat ditandai selesai.");return;}
   const next=!done[index];setDone(value=>({...value,[index]:next}));
   const row=stepRows[index];if(!db||!activeRunId||!row)return;
   const nextRow=stepRows[index+1];
-  const {error}=await db.from("sc_workflow_steps").update({status:next?"done":"active",completed_at:next?new Date().toISOString():null}).eq("id",row.id);
+  const {error}=await db.from("sc_workflow_steps").update({status:next?"done":"active",completed_at:next?new Date().toISOString():null,updated_at:new Date().toISOString()}).eq("id",row.id);
   if(error){setDone(value=>({...value,[index]:!next}));setStatus(error.message);return;}
-  if(nextRow&&next&&!done[index+1])await db.from("sc_workflow_steps").update({status:"active"}).eq("id",nextRow.id);
-  const completed=Object.keys({...done,[index]:next}).filter(key=>({...done,[index]:next})[Number(key)]).length;
+  if(nextRow&&next&&!done[index+1])await db.from("sc_workflow_steps").update({status:"active",updated_at:new Date().toISOString()}).eq("id",nextRow.id);
+  const state={...done,[index]:next},completed=Object.keys(state).filter(key=>state[Number(key)]).length;
   await db.from("sc_workflow_runs").update({current_step_order:Math.min(completed+1,stepRows.length),status:completed===stepRows.length?"completed":"active",completed_at:completed===stepRows.length?new Date().toISOString():null,updated_at:new Date().toISOString()}).eq("id",activeRunId);
   await loadRuns();
  }
 
- const shortcuts=["Siswa sering alpa, sudah dibina, buat surat panggilan dan agenda orang tua","Dari PBD buat RKT lalu program kerja sampai laporan","Tagihan siswa sampai pembayaran, kuitansi dan buku kas","Pengajuan lembur sampai payroll dan slip"];
- return <section className="panel">
-  <div className="sectionhead"><div><span className="pill"><Sparkles size={13}/> Asisten Rencana Pekerjaan</span><h2 style={{marginTop:10}}>Rencanakan pekerjaan lintas modul</h2><p className="muted">Susun langkah lintas modul, periksa hak akses, lalu simpan dan lanjutkan progres kapan pun.</p></div></div>
-  <form onSubmit={event=>{event.preventDefault();void analyze(request)}} className="fields"><label className="field full">Permintaan<textarea value={request} onChange={event=>setRequest(event.target.value)} rows={4} placeholder="Contoh: siswa sering alpa, sudah dua kali dibina, buat surat panggilan orang tua dan jadwalkan pertemuan"/></label><button className="button" disabled={request.trim().length<3||planning}>{planning?"Menyusun…":"Susun Workflow"}</button></form>
-  <div className="flow" style={{marginTop:12}}>{shortcuts.map(item=><button type="button" key={item} className="button secondary" onClick={()=>{setRequest(item);void analyze(item)}}>{item.length>34?item.slice(0,34)+"…":item}</button>)}</div>
-  {savedRuns.length>0&&<div className="panel" style={{marginTop:14}}><strong>Workflow tersimpan</strong><div className="flow" style={{marginTop:8}}>{savedRuns.map(run=><button type="button" key={run.id} className="button secondary" disabled={busy} onClick={()=>void resume(run)}>{run.title} · {run.status}</button>)}</div></div>}
-  {planning&&<div className="banner" role="status">Menyusun urutan kerja dan memeriksa hak akses…</div>}
-  {plan&&<div style={{marginTop:18}}><div className="sectionhead"><div><h3>{plan.title}</h3><p className="muted">{plan.reason}</p><small>Rencana: {source}</small></div>{schoolId&&!activeRunId&&<button className="button secondary" disabled={busy||!plan.steps.length} onClick={()=>void persist()}>{busy?"Menyimpan…":"Simpan Workflow"}</button>}</div>
-   {plan.steps.map((step,index)=><article className="entry" key={stepRows[index]?.id||index} style={{alignItems:"flex-start"}}><button className="iconbutton" disabled={busy} onClick={()=>void toggleStep(index)} aria-label={done[index]?"Tandai belum selesai":"Tandai selesai"}>{done[index]?<Check size={16}/>:<span style={{fontWeight:800}}>{index+1}</span>}</button><div style={{flex:1}}><strong>{step.title}</strong><small>{step.module} · {step.feature||"Ruang kerja utama"}</small><p>{step.instruction}</p>{!step.permitted&&<div className="banner error">Peran ini tidak mempunyai akses ke langkah tersebut.</div>}</div>{step.permitted&&<button className="button secondary" disabled={index>0&&!done[index-1]} onClick={()=>onRoute(step.module,step.feature)}>Buka <ChevronRight size={14}/></button>}</article>)}
-   {!plan.steps.length&&<div className="empty">Tambahkan objek pekerjaan yang lebih spesifik agar workflow dapat disusun.</div>}
+ const shortcuts=[
+  "Siswa sering alpa, sudah dibina, buat surat panggilan dan agenda orang tua",
+  "Dari PBD buat RKT lalu program kerja sampai laporan",
+  "Tagihan siswa sampai pembayaran, kuitansi dan buku kas",
+  "Pengajuan lembur sampai payroll dan slip"
+ ];
+ const completed=plan?plan.steps.filter((_,i)=>done[i]).length:0,progress=plan?.steps.length?Math.round(completed/plan.steps.length*100):0;
+ const preflight=plan?[
+  {label:"Policy akses",ok:plan.steps.every(x=>x.permitted),detail:plan.steps.every(x=>x.permitted)?"Semua langkah tersedia untuk peran aktif.":"Ada langkah yang diblokir oleh role."},
+  {label:"Dependency",ok:plan.steps.length>0,detail:plan.steps.length+" langkah tersusun berurutan."},
+  {label:"Approval gate",ok:true,detail:plan.steps.filter(x=>x.requiresApproval).length+" langkah membutuhkan persetujuan eksplisit."},
+  {label:"Rollback / kompensasi",ok:true,detail:plan.steps.filter(x=>!x.reversible).length+" langkah irreversible ditandai untuk koreksi/kompensasi."}
+ ]:[];
+
+ return <section className="uao-shell">
+  <div className="uao-hero">
+   <div className="uao-hero-copy"><span className="uao-kicker"><Sparkles size={14}/> UNIVERSAL AI ORCHESTRATOR</span><h2>Dari tujuan menjadi workflow yang aman, terukur, dan bisa diaudit.</h2><p>Goal lock, policy, impact analysis, approval, checkpoint, verifikasi dan evidence berada dalam satu control plane. AI merencanakan; aksi tetap mengikuti fitur, role dan data SekolaPro.</p></div>
+   <div className="uao-hero-orbit"><span><ShieldCheck size={18}/> Policy</span><span><GitBranch size={18}/> Workflow</span><span><FileCheck2 size={18}/> QCL</span><span><Database size={18}/> Evidence</span></div>
+  </div>
+
+  <div className="uao-compose">
+   <form onSubmit={event=>{event.preventDefault();void analyze(request)}} className="uao-prompt">
+    <label>Tujuan yang ingin diselesaikan<textarea value={request} onChange={event=>setRequest(event.target.value)} rows={4} placeholder="Contoh: siswa sering alpa, sudah dua kali dibina, buat surat panggilan orang tua dan jadwalkan pertemuan."/></label>
+    <details className="uao-source"><summary>Tambahkan sumber / konteks opsional</summary><p>Isi ini diperlakukan sebagai <b>data tidak tepercaya</b>, bukan instruksi eksekusi.</p><textarea value={sources} onChange={event=>setSources(event.target.value)} rows={3} maxLength={3000} placeholder="Contoh: nama dokumen, ringkasan data, atau konteks yang sudah diverifikasi."/></details>
+    <div className="uao-compose-foot"><div className="uao-mode" role="group" aria-label="Mode eksekusi"><button type="button" className={executionMode==="simulation"?"active":""} onClick={()=>setExecutionMode("simulation")}><Eye size={15}/> Simulasi</button><button type="button" className={executionMode==="guided"?"active":""} onClick={()=>setExecutionMode("guided")}><Play size={15}/> Terarah</button></div><button className="button uao-primary" disabled={request.trim().length<3||planning}>{planning?"Menyusun control plan…":"Susun Control Plan"}</button></div>
+   </form>
+   <div className="uao-shortcuts">{shortcuts.map(item=><button type="button" key={item} onClick={()=>{setRequest(item);void analyze(item)}}>{compact(item,62)}</button>)}</div>
+  </div>
+
+  {savedRuns.length>0&&<div className="uao-runs"><div className="uao-section-title"><div><Clock3 size={18}/><strong>Run terbaru</strong></div><small>Resume dari checkpoint tanpa mengulang analisis.</small></div><div className="uao-run-grid">{savedRuns.map(run=><button type="button" key={run.id} disabled={busy} onClick={()=>void resume(run)}><span>{run.status==="completed"?"Selesai":"Aktif"}</span><strong>{compact(run.title,46)}</strong><small>{new Date(run.updated_at).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"})}</small></button>)}</div></div>}
+
+  {planning&&<div className="uao-thinking"><Sparkles size={18}/> Memetakan tujuan, dependency, policy, risiko dan verifikasi…</div>}
+
+  {plan&&<div className="uao-plan">
+   <div className="uao-goal">
+    <div><span className="uao-kicker">GOAL LOCK</span><h3>{plan.objective}</h3><p>{plan.reason}</p></div>
+    <div className="uao-progress"><span>{progress}%</span><small>{completed}/{plan.steps.length} terverifikasi</small><div><i style={{width:progress+"%"}}/></div></div>
+   </div>
+
+   <div className="uao-metrics">
+    <div><small>Risk</small><strong className={riskClass[plan.riskLevel]}>{riskLabel[plan.riskLevel]}</strong></div>
+    <div><small>Autonomy</small><strong>{plan.autonomyLevel}</strong></div>
+    <div><small>Mode</small><strong>{plan.executionMode==="simulation"?"Simulasi":"Terarah"}</strong></div>
+    <div><small>Source</small><strong>{source||"Policy engine"}</strong></div>
+   </div>
+
+   <div className="uao-grid">
+    <div className="uao-main">
+     <div className="uao-section-title"><div><GitBranch size={18}/><strong>Execution DAG</strong></div>{schoolId&&!activeRunId&&<button className="button secondary" disabled={busy||!plan.steps.length} onClick={()=>void persist()}>{busy?"Menyimpan…":"Simpan run"}</button>}</div>
+     <div className="uao-timeline">
+      {plan.steps.map((step,index)=><article className={"uao-step "+(done[index]?"done ":"")+(step.permitted?"":"blocked")} key={stepRows[index]?.id||step.action+index}>
+       <div className="uao-step-index">{done[index]?<Check size={17}/>:index+1}</div>
+       <div className="uao-step-body">
+        <div className="uao-step-head"><div><small>{step.action}</small><h4>{step.title}</h4></div><span className={riskClass[step.risk]}>{riskLabel[step.risk]}</span></div>
+        <p>{step.instruction}</p>
+        <div className="uao-step-meta"><span><LockKeyhole size={14}/>{step.requiresApproval?"Approval wajib":"Approval otomatis"}</span><span><RotateCcw size={14}/>{step.reversible?"Reversible":"Compensation only"}</span><span><Database size={14}/>{step.module} · {step.feature}</span></div>
+        <details><summary>Precondition, impact & verification</summary><p><b>Precondition:</b> {step.precondition}</p><p><b>Impact:</b> {step.impact}</p><p><b>Verification:</b> {step.verification}</p></details>
+        {!step.permitted&&<div className="uao-inline-warning"><AlertTriangle size={16}/> Diblokir oleh role/policy aktif.</div>}
+        {step.requiresApproval&&stepRows[index]&&!approvals[index]&&<button className="button secondary" disabled={busy||!step.permitted} onClick={()=>void approveStep(index)}><ShieldCheck size={15}/> Approve langkah</button>}
+       </div>
+       <div className="uao-step-actions">{step.permitted&&<button className="button secondary" disabled={index>0&&!done[index-1]} onClick={()=>onRoute(step.module,step.feature)}>Buka <ChevronRight size={14}/></button>}<button className="iconbutton" disabled={busy||!step.permitted||(index>0&&!done[index-1])} onClick={()=>void toggleStep(index)} aria-label={done[index]?"Tandai belum selesai":"Tandai selesai"}><Check size={16}/></button></div>
+      </article>)}
+      {!plan.steps.length&&<div className="empty">Tujuan belum cukup spesifik untuk membangun workflow.</div>}
+     </div>
+    </div>
+
+    <aside className="uao-rail">
+     <section><div className="uao-section-title"><div><ShieldCheck size={17}/><strong>Pre-flight</strong></div></div>{preflight.map(item=><div className="uao-check" key={item.label}><span className={item.ok?"ok":"warn"}>{item.ok?<Check size={14}/>:<AlertTriangle size={14}/>}</span><div><b>{item.label}</b><small>{item.detail}</small></div></div>)}</section>
+     <section><div className="uao-section-title"><div><Layers3 size={17}/><strong>Impact map</strong></div></div>{plan.impact.map(item=><p className="uao-listline" key={item}>{item}</p>)}</section>
+     <section><div className="uao-section-title"><div><FileCheck2 size={17}/><strong>Acceptance</strong></div></div>{plan.acceptanceCriteria.map((item,i)=><p className="uao-listline" key={i}>{item}</p>)}</section>
+     <section><div className="uao-section-title"><div><LockKeyhole size={17}/><strong>Safeguards</strong></div></div>{plan.safeguards.slice(0,5).map((item,i)=><p className="uao-listline" key={i}>{item}</p>)}</section>
+    </aside>
+   </div>
+
    {status&&<div className="banner" role="status">{status}</div>}
-   <button className="button secondary" style={{marginTop:12}} onClick={()=>{setSubmitted("");setPlan(null);setDone({});setStepRows([]);setActiveRunId("");setStatus("")}}><RotateCcw size={14}/> Reset</button>
+   <div className="uao-footer"><small>Run tidak dianggap selesai hanya karena API berhasil. Setiap langkah harus diverifikasi terhadap keadaan aktual.</small><button className="button secondary" onClick={()=>{setSubmitted("");setPlan(null);setDone({});setApprovals({});setStepRows([]);setActiveRunId("");setStatus("")}}><RotateCcw size={14}/> Reset plan</button></div>
   </div>}
  </section>;
 }
