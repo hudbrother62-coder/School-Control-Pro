@@ -12,7 +12,7 @@ type Form={
  showLogo:boolean;showNpsn:boolean;showPhone:boolean;showEmail:boolean;showWebsite:boolean;showSignature:boolean;showStamp:boolean;
  layout:"formal"|"minimal"
 };
-const blank:Form={title:"LAPORAN DISIPLIN & PRESTASI SISWA",subtitle:"Rekap kejadian, pembinaan, tindak lanjut dan prestasi",signerTitle:"Kepala Sekolah",letterCity:"",footer:"School Control · Dokumen kesiswaan",classificationCode:"",showLogo:true,showNpsn:true,showPhone:true,showEmail:true,showWebsite:false,showSignature:true,showStamp:false,layout:"formal"};
+const blank:Form={title:"LAPORAN DISIPLIN & PRESTASI SISWA",subtitle:"Rekap kejadian, pembinaan, tindak lanjut dan prestasi",signerTitle:"Kepala Sekolah",letterCity:"",footer:"SekolaPro · Dokumen kesiswaan",classificationCode:"",showLogo:true,showNpsn:true,showPhone:true,showEmail:true,showWebsite:false,showSignature:true,showStamp:false,layout:"formal"};
 
 export default function DisciplineReportTemplate({schoolId}:{schoolId:string}){
  const db=useMemo(()=>browserDb(),[]);

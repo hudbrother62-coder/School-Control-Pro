@@ -5,3 +5,19 @@
 .support-trigger{position:fixed;right:24px;bottom:24px;z-index:180;width:52px;height:52px!important;border-radius:50%!important;background:#08785b!important;color:#fff!important;box-shadow:0 5px 20px #06332940;border:2px solid #ffffff90!important;display:grid!important;place-items:center}.support-trigger svg{width:22px;height:22px}.support-trigger>span{right:-2px;top:-2px}@media(max-width:700px){.support-trigger{right:16px;bottom:calc(85px + env(safe-area-inset-bottom));width:48px;height:48px!important}}
 
 .support-contact-pages{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;padding:12px 0;font-size:11px}.support-contacts>.support-contact-pages{overflow:visible}.support-contact-pages button{border:1px solid var(--chat-line);border-radius:6px;padding:6px}
+
+/* SekolaPro brand */
+.support-heading{background:linear-gradient(135deg,#7422a8,#47258a 48%,#0a70c4)}
+.support-shell button:focus-visible{outline-color:#8a4bd0}
+.support-avatar{background:#efe6fb;color:#6b27ad}
+.support-contacts .selected{background:#f0e8fa}
+.support-contacts em{background:#6d28b8}
+.support-messages{background:#f7f3fb}
+.support-bubble.mine{background:#eadcf8}
+.support-bubble>small{color:#6d28b8}
+.support-compose>button,.support-voice-preview>button,.support-recording>button{background:#eee5fa;color:#6d28b8}
+.support-trigger{background:linear-gradient(135deg,#7624aa,#48258c 48%,#0a72c8)!important;box-shadow:0 7px 24px #4d258c42}
+[data-theme=dark] .support-shell{--chat-bg:#19162b;--chat-text:#eee9f8;--chat-line:#3d3355;--chat-muted:#b7a9cc}
+[data-theme=dark] .support-messages{background:#110f20}
+[data-theme=dark] .support-bubble.mine,[data-theme=dark] .support-contacts .selected{background:#342449}
+[data-theme=dark] .support-bubble>small{color:#bb8cff}

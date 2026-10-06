@@ -23,7 +23,7 @@ function validated(raw:any,role:Role,request:string){
   if(steps.length>=8)break;
  }
  if(!steps.length)return planWorkflow(request,role);
- return {title:String(raw?.title||"Workflow School Control").slice(0,120),reason:String(raw?.reason||"Urutan dibuat dari keterkaitan data dan pekerjaan antar modul.").slice(0,500),steps};
+ return {title:String(raw?.title||"Workflow SekolaPro").slice(0,120),reason:String(raw?.reason||"Urutan dibuat dari keterkaitan data dan pekerjaan antar modul.").slice(0,500),steps};
 }
 
 export async function POST(req:NextRequest){
@@ -40,7 +40,7 @@ export async function POST(req:NextRequest){
   const role=member.role as Role,fallback=planWorkflow(request,role),apiKey=process.env.GEMINI_API_KEY;
   if(!apiKey)return NextResponse.json({plan:fallback,source:"deterministic"},{headers});
   const catalog=modules.filter(m=>canAccess(m,role)).map(m=>({module:m.key,label:m.label,features:visibleFeatures(m,role)}));
-  const prompt="Anda adalah workflow planner untuk aplikasi School Control sekolah Indonesia.\\n"+
+  const prompt="Anda adalah workflow planner untuk aplikasi SekolaPro sekolah Indonesia.\\n"+
    "Tugas: pecah permintaan pengguna menjadi urutan kerja lintas modul yang benar, tanpa mengeksekusi perubahan data.\\n"+
    "Gunakan HANYA module dan feature dari katalog berikut:\\n"+JSON.stringify(catalog)+"\\n"+
    "Prinsip: mulai dari sumber data/verifikasi sebelum tindakan turunan; hindari input ulang; maksimal 8 langkah; jangan membuka detail BK rahasia untuk role yang tidak berhak; jangan mengarang data; setiap step harus konkret.\\n"+

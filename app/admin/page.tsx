@@ -1,1 +1,1 @@
-import PlatformAdmin from "@/components/PlatformAdmin";export const metadata={title:"Super Admin | School Control",robots:{index:false,follow:false}};export default function Admin(){return <PlatformAdmin/>}
+import PlatformAdmin from "@/components/PlatformAdmin";export const metadata={title:"Super Admin | SekolaPro",robots:{index:false,follow:false}};export default function Admin(){return <PlatformAdmin/>}
