@@ -56,7 +56,7 @@ export default function MasterHub({schoolId,role,focus}:{schoolId:string;role:Ro
    importKind==="classes"?[{Nama_Kelas:"VIII A",Jenjang:"SMP 8",Tahun_Ajaran:"2026/2027"}]:
    importKind==="staff"?[{Nama:"Budi Santoso",Jabatan:"Guru Matematika",Jam_Masuk:"07:00",Toleransi_Terlambat_Menit:15}]:
    [{Kode:"MTK",Nama:"Matematika"}];
-  await downloadExcel("template-"+importKind+"-school-control.xlsx",[{name:"Data",rows},{name:"Panduan",rows:guide}]);
+  await downloadExcel("template-"+importKind+"-sekolapro.xlsx",[{name:"Data",rows},{name:"Panduan",rows:guide}]);
  }
  async function read(file?:File){if(!file)return;setError("");try{if(file.size>5_000_000)throw Error("File maksimal 5 MB");const rows=await readExcel(file);if(rows.length>500)throw Error("Maksimal 500 baris");setPreview(rows as Record<string,unknown>[]);setFilename(file.name)}catch(e){setError(errorMessage(e));setPreview([])}}
  async function commitImport(){if(!preview.length)return;await run(async()=>{
@@ -71,7 +71,7 @@ export default function MasterHub({schoolId,role,focus}:{schoolId:string;role:Ro
    const rows=preview.map(r=>({code:clean(r.Kode),name:clean(r.Nama)}));await rpc("sc_import_subjects",{p_school:schoolId,p_rows:rows});
   } setPreview([]);setFilename("");
  })}
- async function exportAll(){await downloadExcel("data-induk-school-control.xlsx",[
+ async function exportAll(){await downloadExcel("data-induk-sekolapro.xlsx",[
   {name:"Siswa",rows:students.map(s=>({NIS:s.nis||"",NISN:s.nisn||"",Nama:s.name,Jenis_Kelamin:s.gender||"",Kelas:classes.find(c=>c.id===s.class_id)?.name||"",Status:s.status}))},
   {name:"Kelas",rows:classes.map(c=>({Nama_Kelas:c.name,Jenjang:c.grade||"",Tahun_Ajaran:c.academic_year}))},
   {name:"Guru_Staf",rows:staff.map(s=>({Nama:s.name,Jabatan:s.position||"",Jam_Masuk:s.shift_start,Toleransi:s.late_tolerance_minutes,Terkait_Akun:s.user_id?"Ya":"Belum"}))},
