@@ -8,7 +8,8 @@ const env=['NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY','GE
  const request=(authorization,text)=>({headers:new Headers(authorization?{authorization}:{}),json:async()=>({school_id:'local-school',request:text})});
  assert.equal((await api.POST(request(null,'Buat RKT'))).status,401);
  const reply=await api.POST(request('Bearer local-fixture-token','Pengajuan lembur sampai payroll dan slip'));assert.equal(reply.status,200);assert.equal(seenToken,'local-fixture-token');assert.ok(reply.body.plan.steps.length>0);
- const payroll=reply.body.plan.steps.filter(s=>s.module==='gajian'&&s.feature==='Proses Payroll');assert.ok(payroll.length>0);assert.ok(payroll.every(s=>s.permitted===false));
+ assert.ok(reply.body.plan.objective);assert.ok(reply.body.plan.acceptanceCriteria.length>=3);assert.ok(['high','critical'].includes(reply.body.plan.riskLevel));
+ const payroll=reply.body.plan.steps.filter(s=>s.module==='gajian'&&s.feature==='Proses Payroll');assert.ok(payroll.length>0);assert.ok(payroll.every(s=>s.permitted===false));assert.ok(payroll.every(s=>s.action&&s.verification&&s.requiresApproval));
  currentRole='owner';const owner=await api.POST(request('Bearer local-fixture-token','Pengajuan lembur sampai payroll dan slip'));assert.ok(owner.body.plan.steps.every(s=>s.permitted));
  console.log('PASS: orchestrator Bearer parsing, authentication and role-specific payroll workflow.');
  }finally{for(const k of env)if(original[k]===undefined)delete process.env[k];else process.env[k]=original[k]}})().catch(e=>{console.error(e);process.exit(1)});
