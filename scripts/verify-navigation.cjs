@@ -7,6 +7,8 @@ for(const role of Object.keys(catalog.ROLE_LABELS))for(const module of catalog.m
  const instructions=help.taskHelp(module.key,feature);assert.ok(instructions.purpose&&instructions.before&&instructions.result);assert.ok(instructions.steps.length>=3);assert.ok(catalog.modules.find(m=>m.key==='help').features.includes(nav.guideFor(module.key)));routes++;
 }}
 assert.deepEqual(nav.resolveWorkspaceRoute('guru_ai','Ngobrol AI','teacher'),{module:'assistant',feature:'Asisten Guru'});
+assert.deepEqual(nav.resolveWorkspaceRoute('assistant','Rencana Pekerjaan','teacher'),{module:'assistant',feature:'Universal AI Orchestrator'});
+assert.deepEqual(nav.resolveWorkspaceRoute('assistant','Universal AI Orchestrator','teacher'),{module:'assistant',feature:'Universal AI Orchestrator'});
 assert.deepEqual(nav.resolveWorkspaceRoute('command','Agenda','teacher'),{module:'calendar',feature:'Kalender Sekolah'});
 for(const feature of ['Draft Payroll','Review','Approval','Kunci Periode','Rekap Payroll'])assert.deepEqual(nav.resolveWorkspaceRoute('gajian',feature,'owner'),{module:'gajian',feature:'Proses Payroll'});
 assert.equal(nav.resolveWorkspaceRoute('gajian','Proses Payroll','teacher'),null);
