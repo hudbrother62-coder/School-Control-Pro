@@ -1,4 +1,4 @@
-# School Control
+# SekolaPro
 
 **Satu Sistem, Semua Urusan Sekolah.** Modular school SaaS. One school = one owner account + one subscription; invite members with separate logins. 3-day trial.
 
@@ -12,7 +12,7 @@ Next.js 15 / React 19 / TypeScript; Supabase Auth/PostgreSQL/RLS; Gemini server 
 
 ## Setup
 
-1. School Control is bound to the pre-provisioned EMPTY Supabase project `sfzaexzpbcvynkhglndi`; do not attach other products' databases.
+1. SekolaPro is bound to the pre-provisioned EMPTY Supabase project `sfzaexzpbcvynkhglndi`; do not attach other products' databases.
 2. The current database migrations have been applied in timestamp order. Configure Supabase Auth Site URL / Redirect URL for your Vercel domain and use a verified SMTP sender for public signups. Email confirmation remains supported.
 3. Public Supabase URL and publishable key are already present in `.env.production` (safe browser-visible identifiers). Set the private server-only keys in Vercel Environment Variables; never commit secrets.
 4. Run `npm install`, `npm test`, `npm run lint`, `npm run build` before deploying.
