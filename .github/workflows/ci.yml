@@ -1,4 +1,4 @@
-name: School Control CI
+name: SekolaPro CI
 on:
   push:
     branches: [main]
