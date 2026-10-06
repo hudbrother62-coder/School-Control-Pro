@@ -2,3 +2,15 @@
 .platform-subscription-dates{display:grid;gap:5px;font-size:12px;min-width:180px}.platform-subscription-dates strong{color:#08785b}.platform-subscription-dates small{color:#657b72}.platform-detail-grid strong{overflow-wrap:anywhere}.platform-tools .support-trigger{display:flex;padding:9px;align-items:center}
 
 .platform-status.inactive{background:#fff0ed;color:#a62e3a}.platform-pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px;font-size:12px}.platform-panel-header>select{padding:10px;border:1px solid #dce7e2;border-radius:8px;max-width:100%;background:white;color:#174535}
+
+/* SekolaPro brand */
+.platform-admin{--pa-accent:#6d28b8;--pa-soft:#f6f2fb;--pa-border:#e7dff0}
+.platform-aside{background:linear-gradient(180deg,#421369 0%,#292069 55%,#075998 100%)}
+.platform-aside nav button.selected,.platform-aside nav button:hover{background:linear-gradient(135deg,#7a2cb1aa,#1773b9aa)}
+.platform-section-label{color:#cab8e9}
+.platform-aside-bottom{border-top-color:#ffffff26}
+.platform-admin-pill>svg{color:#c9b8ff}
+.platform-kicker,.platform-metric-top svg,.platform-loading a{color:#6d28b8}
+.platform-tools button,.platform-tools a,.platform-panel-header button{color:#57249a;border-color:#ddd1ea}
+.platform-revenue{background:linear-gradient(110deg,#4c176f,#33206e 54%,#075d9f)}
+.platform-revenue svg{color:#cbb8ff}
