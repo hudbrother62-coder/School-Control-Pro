@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+<title>SekolaPro</title><desc>Ikon topi wisuda SekolaPro dengan gradasi ungu ke biru</desc>
+<defs>
+ <linearGradient id="top" x1="12" y1="30" x2="118" y2="76" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a50eb1"/><stop offset=".48" stop-color="#52218c"/><stop offset="1" stop-color="#0879d3"/></linearGradient>
+ <linearGradient id="base" x1="31" y1="64" x2="99" y2="108" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9416a8"/><stop offset=".52" stop-color="#35227f"/><stop offset="1" stop-color="#0870c8"/></linearGradient>
+</defs>
+<path d="M9 49.5 64 20l55 29.5L64 79 9 49.5Z" fill="url(#top)"/>
+<path d="M31 64.5 64 82l34-18v28c-10.5 9.2-21.8 13.7-34 13.7S40.8 101.2 31 92V64.5Z" fill="url(#base)"/>
+<path d="M64 79 9 49.5 64 20l55 29.5L64 79Z" fill="none" stroke="#fff" stroke-opacity=".13" stroke-width="1.5"/>
+<path d="M108.5 54v25.5" stroke="#0870c8" stroke-width="5" stroke-linecap="round"/>
+<circle cx="108.5" cy="84.5" r="5.5" fill="#0870c8"/>
+<path d="m108.5 89-6 14h12l-6-14Z" fill="#0870c8"/>
+</svg>

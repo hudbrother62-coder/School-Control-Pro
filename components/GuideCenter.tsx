@@ -79,7 +79,7 @@ const guides:Guide[]=[
 ];
 
 const extraGuides:{id:string;feature:string;module:ModuleKey;features:string[]}[]=[
- {id:"assistant",feature:"Asisten AI",module:"assistant",features:["Asisten Guru","Asisten Kepala Sekolah","Asisten Kelas","Rencana Pekerjaan"]},
+ {id:"assistant",feature:"Asisten AI",module:"assistant",features:["Asisten Guru","Asisten Kepala Sekolah","Asisten Kelas","Universal AI Orchestrator"]},
  {id:"attendance",feature:"Presensi Guru & Staf",module:"attendance",features:["Check-in/check-out","Riwayat kehadiran","Izin","Cuti"]},
  {id:"planning",feature:"Perencanaan & Supervisi",module:"kepsek_ai",features:["PBD/EDS","Pusat dokumen","Persetujuan dokumen","Supervisi guru"]},
  {id:"performance",feature:"Kinerja & Pengembangan",module:"performance",features:["Kehadiran","Bukti capaian","Evaluasi","Tanggapan guru"]},
@@ -110,7 +110,7 @@ const quickStart:[ModuleKey,string,string,string][]=[
  ["buku_kerja","Jurnal Mengajar","Isi jurnal mengajar","Catat topik, aktivitas, refleksi dan tindak lanjut."],
  ["bk","Kasus & Asesmen","Catat layanan BK","Gunakan kasus dan layanan dengan privasi konselor."],
  ["sikas","Pemasukan","Catat keuangan","Siapkan kas dan catat transaksi pada tanggal yang tepat."],
- ["assistant","Rencana Pekerjaan","Minta panduan urutan pekerjaan","Tulis tujuan; asisten membantu memilih langkah dan fitur."],
+ ["assistant","Universal AI Orchestrator","Susun control plan lintas modul","Tulis tujuan; sistem memetakan dependency, risk, approval, dampak dan verifikasi."],
  ["reports","Ringkasan Laporan","Periksa hasil dan laporan","Pilih laporan, periode dan pratinjau sebelum ekspor."],
 ];
 

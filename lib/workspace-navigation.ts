@@ -8,6 +8,7 @@ const aliases:Record<string,WorkspaceRoute>={
  "guru_ai::Ngobrol AI":{module:"assistant",feature:"Asisten Guru"},
  "guru_ai::Koneksi AI":{module:"assistant",feature:"Koneksi AI"},
  "kepsek_ai::Asisten Kepsek":{module:"assistant",feature:"Asisten Kepala Sekolah"},
+ "assistant::Rencana Pekerjaan":{module:"assistant",feature:"Universal AI Orchestrator"},
  "buku_kerja::Asisten Kelas":{module:"assistant",feature:"Asisten Kelas"},
  "kepsek_ai::Arsip Laporan":{module:"reports",feature:"Arsip Laporan"},
  "command::Agenda":{module:"calendar",feature:"Kalender Sekolah"},
