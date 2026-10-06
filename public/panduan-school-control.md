@@ -1,4 +1,4 @@
-# Panduan penggunaan School Control
+# Panduan penggunaan SekolaPro
 
 Diperbarui 3 Oktober 2026. Menu yang tampil mengikuti jabatan dan akses akun di sekolah aktif.
 
@@ -3035,7 +3035,7 @@ Buka **Pusat Laporan → Template Laporan Sekolah**. Pemilik/kepala sekolah/waki
 
 Template unggahan diterapkan pada ekspor Word. Preview/cetak PDF memakai tata letak formal aplikasi dan aset sekolah; tata letak Word unggahan tidak dirender identik ke PDF di browser. Sekolah dapat menyimpan hasil Word sebagai PDF dari Word bila membutuhkan layout unggahan yang sama. Excel memakai lembar ringkasan dan tabel per bagian, lebar kolom otomatis dan filter, tanpa kop/gambar Word. Kepala sekolah menetapkan standar format; dokumen pemerintah tetap mengikuti ketentuan instansi terkait.
 
-## School Control Pro dan masa uji coba
+## SekolaPro dan masa uji coba
 
 Satu paket per sekolah: **Rp199.000 / 30 hari** atau **Rp1.990.000 / 365 hari**, dengan fitur yang sama. Tahunan hemat setara dua pembayaran bulanan. Trial **7 hari** dihitung sejak sekolah dibuat. Kuota generator perangkat ajar/perencanaan adalah 15 permintaan selama trial, kemudian 200 permintaan per bulan kalender UTC, dipakai bersama anggota sekolah. Permintaan dihitung ketika akses provider dijalankan; percobaan provider yang gagal dapat tetap mengurangi kuota. Tarif yang tampil pada checkout adalah sumber tagihan baru; pesanan lama mempertahankan nominalnya.
 
