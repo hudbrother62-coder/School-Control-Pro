@@ -213,3 +213,10 @@ dialog[open],.modal-backdrop,.smart-popover{animation:sc-enter .16s ease both}
 .platform-school-detail{background:var(--surface)!important;color:var(--text)!important}.platform-school-detail .platform-detail-identity>div,.platform-school-detail .platform-detail-grid>div{background:var(--surface);border-color:var(--border)}.platform-school-detail strong,.platform-school-detail h2,.platform-school-detail h3,.platform-school-detail td b{color:var(--text)}.platform-school-detail small,.platform-school-detail p,.platform-school-detail td,.platform-school-detail time{color:var(--muted)}.platform-school-detail th{background:var(--bg);color:var(--muted)}.platform-school-detail td,.platform-school-detail .platform-detail-group{border-color:var(--border)}.platform-school-detail table{font-size:13px}.platform-school-detail .platform-detail-grid small,.platform-school-detail .platform-detail-identity small{font-size:11px}.platform-school-detail .platform-detail-grid strong,.platform-school-detail .platform-detail-identity strong{font-size:14px}.workspace-tool-result+ .workspace-tool-result{margin-top:4px}
 
 .platform-aside,.platform-panel{min-width:0}.platform-aside nav{max-width:100%;min-width:0}.platform-detail-subtitle{font-size:13px;line-height:1.7;margin:0 0 20px}.button{display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1.5}@media(max-width:950px){.platform-admin{grid-template-columns:minmax(0,1fr)}.platform-main{width:100%;max-width:100%}.platform-aside nav{width:100%}.platform-aside nav button{flex-shrink:0}}
+
+/* SekolaPro brand */
+body{--accent:#6d28b8;--accent-soft:#f0e9fb;--sidebar:linear-gradient(180deg,#43136f 0%,#26206f 54%,#075ca8 100%)}
+body[data-theme=dark]{--accent:#a879ff;--accent-soft:#2b2144;--sidebar:linear-gradient(180deg,#241035 0%,#17183f 54%,#092f57 100%)}
+.button:not(.secondary):not(.danger){background:linear-gradient(135deg,#7b1fa8 0%,#4a238e 48%,#0a74cf 100%);box-shadow:0 8px 22px #51238c24}
+.navbtn.active,.navbtn:hover{background:linear-gradient(135deg,#6d2ca6aa,#1470b8aa)}
+.bottomnav .active{color:#6d28b8}
