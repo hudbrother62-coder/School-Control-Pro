@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" role="img" aria-labelledby="title desc">
+<title>SekolaPro</title><desc>Logo SekolaPro dengan ikon topi wisuda dan tulisan gradasi ungu ke biru</desc>
+<defs>
+ <linearGradient id="capTop" x1="155" y1="54" x2="600" y2="198" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#a50eb1"/><stop offset=".48" stop-color="#52218c"/><stop offset="1" stop-color="#0879d3"/></linearGradient>
+ <linearGradient id="capBase" x1="244" y1="162" x2="520" y2="265" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9416a8"/><stop offset=".52" stop-color="#35227f"/><stop offset="1" stop-color="#0870c8"/></linearGradient>
+ <linearGradient id="word" x1="145" y1="286" x2="625" y2="286" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#61106f"/><stop offset=".46" stop-color="#4d147c"/><stop offset=".64" stop-color="#0b5eac"/><stop offset="1" stop-color="#0879d3"/></linearGradient>
+</defs>
+<g transform="translate(112 10)">
+ <path d="M76 104 272 0l196 104-196 105L76 104Z" fill="url(#capTop)"/>
+ <path d="M154 157l118 62 120-63v82c-37 31-77 47-120 47-43 0-83-16-118-47v-81Z" fill="url(#capBase)"/>
+ <path d="M428 120v76" stroke="#0870c8" stroke-width="16" stroke-linecap="round"/>
+ <circle cx="428" cy="214" r="17" fill="#0870c8"/>
+ <path d="m428 229-19 47h38l-19-47Z" fill="#0870c8"/>
+</g>
+<text x="78" y="320" font-family="Arial,Helvetica,sans-serif" font-size="112" font-weight="800" letter-spacing="-5" fill="url(#word)">SekolaPro</text>
+</svg>
