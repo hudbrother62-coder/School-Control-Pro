@@ -1,7 +1,7 @@
 /** Only aggregate operational context enters AI prompts. No free-text journals, BK, salaries or student names. */
 export function aiContextPeriod(month?:unknown){const now=new Date(),fallback=now.toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'}).slice(0,7);const value=typeof month==='string'?month:fallback;if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(value))throw Error('Bulan konteks AI tidak valid.');const [year,m]=value.split('-').map(Number);if(year<2000||year>2100)throw Error('Bulan konteks AI tidak valid.');return {start:value+'-01',end:value+'-'+String(new Date(Date.UTC(year,m,0)).getUTCDate()).padStart(2,'0')};}
 export function safeAiSchoolContext(input:any){if(!input||!input.summary||!Array.isArray(input.summary.student))return null;const s=input.summary,number=(v:any)=>Number.isFinite(Number(v))?Number(v):0;const totals=(rows:any[],keys:string[])=>Object.fromEntries(keys.map(k=>[k,rows.reduce((sum,r)=>sum+number(r[k]),0)]));const clean=(v:any)=>String(v||'').replace(/[\x00-\x1F]/g,' ').slice(0,120);const journal=s.journals||[];return {
- source:'School Control · agregat database sesuai hak akses',period:s.period,generated_at:s.generated_at,scope:clean(s.scope),
+ source:'SekolaPro · agregat database sesuai hak akses',period:s.period,generated_at:s.generated_at,scope:clean(s.scope),
  students_active:number(s.students),classes:number(s.classes),
  student_attendance:totals(s.student||[],['present','sick','leave','absent','total']),staff_attendance:totals(s.attendance||[],['present','late','total']),
  tasks:(s.program||[]).map((r:any)=>({status:clean(r.status),count:number(r.count)})),
