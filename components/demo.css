@@ -9,7 +9,7 @@ body[data-theme=dark] .demo-module-grid button,body[data-theme=dark] .demo-locat
 @media(max-width:900px){.demo-module-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.demo-module-grid{grid-template-columns:1fr}.demo-bars{height:170px}}
 
 
-/* Dedicated School Control demo workspaces */
+/* Dedicated SekolaPro demo workspaces */
 .demo-search input{border:0;outline:0;background:transparent;color:inherit;font:inherit;width:150px}
 .demo-form-head,.demo-section-title{grid-column:1/-1;display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
 .demo-form-head p,.demo-section-title p,.demo-lead{margin:4px 0 0;color:#7b8f87;font-size:10px;line-height:1.55}
@@ -39,3 +39,16 @@ body[data-theme=dark] .demo-form-head p,body[data-theme=dark] .demo-section-titl
 .demo-section-title>.demo-primary{align-self:center;white-space:nowrap}
 body[data-theme=dark] .demo-calendar-cell{background:#101d30;border-color:#33465e}body[data-theme=dark] .demo-calendar-date{color:#eef5ff}body[data-theme=dark] .demo-calendar-event{background:#18372f;color:#8de1c3}
 @media(max-width:560px){.demo-calendar-cell{min-height:64px;padding:3px}.demo-calendar-date{padding:3px}.demo-calendar-date span{display:none}.demo-calendar-event{font-size:7px;padding:4px}.demo-section-title{align-items:stretch;flex-direction:column}.demo-section-title>.demo-primary{width:100%}}
+
+/* SekolaPro brand */
+.demo-shell aside{background:linear-gradient(180deg,#43136f 0%,#29206c 55%,#075b9f 100%)}
+.demo-brand small,.demo-shell nav button,.demo-exit{color:#d5cbe8}
+.demo-shell nav button.active,.demo-shell nav button:hover{background:linear-gradient(135deg,#7b2eb2aa,#1b73b7aa)}
+.demo-kicker,.demo-selected-feature strong{color:#6d28b8}
+.demo-feature-strip button{background:#f3edfb;color:#6224a4;border-color:#e2d7f0}
+.demo-feature-strip button.active,.demo-primary{background:linear-gradient(135deg,#7624aa,#4a268e 48%,#0a72c8)!important;border-color:transparent!important}
+.demo-progress i,.demo-bars i,.demo-hbar>i>b{background:linear-gradient(180deg,#8b2bb7,#0b74c9)}
+.demo-badge{background:#f3edfb;color:#6224a4}
+.demo-calendar button small,.demo-calendar-event{color:#6425a6}.demo-calendar-event{background:#f1eafb}
+.demo-toolbar-live button,.demo-toolbar-live label{color:#6125a1;border-color:#e0d5ee;background:#fbf9fd}
+body[data-theme=dark] .demo-feature-strip button,body[data-theme=dark] .demo-calendar-event{background:#2c2143;color:#c8a6ff;border-color:#47345f}
