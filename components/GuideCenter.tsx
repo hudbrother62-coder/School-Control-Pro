@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 import {AlertTriangle,BookOpen,CheckCircle2,ChevronDown,CircleHelp,Search,ShieldCheck,Target} from "lucide-react";
-import {modules,visibleFeatures,ROLE_LABELS,type Role,type ModuleKey} from "@/lib/modules";
+import {modules,navigationFeatures,ROLE_LABELS,type Role,type ModuleKey} from "@/lib/modules";
 import {guideFor,resolveWorkspaceRoute,type WorkspaceRoute} from "@/lib/workspace-navigation";
 import {taskHelp} from "@/lib/workspace-help";
 
@@ -132,7 +132,7 @@ export default function GuideCenter({role,focus,onRoute}:{role:Role;focus?:strin
  useEffect(()=>{setQuery("");setOpen(guides.find(g=>g.feature===focus)?.id||"start")},[focus]);
  const selected=useMemo(()=>{const q=(focus||"").toLowerCase();return guides.filter(g=>(!q||q.includes("mulai")||g.feature.toLowerCase()===q||g.feature.toLowerCase().includes(q)||q.includes(g.feature.toLowerCase()))&&(g.title+" "+g.summary+" "+g.basis+" "+g.steps.map(s=>s.detail).join(" ")).toLowerCase().includes(query.toLowerCase()))},[focus,query]);
  const shortcuts=quickStart.filter(([m,f])=>!!resolveWorkspaceRoute(m,f,role));
- const featureLinks=modules.filter(m=>m.key!=="help"&&(!focus||focus==="Mulai dari Sini"||guideFor(m.key)===focus)).flatMap(m=>visibleFeatures(m,role).map(f=>({module:m.key,feature:f,label:m.label,help:taskHelp(m.key,f)}))).filter(x=>(x.label+" "+x.feature+" "+x.help.purpose).toLowerCase().includes(query.toLowerCase()));
+ const featureLinks=modules.filter(m=>m.key!=="help"&&(!focus||focus==="Mulai dari Sini"||guideFor(m.key)===focus)).flatMap(m=>navigationFeatures(m,role).map(f=>({module:m.key,feature:f,label:m.label,help:taskHelp(m.key,f)}))).filter(x=>(x.label+" "+x.feature+" "+x.help.purpose).toLowerCase().includes(query.toLowerCase()));
  return <section className="guide-center">
   <div className="guide-hero-pro"><div><span className="eyebrow">BUKU PANDUAN LANGKAH DEMI LANGKAH</span><h2>Panduan SekolaPro</h2><p>Pilih pekerjaan Anda, ikuti langkahnya, lalu buka fitur langsung dari panduan. Mulai dengan data yang dibutuhkan; tidak perlu mengisi semua menu sekaligus.</p></div><div className="guide-role-pro"><ShieldCheck size={20}/><span>Akses Anda</span><b>{ROLE_LABELS[role]}</b><a className="button secondary" href="/panduan-school-control.md" download>Unduh panduan</a></div></div>
   {(focus==="Mulai dari Sini"||!focus)&&<section className="panel guide-flow-pro"><div><Target size={19}/><h3>Urutan cepat untuk {ROLE_LABELS[role]}</h3></div><div>{(flow[role]||flow.staff).map((x,i)=><span key={x}><b>{i+1}</b>{x}</span>)}</div></section>}
