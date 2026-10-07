@@ -1,0 +1,13 @@
+const fs=require('fs'),assert=require('node:assert/strict'),path=require('path');
+const page=fs.readFileSync(path.join(__dirname,'../app/app/page.tsx'),'utf8');
+const css=fs.readFileSync(path.join(__dirname,'../components/support-chat.css'),'utf8');
+const headerMatch=page.match(/<header className="top">[\s\S]*?<\/header>/);
+assert.ok(headerMatch,'Top header not found');
+assert.ok(!headerMatch[0].includes('<SupportChat'),'SupportChat must not be rendered inside the top header');
+assert.ok(page.includes('<SupportChat key={schoolId} schoolId={schoolId} schoolName={access?.school.name||"Sekolah"} userId={user.id}/>\n  <nav className="bottomnav"'),'SupportChat must be rendered as a viewport-level sibling before bottom navigation');
+assert.ok(css.includes('position:fixed!important'),'Support trigger must be viewport-fixed');
+assert.ok(css.includes('top:auto!important'),'Support trigger must never inherit a top position');
+assert.ok(css.includes('bottom:24px!important'),'Desktop support trigger must sit at the bottom');
+assert.ok(css.includes('@media(max-width:740px)'),'Mobile breakpoint must cover the bottom-navigation breakpoint');
+assert.ok(css.includes('bottom:calc(88px + env(safe-area-inset-bottom))!important'),'Mobile support trigger must clear the bottom navigation and safe area');
+console.log('PASS: support call button stays lower-right and clears mobile bottom navigation.');
