@@ -12,7 +12,7 @@ import WorkspaceNavigation from "@/components/WorkspaceNavigation";
 import {taskHelp} from "@/lib/workspace-help";
 import {resolveWorkspaceRoute,readRouteHash,routeHash,guideFor} from "@/lib/workspace-navigation";
 import LiveClock from "@/components/LiveClock";
-import {modules,canAccess,visibleFeatures,isAdmin,ROLE_LABELS,type School,type Role,type ModuleKey,type Membership,type Staff} from "@/lib/modules";
+import {modules,canAccess,visibleFeatures,navigationFeatures,isAdmin,ROLE_LABELS,type School,type Role,type ModuleKey,type Membership,type Staff} from "@/lib/modules";
 
 const SupportChat=dynamic(()=>import("@/components/SupportChat"),{ssr:false});
 const PanelLoading=()=> <div className="panel" role="status" aria-live="polite">Memuat fitur…</div>;
@@ -80,7 +80,7 @@ export default function Home(){
  useEffect(()=>{const t=setInterval(()=>setClockTick(n=>n+1),30000);return()=>clearInterval(t)},[]);
  useEffect(()=>{if(!db||!user)return;void db.rpc("sc_is_platform_admin").then(({data})=>{if(data===true&&window.location.pathname==="/app")window.location.replace("/admin")})},[db,user,revision]);
  const access=schools.find(s=>s.school.id===schoolId); const role=access?.role||"viewer";
- const selected=modules.find(m=>m.key===module)||modules[0]; const selectedFeatures=visibleFeatures(selected,role); const instructions=taskHelp(module,featureFocus); const visible=modules.filter(m=>m.key!=="payslip"&&canAccess(m,role)&&visibleFeatures(m,role).length>0);
+ const selected=modules.find(m=>m.key===module)||modules[0]; const selectedFeatures=visibleFeatures(selected,role); const instructions=taskHelp(module,featureFocus); const visible=modules.filter(m=>canAccess(m,role)&&navigationFeatures(m,role).length>0);
  const isManager=isAdmin(role)||role==="hr";
  useEffect(()=>{setMounted(true);const t=localStorage.getItem("sekolapro-theme")||localStorage.getItem("school-control-theme")||"light";setTheme(t);document.body.dataset.theme=t},[]);
  useEffect(()=>{if(!db)return;let active=true;void db.auth.getUser().then(({data})=>{if(!active)return;setUser(data.user);setAuthReady(true)}).catch(()=>{if(active)setAuthReady(true)}); const {data:{subscription:sub}}=db.auth.onAuthStateChange((_event,session)=>{if(!active)return;setUser(session?.user||null);setAuthReady(true)});return ()=>{active=false;sub.unsubscribe()};},[db]);
