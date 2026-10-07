@@ -1,44 +1,31 @@
-# SekolaPro landing design QA
+# SekolaPro connected school — design QA
 
-Result: passed (2026-10-07).
+Final result: passed
 
-Reference: user six-scene design board, 864 × 1536. Compared the classroom reference crop and rendered desktop screenshot side by side in `/workspace/scratch/352384837b93/compare.png`. Inspected full hero, classroom, counseling, administration, facilities, access, and both themes in the browser.
+## Target and approach
+Approved image: exec-868e57f0-378c-4e97-b42d-f16f72cc8666.png, 1024 × 1536. One connected terraced school with warm learning rooms, real-looking school activities, lush gardens, purple illuminated stairs and a twilight blue environment. Native HTML retains the approved short headlines, feature chips, application preview and CTA. Two clean 1024 × 1536 WebP backgrounds preserve the same geometry in evening/daylight; no raster UI or wall slogans. The illustration is a rendered 3D visual, with continuous image framing rather than a live 3D mesh.
 
-The implementation follows the reference's vivid indigo/violet palette, warm room lighting, bold rounded typography, colorful feature tiles, and blue glass panels with pale data cells. Desktop uses a full viewport rather than the reference board's condensed strips; mobile stacks copy and preview cards.
+## Full composition and focused comparison
+Browser desktop: 1363 × 936, native full story approximately 2044 px tall. Captured full-page implementation at /workspace/scratch/sekolapro-terraces-desktop.jpg, normalized the 2:3 story area to the reference 1024 × 1536 for a side-by-side comparison at /workspace/scratch/352384837b93/sekolapro-design-comparison.jpg. Focused hero comparison also inspected. Subsequent browser viewport inspection covered the final hero, learning, students, management and application preview after alignment fixes.
 
-Viewports checked: desktop 1363 × 936; embedded mobile 390 × 844, 320 × 640, and landscape 667 × 375. Fixed compact access-scene actions overlapping bottom navigation. Mobile scroll label and mouse icon are hidden; arrow controls remain available.
+Findings and fixes: initially dim reveal text was raised to 85% before entry; local soft shades keep copy readable without covering the central staircase or people. Hero top spacing reduced from 11vw to 8vw and display type from 5.8vw to 5.4vw. Removed an unnecessary paragraph line break. Students and management moved upward to align with their rooms; the four-tile preview moved from below the management area to the right terrace beside it. Daylight shading was softened to avoid large white patches.
 
-Motion: native forward/backward scrolling changes scenes while stage top remains at zero. Scene artwork uses complementary smooth blend weights; only one copy pane is visible, eliminating stopped-scroll ghost text. Copy and panels enter with restrained CSS motion. Reduced-motion CSS disables entrance animations and scene artwork uses direct selection.
+Typography: self-hosted Plus Jakarta Sans, bold display hierarchy, short two-line headings, compact body copy. Consistent Lucide stroke icons, readable native feature chips and purple-to-blue CTAs. Brand mark retained. Image compression visually inspected at desktop and mobile sizes; room activity remains sharp. No placeholder avatars or procedural/CSS school substitutions.
 
-Functional checks: all six navigation targets, theme switch, feature catalogue, Escape dismissal, registration/login links retained. Plus Jakarta Sans loaded from bundled fonts. Facilities remain presented according to the existing catalogue and access follows application roles.
+## Viewport resilience
+Inspected 390 × 844 portrait, 320 × 640 small portrait and 667 × 375 landscape via temporary iframe QA route. Route removed before publishing. Mobile shows an unobstructed sticky school view above native-flow information, panning through the same image as scrolling progresses. Reduced blank section spacing from 55svh to 38svh. No horizontal clipping or unusable navigation observed at 320 px; shorter landscape image window keeps native text reachable. Desktop copy occupies outer margins and the main staircase remains visible.
 
-No unresolved P0/P1/P2 visual issues. Illustration panels represent sample UI; room illustrations are generated artwork. This is a responsive interpretation rather than a pixel-identical reproduction of the composite reference board.
+## States, functionality and accessibility
+- Mobile menu opens a native dialog; close and Escape work. Focus returns without intentional scrolling.
+- Sarpras search displays facility inventory, borrowing, maintenance, procurement and stock checks. Nonsense searches show a clear empty state.
+- Data siswa chip opens matching school/student features instead of an empty search. Other chips use contextual search.
+- Pricing shows the existing monthly/yearly plans and current 7-day trial. FAQ expansion checked for facility management.
+- Theme toggles display matching day/evening assets, not a recolored night illustration. Light modal and small-screen contrast inspected.
+- Native links keep existing /masuk and /daftar routes. No registration, payment, permissions or backend behavior changed.
+- Semantic headings/buttons/landmarks, visible focus indicators, labeled search/theme/menu/close controls, dialog focus handling, decorative image hidden from assistive technology.
+- Reduced-motion CSS removes transforms/entrance transitions; JS removes reveal animation and zoom. Scrolling remains native, without snapping, input interception or per-chapter image/camera resets.
 
-## Day theme and lens-motion revision
+## Verification
+Camera regression first failed before implementation and now passes 1000 progress samples, endpoint clamping, monotonic pan and continuous zoom. npm test: all 17 regression scripts passed. TypeScript/lint passed. Production build passed; final build rerun after removal of the temporary QA route.
 
-2026-10-07: Removed the hero's “Satu data / Beragam tanggung jawab” card. Light theme now uses four matching daytime illustration assets, dark ink, white glass panels, pastel metrics, and restrained copy/footer veils. Night artwork and original dark palette remain available.
-
-Built-in imagegen prompt: lighting-weather edit of each existing campus/classroom/counseling/office illustration; preserve composition, architecture, people and signage; change to pale blue morning sky, natural warm sunlight, white walls and green foliage, retain violet brand accents, no UI or added text. Project assets: `public/landing/{campus,classroom,counseling,office}-day.webp`. Generated assets inspected before conversion and browser use.
-
-Idle movement uses a separate 18-second CSS perspective orbit layer. Scroll lens zoom ranges from 1.04 to 1.16 around each scene boundary and reverses continuously. Actual WebGL cap also rotates gently while idle; fallback cap uses CSS motion. Reduced-motion rules disable orbit/zoom and retain direct scene selection. School images use simulated depth, not a full geometric building orbit.
-
-Browser evidence: idle matrix changed while document scroll remained stationary; zoom reached approximately 1.14 during a boundary scroll versus 1.04 at rest; reverse scrolling restored hero while stage top remained zero. All day assets loaded. Inspected daytime hero, classroom, counseling, administration, facilities, access; desktop 1363 × 936 and mobile 390 × 844 / 320 × 640. Compacted mobile metric preview to avoid clipped values.
-
-Also reproduced focus-induced scrolling inside `overflow:hidden` stage (internal scrollTop 57, header top -58). Changed stage overflow to clip, removing the internal scroll container; navigation now leaves internal scrollTop 0 and header top 0. Artwork remains clipped. No application console errors observed.
-
-## Mobile cap and scene typography revision
-- Hide decorative graduation cap below 760px; preserve the brand logo.
-- All scene copy and preview text enter and leave with reversible scroll progress, staggered by element. Reduced motion remains static.
-- Mobile browser verified: cap display none, stage scrollTop zero, resting heading opacity 1, outgoing heading opacity 0.073 and translateY -14.831px. Light and dark hero remain readable.
-- TypeScript and pure motion bounds tests passed.
-
-## Continuous school journey (2026-10-07)
-- Replace mutually hidden slide sections with six chapters in native document flow. No snap, wheel interception, scene swapping, or inactive content.
-- One persistent school model: open classrooms with students and teacher, counseling, administration, library garden, playground and entrance. Native scroll follows a single smooth camera arc.
-- Static geometry and people are instanced; one walking figure, capped 30fps and device pixel ratio, pause outside viewport and hidden tabs, full renderer cleanup. Reduced motion retains static camera and readable copy.
-- One matching campus image remains visible if WebGL is unavailable, with continuous reversible tilt/lift/zoom. Browser here has no WebGL; fallback path verified, GPU rendering remains unverified in this environment.
-- Desktop: model column between copy and preview, copy right 413.55px, model left 417.88px, model right 984.05px, preview left 984.03px (rounding boundary); preview padding keeps visible content apart.
-- Mobile: sticky school occupies its own upper area. 390x844, 320x640, 667x375 tested; no horizontal overflow, chapter starts below model, mobile floating nav removed.
-- Native scroll forward/back, chapter jump, theme toggle, searchable facilities catalogue and Escape dismissal verified. Camera fallback tilt +3.38 degrees after scrolling, with same image source; resting heading opacity 1.
-- Application regression suite and TypeScript checks passed. Production build recorded separately after preview route removal.
-- Production build passed (14 routes), no QA route shipped. Landing initial JavaScript 163 kB. Webpack rebuilt after recoverable development-cache warnings.
+Browser full-page screenshots intermittently timed out; full composition was captured successfully once and compared, with final adjustments verified in focused native viewport screenshots. Browser proof images: /workspace/scratch/sekolapro-terraces-top.jpg and /workspace/scratch/sekolapro-terraces-mobile.jpg.

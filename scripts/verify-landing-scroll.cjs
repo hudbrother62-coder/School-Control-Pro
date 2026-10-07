@@ -6,18 +6,15 @@ assert.ok(fs.existsSync(file), 'Landing camera path must support native continuo
 const source = ts.transpileModule(fs.readFileSync(file, 'utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
 const moduleScope={exports:{}};
 new Function('module','exports',source)(moduleScope,moduleScope.exports);
-const {schoolCamera}=moduleScope.exports;
-assert.equal(typeof schoolCamera,'function','One persistent school needs a continuous camera path');
-assert.deepEqual(schoolCamera(-1),schoolCamera(0));
-assert.deepEqual(schoolCamera(2),schoolCamera(1));
-let previous=schoolCamera(0);
+const {storyCamera}=moduleScope.exports;
+assert.equal(typeof storyCamera,'function','The connected school needs one continuous image-camera path');
+assert.deepEqual(storyCamera(-1),storyCamera(0));assert.deepEqual(storyCamera(2),storyCamera(1));
+assert.equal(storyCamera(0).pan,0);assert.equal(storyCamera(1).pan,100);
+let previous=storyCamera(0);
 for(let i=1;i<=1000;i++){
- const pose=schoolCamera(i/1000);
- assert.ok(pose.azimuth>=previous.azimuth,'Camera must travel continuously rather than reset at chapter boundaries');
- assert.ok(Math.abs(pose.azimuth-previous.azimuth)<.01);
- assert.ok(Math.abs(pose.distance-previous.distance)<.02);
- assert.ok(pose.distance>=12&&pose.distance<=18,'Whole school stays framed');
- previous=pose;
+ const pose=storyCamera(i/1000);
+ assert.ok(pose.pan>=previous.pan&&pose.pan<=100,'Camera moves down the same architecture without resets');
+ assert.ok(pose.zoom>=1&&pose.zoom<=1.035);
+ assert.ok(Math.abs(pose.zoom-previous.zoom)<.001,'Zoom never jumps');previous=pose;
 }
-assert.ok(schoolCamera(1).azimuth-schoolCamera(0).azimuth>1,'Scroll visibly travels around the same school');
-console.log('Persistent school camera: clamped, continuous, reversible and safely framed');
+console.log('Continuous story camera: safe framing, bounds and reversible movement passed');
