@@ -67,20 +67,69 @@ export default function FinancePanel({schoolId,userId,focus}:{schoolId:string;us
  const chooseAccount=<label className="field">Kas / Rekening<SearchableSelect label="Kas / Rekening" required value={accountId} onChange={e=>setAccountId(e.target.value)}><option value="">Pilih kas</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.name} · {a.kind}</option>)}</SearchableSelect></label>;
  const bill=bills.find(b=>b.id===billId),paid=bill?payments.filter(p=>p.bill_id===bill.id).reduce((a,p)=>a+Number(p.amount),0):0;
  const studentName=(id:string)=>students.find(s=>s.id===id)?.name||"Siswa tidak aktif";
- const exportLedger=()=>saveCsv("laporan-kas-sekolapro.csv",csvExport(["Tanggal","Jenis","Kategori","Kas","Nominal","Keterangan"],tx.map(t=>[t.occurred_at,t.kind,t.category,accounts.find(a=>a.id===t.account_id)?.name,Number(t.amount),t.description])));
+ const exportLedger=()=>saveCsv("buku-kas-"+reportMonth+"-sekolapro.csv",csvExport(["Tanggal","Nomor","Jenis","Kategori","Kas","Nominal","Keterangan","Bukti"],periodLedger.map(t=>[t.occurred_at,t.number,t.kind,t.category,accounts.find(a=>a.id===t.account_id)?.name,Number(t.amount),t.description,t.proof_path?"Ada":"Belum ada"])));
  const billPaid=(id:string)=>payments.filter(p=>p.bill_id===id).reduce((n,p)=>n+Number(p.amount),0);
- const budgetRealization=budgets.map(b=>{const spent=tx.filter(t=>t.kind==="expense"&&(b.activity_name?t.activity_name===b.activity_name:t.category===b.category)).reduce((n,t)=>n+Number(t.amount),0);return {...b,spent,remaining:Number(b.amount)-spent,percent:Number(b.amount)>0?Math.round(spent/Number(b.amount)*1000)/10:0}});
+ const budgetRealization=budgets.map(b=>{const spent=tx.filter(t=>t.status!=="void"&&t.kind==="expense"&&t.occurred_at.startsWith(String(b.fiscal_year))&&(b.activity_name?t.activity_name===b.activity_name:t.category===b.category)).reduce((n,t)=>n+Number(t.amount),0);return {...b,spent,remaining:Number(b.amount)-spent,percent:Number(b.amount)>0?Math.round(spent/Number(b.amount)*1000)/10:0}});
+ const periodTransactions=tx.filter(t=>t.status!=="void"&&t.occurred_at.startsWith(reportMonth)&&(!reportAccount||t.account_id===reportAccount));
+ const periodPayments=payments.filter(p=>p.paid_at.startsWith(reportMonth)&&(!reportAccount||tx.find(t=>t.id===p.transaction_id)?.account_id===reportAccount));
+ const reportYear=Number(reportMonth.slice(0,4));
+ const annualBudgets=budgetRealization.filter(b=>b.fiscal_year===reportYear);
+ const periodIncome=periodTransactions.filter(t=>t.kind==="income").reduce((n,t)=>n+Number(t.amount),0);
+ const periodExpense=periodTransactions.filter(t=>t.kind==="expense").reduce((n,t)=>n+Number(t.amount),0);
+ const selectedAccounts=accounts.filter(a=>!reportAccount||a.id===reportAccount);
+ const balanceAt=(account:Account,before:string)=>Number(account.opening_balance)+tx.filter(t=>t.status!=="void"&&t.account_id===account.id&&t.occurred_at<before).reduce((n,t)=>n+(t.kind==="income"?1:-1)*Number(t.amount),0);
+ const periodStart=reportMonth+"-01";
+ const periodEnd=new Date(Date.UTC(reportYear,Number(reportMonth.slice(5,7)),0)).toISOString().slice(0,10);
+ const periodLabel=new Intl.DateTimeFormat("id-ID",{month:"long",year:"numeric",timeZone:"UTC"}).format(new Date(periodStart+"T12:00:00Z"));
+ const openingPeriod=selectedAccounts.reduce((n,a)=>n+balanceAt(a,periodStart),0);
+ const closingPeriod=openingPeriod+periodIncome-periodExpense;
+ const periodBills=bills.filter(b=>(b.period||b.due_on.slice(0,7))===reportMonth);
+ const outstanding=bills.reduce((n,b)=>n+Math.max(0,Number(b.amount_due)-billPaid(b.id)),0);
+ const periodLedger=[...periodTransactions].sort((a,b)=>a.occurred_at.localeCompare(b.occurred_at)||a.id.localeCompare(b.id));
  function financeReportModel():OfficialReportModel{
-  const common={moduleKey:"sikas",orientation:"landscape" as const,status:"approved" as const};
-  if(reportKind==="receivables")return {...common,documentType:"tagihan_tunggakan",prefix:"PIUT",title:"Laporan Tagihan dan Tunggakan Siswa",subtitle:"Rekap tagihan, pembayaran, sisa piutang dan jatuh tempo",metrics:[{label:"Total tagihan",value:money(bills.reduce((n,b)=>n+Number(b.amount_due),0))},{label:"Sudah dibayar",value:money(bills.reduce((n,b)=>n+billPaid(b.id),0))},{label:"Sisa piutang",value:money(bills.reduce((n,b)=>n+Math.max(0,Number(b.amount_due)-billPaid(b.id)),0))},{label:"Tagihan aktif",value:String(bills.filter(b=>Math.max(0,Number(b.amount_due)-billPaid(b.id))>0).length)}],sections:[{title:"Rincian Tagihan",columns:["NIS","Siswa","Tagihan","Periode","Jatuh Tempo","Nilai","Terbayar","Sisa","Status"],rows:bills.map(b=>{const paid=billPaid(b.id),s=students.find(x=>x.id===b.student_id);return [s?.nis||"—",s?.name||"Siswa",b.title,b.period||"—",b.due_on,money(b.amount_due),money(paid),money(Math.max(0,Number(b.amount_due)-paid)),Math.max(0,Number(b.amount_due)-paid)<=0?"Lunas":paid>0?"Sebagian":"Belum bayar"]})}]};
-  if(reportKind==="payments")return {...common,documentType:"pembayaran_kuitansi",prefix:"BYR",title:"Laporan Pembayaran dan Kuitansi",subtitle:"Rekap penerimaan pembayaran siswa berdasarkan kuitansi yang tersimpan",metrics:[{label:"Pembayaran",value:String(payments.length)},{label:"Total diterima",value:money(payments.reduce((n,p)=>n+Number(p.amount),0))},{label:"Metode tercatat",value:String(new Set(payments.map(p=>p.payment_method||"Lainnya")).size)},{label:"Bukti terlampir",value:String(payments.filter(p=>p.proof_path).length)}],sections:[{title:"Riwayat Pembayaran",columns:["Tanggal","Nomor Kuitansi","NIS","Siswa","Tagihan","Metode","Nominal"],rows:payments.map(p=>{const b=bills.find(x=>x.id===p.bill_id),s=students.find(x=>x.id===b?.student_id);return [p.paid_at.slice(0,10),p.receipt_no,s?.nis||"—",s?.name||"Siswa",b?.title||"Tagihan",p.payment_method||"—",money(p.amount)]})}]};
-  if(reportKind==="budget")return {...common,documentType:"anggaran_realisasi",prefix:"ANG",title:"Laporan Anggaran dan Realisasi",subtitle:"Perbandingan pagu, realisasi pengeluaran, dan sisa anggaran",metrics:[{label:"Total pagu",value:money(budgetRealization.reduce((n,b)=>n+Number(b.amount),0))},{label:"Realisasi",value:money(budgetRealization.reduce((n,b)=>n+Number(b.spent),0))},{label:"Sisa",value:money(budgetRealization.reduce((n,b)=>n+Number(b.remaining),0))},{label:"Kegiatan",value:String(budgetRealization.length)}],notes:["Laporan ini adalah dokumen internal pendamping. Pelaporan/pengesahan dana pemerintah tetap mengikuti sistem resmi yang berlaku."],sections:[{title:"Anggaran dan Realisasi",columns:["Tahun","Sumber Dana","Kegiatan","Kategori","Pagu","Realisasi","Sisa","%"],rows:budgetRealization.map(b=>[b.fiscal_year,b.source_fund||"—",b.activity_name||"—",b.category,money(b.amount),money(b.spent),money(b.remaining),b.percent+"%"])}]};
-  return {...common,documentType:"keuangan_sekolah",prefix:"KEU",title:"Laporan Keuangan Sekolah",subtitle:"Ringkasan kas, transaksi, anggaran, tagihan dan pembayaran",metrics:[{label:"Pemasukan",value:money(totals?.income||0)},{label:"Pengeluaran",value:money(totals?.expense||0)},{label:"Saldo kas",value:money((totals?.opening||0)+(totals?.income||0)-(totals?.expense||0))},{label:"Sisa piutang",value:money((totals?.billed||0)-(totals?.paid||0))}],sections:[
-   {title:"Saldo Kas / Rekening",columns:["Kas / Rekening","Jenis","Saldo"],rows:balances.map(b=>[b.account_name,b.kind,money(b.balance)])},
-   {title:"Mutasi Keuangan",columns:["Tanggal","Nomor","Kas / Rekening","Jenis","Kategori","Kegiatan","Keterangan","Nominal"],rows:tx.map(t=>[t.occurred_at,t.number||"—",accounts.find(a=>a.id===t.account_id)?.name||"—",t.kind==="income"?"Pemasukan":"Pengeluaran",t.category,t.activity_name||"—",t.description||"—",money(t.amount)])},
-   {title:"Ringkasan Anggaran",columns:["Tahun","Sumber Dana","Kegiatan/Kategori","Pagu","Realisasi","Sisa"],rows:budgetRealization.map(b=>[b.fiscal_year,b.source_fund||"—",b.activity_name||b.category,money(b.amount),money(b.spent),money(b.remaining)])}
-  ]};
+  const common={moduleKey:"sikas",orientation:"landscape" as const,status:"approved" as const,
+   confidentiality:"restricted" as const,periodLabel,periodStart,periodEnd,
+   notes:["Laporan internal Sekolapro. Pelaporan dan pengesahan dana pemerintah tetap mengikuti sistem resmi yang berlaku."]};
+  if(reportKind==="bku"){
+   let saldo=openingPeriod;
+   return {...common,documentType:"buku_kas_umum",prefix:"BKU",title:"Buku Kas Umum",subtitle:"Mutasi kas dan rekening periode "+periodLabel,
+    metrics:[{label:"Saldo awal",value:money(openingPeriod)},{label:"Pemasukan",value:money(periodIncome)},{label:"Pengeluaran",value:money(periodExpense)},{label:"Saldo akhir",value:money(closingPeriod)}],
+    sections:[{title:"Buku Kas Umum",columns:["Tanggal","Nomor","Kas/Rekening","Kategori","Kegiatan","Uraian","Masuk","Keluar","Saldo berjalan"],
+     rows:periodLedger.map(t=>{saldo+=(t.kind==="income"?1:-1)*Number(t.amount);return [t.occurred_at,t.number||"—",accounts.find(a=>a.id===t.account_id)?.name||"—",t.category,t.activity_name||"—",t.description||"—",t.kind==="income"?money(t.amount):"—",t.kind==="expense"?money(t.amount):"—",money(saldo)]})}]};
+  }
+  if(reportKind==="receivables"){
+   return {...common,documentType:"tagihan_tunggakan",prefix:"PIUT",title:"Laporan Tagihan dan Tunggakan Siswa",
+    subtitle:"Tagihan periode "+periodLabel+" dan status pembayaran saat laporan dibuat",
+    metrics:[{label:"Tagihan periode",value:money(periodBills.reduce((n,b)=>n+Number(b.amount_due),0))},{label:"Terbayar",value:money(periodBills.reduce((n,b)=>n+billPaid(b.id),0))},{label:"Sisa periode",value:money(periodBills.reduce((n,b)=>n+Math.max(0,Number(b.amount_due)-billPaid(b.id)),0))},{label:"Piutang seluruh periode",value:money(outstanding)}],
+    sections:[{title:"Tagihan Siswa",columns:["NIS","Siswa","Tagihan","Periode","Jatuh Tempo","Nilai","Terbayar","Sisa","Status"],
+     rows:periodBills.map(b=>{const received=billPaid(b.id),due=Math.max(0,Number(b.amount_due)-received),st=students.find(x=>x.id===b.student_id);return [st?.nis||"—",st?.name||"Siswa",b.title,b.period||"—",b.due_on,money(b.amount_due),money(received),money(due),due===0?"Lunas":received>0?"Sebagian":"Belum bayar"]})}]};
+  }
+  if(reportKind==="payments"){
+   return {...common,documentType:"pembayaran_kuitansi",prefix:"BYR",title:"Laporan Pembayaran dan Kuitansi",subtitle:"Penerimaan tagihan siswa periode "+periodLabel,
+    metrics:[{label:"Pembayaran",value:String(periodPayments.length)},{label:"Total diterima",value:money(periodPayments.reduce((n,p)=>n+Number(p.amount),0))},{label:"Metode",value:String(new Set(periodPayments.map(p=>p.payment_method||"Lainnya")).size)},{label:"Bukti terlampir",value:String(periodPayments.filter(p=>p.proof_path).length)}],
+    sections:[{title:"Riwayat Pembayaran",columns:["Tanggal","Kuitansi","NIS","Siswa","Tagihan","Metode","Kas/Rekening","Nominal","Bukti"],
+     rows:periodPayments.map(p=>{const b=bills.find(x=>x.id===p.bill_id),st=students.find(x=>x.id===b?.student_id),transaction=tx.find(t=>t.id===p.transaction_id);return [p.paid_at.slice(0,10),p.receipt_no,st?.nis||"—",st?.name||"Siswa",b?.title||"Tagihan",p.payment_method||"—",accounts.find(a=>a.id===transaction?.account_id)?.name||"—",money(p.amount),p.proof_path?"Ada":"Belum ada"]})}]};
+  }
+  if(reportKind==="budget"){
+   return {...common,documentType:"anggaran_realisasi",prefix:"ANG",title:"Laporan Anggaran dan Realisasi",subtitle:"Realisasi tahun anggaran "+reportYear,
+    metrics:[{label:"Pagu anggaran",value:money(annualBudgets.reduce((n,b)=>n+Number(b.amount),0))},{label:"Realisasi",value:money(annualBudgets.reduce((n,b)=>n+b.spent,0))},{label:"Sisa",value:money(annualBudgets.reduce((n,b)=>n+b.remaining,0))},{label:"Kegiatan",value:String(annualBudgets.length)}],
+    sections:[{title:"Rincian Anggaran Tahunan",columns:["Tahun","Sumber Dana","Kegiatan","Kategori","Pagu","Realisasi","Sisa","%"],
+      rows:annualBudgets.map(b=>[b.fiscal_year,b.source_fund||"—",b.activity_name||"—",b.category,money(b.amount),money(b.spent),money(b.remaining),b.percent+"%"])}]};
+  }
+  return {...common,documentType:"keuangan_sekolah",prefix:"KEU",title:"Laporan Keuangan Sekolah",subtitle:"Rekap terpadu periode "+periodLabel,
+   metrics:[{label:"Saldo awal",value:money(openingPeriod)},{label:"Pemasukan",value:money(periodIncome)},{label:"Pengeluaran",value:money(periodExpense)},{label:"Saldo akhir",value:money(closingPeriod)},{label:"Piutang seluruh periode",value:money(outstanding)}],
+   sections:[
+    {title:"Saldo Kas / Rekening Akhir Periode",columns:["Kas/Rekening","Jenis","Saldo akhir"],
+     rows:selectedAccounts.map(a=>[a.name,a.kind,money(balanceAt(a,periodEnd+"~"))])},
+    {title:"Mutasi Keuangan",columns:["Tanggal","Nomor","Kas/Rekening","Jenis","Kategori","Kegiatan","Keterangan","Nominal","Bukti"],
+     rows:periodLedger.map(t=>[t.occurred_at,t.number||"—",accounts.find(a=>a.id===t.account_id)?.name||"—",t.kind==="income"?"Pemasukan":"Pengeluaran",t.category,t.activity_name||"—",t.description||"—",money(t.amount),t.proof_path?"Ada":"Belum ada"])},
+    {title:"Tagihan Periode",columns:["Siswa","Tagihan","Nilai","Terbayar","Sisa"],
+     rows:periodBills.map(b=>[studentName(b.student_id),b.title,money(b.amount_due),money(billPaid(b.id)),money(Math.max(0,Number(b.amount_due)-billPaid(b.id)))])},
+    {title:"Ringkasan Anggaran Tahunan",columns:["Sumber Dana","Kegiatan/Kategori","Pagu","Realisasi","Sisa"],
+     rows:annualBudgets.map(b=>[b.source_fund||"—",b.activity_name||b.category,money(b.amount),money(b.spent),money(b.remaining)])}
+   ]};
  }
+
  async function exportOfficialFinance(format:"pdf"|"docx"|"xlsx"){if(!db)return;await run(async()=>{const identity=await loadReportIdentity(db,schoolId),model=financeReportModel(),issued=await issueAndExport(db,schoolId,identity,model,format);setOk("Laporan "+issued.document_number+" diterbitkan dan masuk arsip keuangan.")})}
  async function previewOfficialFinance(){if(!db)return;await run(async()=>{const identity=await loadReportIdentity(db,schoolId);previewOfficialReport(identity,{...financeReportModel(),status:"draft"});setOk("Preview draft dibuka tanpa memakai nomor dokumen.")})}
  function open(kind:Exclude<ModalKind,null>){setError("");setProofFile(null);if(kind==="account"){setName("");setAccountKind("cash");setOpening("0")}if(kind==="transaction"){setAccountId("");setCategory("");setActivityName("");setAmount("");setDescription("");setDate(localDay())}if(kind==="budget"){setCategory("");setActivityName("");setSourceFund("");setAmount("");setDescription("");setYear(String(new Date().getFullYear()))}if(kind==="bill"){setStudentId("");setBillTitle("");setPeriod(localDay().slice(0,7));setAmount("");setDate(localDay())}if(kind==="payment"){setBillId("");setAccountId("");setAmount("");setReceipt("");setPaymentMethod("Tunai")}setModal(kind)}
