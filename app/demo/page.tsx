@@ -1,3 +1,2 @@
 import {redirect} from "next/navigation";
-export const metadata={title:"SekolaPro",robots:{index:false,follow:false}};
-export default function Page(){redirect("/app");}
+export default function Demo(){redirect("/masuk")}
