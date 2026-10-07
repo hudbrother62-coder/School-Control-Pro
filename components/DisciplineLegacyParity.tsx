@@ -35,12 +35,12 @@ export default function DisciplineLegacyParity({schoolId,userId,role,focus}:{sch
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  const className=(id:string|null)=>classes.find(c=>c.id===id)?.name||"—";
  const studentList=useRecordList(students.filter(s=>s.status!=="deleted"),s=>[s.name,s.nis,className(s.class_id),s.status].join(" "),[
-  {key:"status",label:"Status",options:[{value:"active",label:"Aktif"},{value:"archived",label:"Diarsipkan"}],matches:(s,v)=>s.status===v},
-  {key:"class",label:"Kelas",options:classes.map(x=>({value:x.id,label:x.name})),matches:(s,v)=>s.class_id===v}
+  {key:"status",label:"Status",options:[{value:"active",label:"Aktif"},{value:"archived",label:"Diarsipkan"}],value:s=>s.status},
+  {key:"class",label:"Kelas",options:classes.map(x=>({value:x.id,label:x.name})),value:s=>s.class_id||""}
  ]);
  const documentList=useRecordList(docs,d=>[d.document_number,d.title,d.status,students.find(s=>s.id===d.student_id)?.name,docLabels[d.document_type]].join(" "),[
-  {key:"type",label:"Jenis dokumen",options:Object.entries(docLabels).map(([value,label])=>({value,label})),matches:(d,v)=>d.document_type===v},
-  {key:"status",label:"Status",options:Array.from(new Set(docs.map(x=>x.status))).filter(Boolean).map(v=>({value:v,label:v})),matches:(d,v)=>d.status===v}
+  {key:"type",label:"Jenis dokumen",options:Object.entries(docLabels).map(([value,label])=>({value,label})),value:d=>d.document_type},
+  {key:"status",label:"Status",options:Array.from(new Set(docs.map(x=>x.status))).filter(Boolean).map(v=>({value:v,label:v})),value:d=>d.status}
  ]);
  async function archive(id:string,value:boolean){if(!db)return;await run(async()=>{const {error}=await db.rpc("sc_archive_student",{p_school:schoolId,p_student:id,p_archive:value});if(error)throw error;setOk(value?"Siswa dipindahkan ke arsip.":"Siswa dipulihkan.")})}
  async function finalDelete(id:string){if(!db)return;const phrase=prompt("Ketik HAPUS PERMANEN untuk menghapus siswa dari daftar operasional. Riwayat referensial tetap dipertahankan untuk audit.");if(phrase!=="HAPUS PERMANEN")return;await run(async()=>{const {error}=await db.rpc("sc_soft_delete_student",{p_school:schoolId,p_student:id});if(error)throw error;setOk("Siswa dikeluarkan permanen dari daftar operasional.")})}
