@@ -24,10 +24,10 @@ type Snapshot={
  attendance:PersonalAttendance|null;teachingJournals:number;workJournals:number;
 };
 
-const schoolDate=(value:Date)=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).format(value);
+const schoolDate=(value:Date)=>{const parts=new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(value);const read=(key:string)=>parts.find(p=>p.type===key)?.value||"";return read("year")+"-"+read("month")+"-"+read("day")};
 const formatDate=(s:string)=>new Intl.DateTimeFormat("id-ID",{timeZone:"Asia/Jakarta",day:"numeric",month:"short"}).format(new Date(s+"T12:00:00+07:00"));
 const timeLabel=(s:string)=>s.slice(0,5);
-const weekday=()=>({Monday:1,Tuesday:2,Wednesday:3,Thursday:4,Friday:5,Saturday:6,Sunday:7})[new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",weekday:"long"}).format(new Date())]||1;
+const weekday=()=>{const days:Record<string,number>={Monday:1,Tuesday:2,Wednesday:3,Thursday:4,Friday:5,Saturday:6,Sunday:7};return days[new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Jakarta",weekday:"long"}).format(new Date())]||1};
 const incomplete=(status:string)=>!["done","completed","verified"].includes(status);
 const attendanceName=(status:string)=>({present:"Hadir",late:"Terlambat",sick:"Sakit",leave:"Izin",absent:"Tidak hadir"} as Record<string,string>)[status]||status;
 const dayStart=(today:string,offset:number)=>{const d=new Date(today+"T12:00:00+07:00");d.setUTCDate(d.getUTCDate()+offset);return schoolDate(d)};
