@@ -73,30 +73,30 @@ export default function LibraryPanel({schoolId,userId,role,staff,focus,onRoute}:
  const loanRows=loans.map(x=>({...x,effective_status:effectiveLoan(x)}));
 
  const titleList=useRecordList(titles,x=>[x.title,x.author,x.publisher,x.isbn,x.classification,x.category,x.shelf_location,x.source].join(" "),[
-  {key:"category",label:"Kategori",options:unique(titles.map(x=>x.category)).map(v=>({value:v,label:v})),matches:(x,v)=>x.category===v},
-  {key:"active",label:"Status",options:[{value:"active",label:"Aktif"},{value:"inactive",label:"Nonaktif"}],matches:(x,v)=>v==="active"?x.active:!x.active}
+  {key:"category",label:"Kategori",options:unique(titles.map(x=>x.category)).map(v=>({value:v,label:v})),value:x=>x.category||""},
+  {key:"active",label:"Status",options:[{value:"active",label:"Aktif"},{value:"inactive",label:"Nonaktif"}],value:x=>x.active?"active":"inactive"}
  ]);
  const copyList=useRecordList(copies,x=>[titleById(x.title_id)?.title,x.inventory_code,x.barcode,x.condition,x.status].join(" "),[
-  {key:"status",label:"Status",options:["available","loaned","maintenance","lost","archived"].map(v=>({value:v,label:statusLabel(v)})),matches:(x,v)=>x.status===v},
-  {key:"condition",label:"Kondisi",options:unique(copies.map(x=>x.condition)).map(v=>({value:v,label:v})),matches:(x,v)=>x.condition===v}
+  {key:"status",label:"Status",options:["available","loaned","maintenance","lost","archived"].map(v=>({value:v,label:statusLabel(v)})),value:x=>x.status},
+  {key:"condition",label:"Kondisi",options:unique(copies.map(x=>x.condition)).map(v=>({value:v,label:v})),value:x=>x.condition}
  ]);
  const memberList=useRecordList(members,x=>[x.name,x.code,x.group,x.kind].join(" "),[
-  {key:"kind",label:"Jenis",options:[{value:"student",label:"Siswa"},{value:"staff",label:"Guru / Staf"}],matches:(x,v)=>x.kind===v},
-  {key:"group",label:"Kelas / Kelompok",options:unique(members.map(x=>x.group)).map(v=>({value:v,label:v})),matches:(x,v)=>x.group===v}
+  {key:"kind",label:"Jenis",options:[{value:"student",label:"Siswa"},{value:"staff",label:"Guru / Staf"}],value:x=>x.kind},
+  {key:"group",label:"Kelas / Kelompok",options:unique(members.map(x=>x.group)).map(v=>({value:v,label:v})),value:x=>x.group}
  ]);
  const loanList=useRecordList(loanRows,x=>[x.borrower_name,copyLabel(x.copy_id),x.due_at,x.effective_status].join(" "),[
-  {key:"status",label:"Status",options:["active","overdue","returned","lost"].map(v=>({value:v,label:statusLabel(v)})),matches:(x,v)=>x.effective_status===v}
+  {key:"status",label:"Status",options:["active","overdue","returned","lost"].map(v=>({value:v,label:statusLabel(v)})),value:x=>x.effective_status}
  ]);
  const visitList=useRecordList(visits,x=>[x.visitor_name,x.purpose,x.visitor_type,x.visited_at].join(" "),[
-  {key:"type",label:"Jenis pengunjung",options:[{value:"student",label:"Siswa"},{value:"staff",label:"Guru / Staf"},{value:"other",label:"Lainnya"},{value:"class",label:"Kelas"}],matches:(x,v)=>x.visitor_type===v},
-  {key:"purpose",label:"Tujuan",options:unique(visits.map(x=>x.purpose)).map(v=>({value:v,label:v})),matches:(x,v)=>x.purpose===v}
+  {key:"type",label:"Jenis pengunjung",options:[{value:"student",label:"Siswa"},{value:"staff",label:"Guru / Staf"},{value:"other",label:"Lainnya"},{value:"class",label:"Kelas"}],value:x=>x.visitor_type},
+  {key:"purpose",label:"Tujuan",options:unique(visits.map(x=>x.purpose)).map(v=>({value:v,label:v})),value:x=>x.purpose||""}
  ]);
  const acqList=useRecordList(acquisitions,x=>[x.item_title,x.supplier,x.source_fund,x.status].join(" "),[
   {key:"status",label:"Status",options:["requested","ordered","received","cancelled"].map(v=>({value:v,label:statusLabel(v)})),matches:(x,v)=>x.status===v},
-  {key:"source",label:"Sumber dana",options:unique(acquisitions.map(x=>x.source_fund)).map(v=>({value:v,label:v})),matches:(x,v)=>x.source_fund===v}
+  {key:"source",label:"Sumber dana",options:unique(acquisitions.map(x=>x.source_fund)).map(v=>({value:v,label:v})),value:x=>x.source_fund||""}
  ]);
  const maintenanceList=useRecordList(maintenance,x=>[copyLabel(x.copy_id||""),x.action,x.condition_before,x.condition_after,x.notes].join(" "),[
-  {key:"action",label:"Tindakan",options:unique(maintenance.map(x=>x.action)).map(v=>({value:v,label:v})),matches:(x,v)=>x.action===v}
+  {key:"action",label:"Tindakan",options:unique(maintenance.map(x=>x.action)).map(v=>({value:v,label:v})),value:x=>x.action}
  ]);
 
  function resetCommon(){setNotes("");setError("");setOk("")}
