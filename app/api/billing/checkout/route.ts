@@ -16,7 +16,7 @@ export async function POST(req:NextRequest){
   if(!user)return NextResponse.json({error:"Sesi tidak sah."},{status:401,headers:h});
   const body=await req.json();
   const schoolId=typeof body.school_id==="string"?body.school_id:"";
-  const planId=body.plan==="yearly"?"yearly":body.plan==="monthly"?"monthly":null;
+  const planId=body.plan==="monthly"?"monthly":null;
   if(!planId||!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(schoolId))return NextResponse.json({error:"Sekolah atau paket tidak valid."},{status:400,headers:h});
   const {data:membership}=await db.from("sc_members").select("role").eq("user_id",user.id).eq("school_id",schoolId).maybeSingle();
   if(!membership||membership.role!=="owner")return NextResponse.json({error:"Hanya akun utama sekolah dapat melakukan pembayaran."},{status:403,headers:h});
