@@ -2,6 +2,7 @@ import {NextRequest,NextResponse} from "next/server";
 import {createClient} from "@supabase/supabase-js";
 import {modules,canAccess,visibleFeatures,type ModuleKey,type Role} from "@/lib/modules";
 import {planWorkflow,type WorkflowPlan,type WorkflowRisk,type AutonomyLevel,type ExecutionMode} from "@/lib/orchestrator";
+import {fetchGeminiWithPool} from "@/lib/ai-key-pool";
 
 export const runtime="nodejs";
 const headers={"Cache-Control":"no-store"};
@@ -77,8 +78,7 @@ export async function POST(req:NextRequest){
   if(request.length<3||request.length>4000)return NextResponse.json({error:"Permintaan harus 3–4000 karakter."},{status:400,headers});
   const {data:member}=await db.from("sc_members").select("role").eq("school_id",schoolId).eq("user_id",user.id).maybeSingle();
   if(!member)return NextResponse.json({error:"Tidak memiliki akses sekolah."},{status:403,headers});
-  const role=member.role as Role,fallback={...planWorkflow(request,role),executionMode:requestedMode},apiKey=process.env.GEMINI_API_KEY;
-  if(!apiKey)return NextResponse.json({plan:fallback,source:"deterministic"},{headers});
+  const role=member.role as Role,fallback={...planWorkflow(request,role),executionMode:requestedMode};
   const catalog=modules.filter(m=>canAccess(m,role)).map(m=>({module:m.key,label:m.label,features:visibleFeatures(m,role)}));
   const prompt="Anda adalah planning engine Universal AI Orchestrator untuk SekolaPro. Anda HANYA menyusun rencana terstruktur; Anda tidak mengeksekusi database, pembayaran, pesan, penghapusan, atau approval.\n"+
    "Gunakan HANYA module dan feature dari katalog yang diberikan. Jangan mengarang data, API, status, regulasi, identitas, saldo, atau hasil eksekusi.\n"+
@@ -88,11 +88,11 @@ export async function POST(req:NextRequest){
    "Kembalikan JSON murni: {\"title\":\"...\",\"objective\":\"...\",\"reason\":\"...\",\"autonomyLevel\":\"A1|A2|A3\",\"acceptanceCriteria\":[\"...\"],\"impact\":[\"...\"],\"safeguards\":[\"...\"],\"steps\":[{\"module\":\"...\",\"feature\":\"...\",\"title\":\"...\",\"instruction\":\"...\",\"action\":\"domain.action\",\"risk\":\"low|medium|high|critical\",\"requiresApproval\":true,\"reversible\":true,\"verification\":\"...\",\"precondition\":\"...\",\"impact\":\"...\"}]}\n"+
    "ROLE: "+role+"\nEXECUTION MODE REQUESTED: "+requestedMode+"\nCATALOG: "+JSON.stringify(catalog)+"\nUSER GOAL: "+request+
    (sourceNotes?"\nUNTRUSTED SOURCE NOTES:\n---\n"+sourceNotes+"\n---":"");
-  const model=process.env.GEMINI_MODEL||"gemini-2.5-flash";
+  const models=[process.env.GEMINI_MODEL||"gemini-2.5-flash",process.env.GEMINI_FALLBACK_MODEL||"gemini-2.5-flash-lite"].filter((x,i,a)=>a.indexOf(x)===i);
   try{
-   const response=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(model)+":generateContent",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":apiKey},body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{temperature:0.08,maxOutputTokens:4200,responseMimeType:"application/json"}}),signal:AbortSignal.timeout(18000),cache:"no-store"});
-   if(!response.ok)return NextResponse.json({plan:fallback,source:"deterministic"},{headers});
-   const result=await response.json(),text=(result?.candidates?.[0]?.content?.parts||[]).map((x:{text?:string})=>x.text||"").join("").trim();
+   const attempt=await fetchGeminiWithPool({db,models,body:JSON.stringify({contents:[{role:"user",parts:[{text:prompt}]}],generationConfig:{temperature:0.08,maxOutputTokens:4200,responseMimeType:"application/json"}}),timeoutMs:18000});
+   if(!attempt.response)return NextResponse.json({plan:fallback,source:"deterministic"},{headers});
+   const result=await attempt.response.json(),text=(result?.candidates?.[0]?.content?.parts||[]).map((x:{text?:string})=>x.text||"").join("").trim();
    return NextResponse.json({plan:validated(cleanJson(text),role,request,requestedMode),source:"ai"},{headers});
   }catch{return NextResponse.json({plan:fallback,source:"deterministic"},{headers})}
  }catch{return NextResponse.json({error:"Orchestrator tidak dapat memproses permintaan."},{status:500,headers})}
