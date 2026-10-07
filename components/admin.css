@@ -30,3 +30,18 @@
 .platform-ai-key-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}.platform-ai-key-actions button{border:1px solid #d9cce8;border-radius:8px;padding:9px 11px;background:#fff;color:#57249a;display:flex;align-items:center;gap:6px;font-size:10px;font-weight:780;cursor:pointer}.platform-ai-key-actions button.danger{color:#a13e4c;border-color:#efd3d8}.platform-ai-key-actions button:disabled{opacity:.5;cursor:not-allowed}
 .platform-ai-key-footnote{margin:0 27px 27px;padding-top:2px;font-size:10px;line-height:1.6;color:#81758a}
 @media(max-width:850px){.platform-ai-key-grid{grid-template-columns:1fr}}@media(max-width:580px){.platform-ai-key-summary,.platform-success,.platform-ai-key-grid,.platform-ai-key-footnote{margin-left:16px;margin-right:16px}.platform-ai-key-grid{padding-left:0;padding-right:0}.platform-ai-key-title{flex-direction:column}}
+
+
+/* Gemini API configuration lives directly in the Super Admin dashboard overview. */
+.platform-gemini-dashboard{margin:0 0 17px;border:1px solid var(--pa-border);border-radius:14px;background:white;overflow:hidden}
+.platform-gemini-dashboard-intro{display:flex;align-items:center;gap:15px;padding:21px 24px}
+.platform-gemini-dashboard-icon{display:grid;place-items:center;flex:0 0 46px;height:46px;border-radius:12px;color:#6d28b8;background:#f1ebfb}
+.platform-gemini-dashboard-copy{flex:1;min-width:0}
+.platform-gemini-dashboard-copy h2{font-size:16px;letter-spacing:-.02em;margin:0 0 6px;color:#302542}
+.platform-gemini-dashboard-copy p{margin:0;max-width:680px;font-size:11px;color:#796e86;line-height:1.65}
+.platform-gemini-dashboard-intro>button{flex-shrink:0;border:1px solid #d9c8e9;border-radius:9px;background:#6d28b8;color:#fff;padding:12px 15px;font-size:11px;font-weight:780;cursor:pointer}
+.platform-gemini-dashboard-intro>button:hover{background:#5b21a2}
+.platform-gemini-dashboard-intro>button:focus-visible{outline:3px solid #d8c2f5;outline-offset:3px}
+.platform-gemini-dashboard-panel{padding:0 14px 14px}
+.platform-gemini-dashboard-panel>.platform-panel{border-color:#e9e0f0}
+@media(max-width:720px){.platform-gemini-dashboard-intro{padding:17px;align-items:flex-start;flex-wrap:wrap;gap:12px}.platform-gemini-dashboard-icon{flex-basis:42px;height:42px}.platform-gemini-dashboard-copy{flex-basis:calc(100% - 58px)}.platform-gemini-dashboard-intro>button{width:100%}.platform-gemini-dashboard-panel{padding:0 8px 8px}}
