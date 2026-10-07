@@ -61,7 +61,7 @@ assert(!dashboard.includes('className="module-tabs"')&&dashboard.includes("Works
 const dashboardOverview=fs.readFileSync(path.join(base,"components/DashboardOverview.tsx"),"utf8");
 assert(dashboardOverview.includes("COMMAND CENTER SEKOLAH")&&dashboardOverview.includes("Pusat Laporan"),"Dashboard must render the operational command center and direct report access.");
 const reportCenter=fs.readFileSync(path.join(base,"components/ReportCenter.tsx"),"utf8");
-for(const required of ["Laporan Akademik","Laporan Disiplin & Prestasi","Laporan Keuangan","Laporan SDM & Payroll","Standar dokumen sekolah Indonesia"])assert(reportCenter.includes(required),"Report Center missing: "+required);
+for(const required of ["Laporan Akademik","Laporan Disiplin & Prestasi","Laporan Keuangan","Laporan Perpustakaan","Standar dokumen sekolah Indonesia"])assert(reportCenter.includes(required),"Report Center missing: "+required);
 const reportEngine=fs.readFileSync(path.join(base,"lib/report-engine.ts"),"utf8");
 assert(reportEngine.includes("show_logo")&&reportEngine.includes("classification_code")&&reportEngine.includes("signer_title"),"Report engine must honor shared school template settings.");
 const disciplineTemplate=fs.readFileSync(path.join(base,"components/DisciplineReportTemplate.tsx"),"utf8");
@@ -72,7 +72,7 @@ const financeParity=fs.readFileSync(path.join(base,"components/FinanceLegacyPari
 assert(financeParity.includes('focus==="Laporan"')&&financeParity.includes("rekap_piutang_siswa")&&financeParity.includes("rekap_pembayaran_siswa"),"Finance report center must include period, receivable, and payment reports.");
 const demoWorkspace=fs.readFileSync(path.join(base,"components/DemoWorkspace.tsx"),"utf8");
 assert(demoWorkspace.includes('"reports","Pusat Laporan"')&&demoWorkspace.includes("<ReportCenter"),"Demo must expose the first-class report center.");
-for(const required of ["Laporan Lengkap","Rekap & Laporan","Laporan BK","Laporan Program","Buku Kas Umum","Realisasi Anggaran","Laporan HR","Arsip Laporan"])assert(demoWorkspace.includes(required),"Demo report parity missing: "+required);
+for(const required of ["Laporan Lengkap","Rekap & Laporan","Laporan BK","Laporan Program","Buku Kas Umum","Realisasi Anggaran","Arsip Laporan"])assert(demoWorkspace.includes(required),"Demo report parity missing: "+required);
 assert(demoWorkspace.includes("DemoReportView")&&demoWorkspace.includes("downloadExcel"),"Demo report pages must provide preview/export behavior.");
 assert(demoWorkspace.includes("settings::Branding")&&demoWorkspace.includes("principalNip"),"Demo report identity must be configurable from Branding.");
 const authScreen=fs.readFileSync(path.join(base,"components/AuthScreen.tsx"),"utf8");

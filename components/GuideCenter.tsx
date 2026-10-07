@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 import {AlertTriangle,BookOpen,CheckCircle2,ChevronDown,CircleHelp,Search,ShieldCheck,Target} from "lucide-react";
-import {modules,visibleFeatures,ROLE_LABELS,type Role,type ModuleKey} from "@/lib/modules";
+import {modules,navigationFeatures,ROLE_LABELS,type Role,type ModuleKey} from "@/lib/modules";
 import {guideFor,resolveWorkspaceRoute,type WorkspaceRoute} from "@/lib/workspace-navigation";
 import {taskHelp} from "@/lib/workspace-help";
 
@@ -80,10 +80,11 @@ const guides:Guide[]=[
 
 const extraGuides:{id:string;feature:string;module:ModuleKey;features:string[]}[]=[
  {id:"assistant",feature:"Asisten AI",module:"assistant",features:["Asisten Guru","Asisten Kepala Sekolah","Asisten Kelas","Universal AI Orchestrator"]},
- {id:"attendance",feature:"Presensi Guru & Staf",module:"attendance",features:["Check-in/check-out","Riwayat kehadiran","Izin","Cuti"]},
+ {id:"attendance",feature:"Presensi Guru & Staf",module:"attendance",features:["Presensi Saya","Riwayat Kehadiran","Jadwal & Shift","Izin & Cuti"]},
  {id:"planning",feature:"Perencanaan & Supervisi",module:"kepsek_ai",features:["PBD/EDS","Pusat dokumen","Persetujuan dokumen","Supervisi guru"]},
- {id:"performance",feature:"Kinerja & Pengembangan",module:"performance",features:["Kehadiran","Bukti capaian","Evaluasi","Tanggapan guru"]},
- {id:"reports",feature:"Laporan & Arsip",module:"reports",features:["Ringkasan Laporan","Akademik","Keuangan","Arsip Laporan"]},
+ {id:"library",feature:"Perpustakaan",module:"library",features:["Dashboard Perpustakaan","Koleksi Buku","Peminjaman","Laporan & Statistik"]},
+ {id:"performance",feature:"Kinerja & Pengembangan",module:"performance",features:["Bukti Kinerja & Pengembangan","Evaluasi","Tanggapan guru"]},
+ {id:"reports",feature:"Laporan & Arsip",module:"reports",features:["Ringkasan Laporan","Template Laporan Sekolah","Arsip Laporan"]},
 ];
 for(const g of extraGuides){const h=taskHelp(g.module,"");guides.push({id:g.id,feature:g.feature,title:g.feature,basis:"SekolaPro",summary:h.purpose,before:[h.before],steps:h.steps.map((detail,i)=>({title:String(i+1)+". "+(g.features[i]||g.feature),detail,result:h.result})),success:[h.result],problems:[{problem:"Fitur atau data tidak muncul.",fix:"Periksa peran akun, data prasyarat dan pesan validasi. Gunakan tombol Buka fitur yang tersedia untuk peran Anda."}]})}
 const stepRoutes:Record<string,[ModuleKey,string][]>={
@@ -96,7 +97,7 @@ const stepRoutes:Record<string,[ModuleKey,string][]>={
  bk:[["bk","Kasus & Asesmen"],["bk","Konseling Individu"],["bk","Laporan BK"]],
  command:[["command","Program Kerja"],["command","Tugas"],["command","Hasil Rapat"],["command","Bukti Kegiatan"]],
  finance:[["sikas","Kas/Rekening"],["sikas","Pemasukan"],["sikas","Tagihan Siswa"],["sikas","Pembayaran"],["sikas","Laporan"]],
- payroll:[["gajian","Tim SDM"],["gajian","Jadwal Kerja"],["gajian","Komponen Gaji"],["gajian","Proses Payroll"]],
+ payroll:[["gajian","Tim SDM"],["attendance","Jadwal & Shift"],["gajian","Komponen Gaji"],["gajian","Proses Payroll"]],
  access:[["access","Tambah Pengguna"],["gajian","Tim SDM"],["settings","Profil sekolah"]],
  ...Object.fromEntries(extraGuides.map(g=>[g.id,g.features.map(f=>[g.module,f])])),
 };
@@ -105,10 +106,11 @@ const quickStart:[ModuleKey,string,string,string][]=[
  ["master","Kelas","Siapkan kelas dan data siswa","Buat kelas, lalu tambah/import siswa dari template."],
  ["access","Tambah Pengguna","Undang guru dan staf","Pilih peran lalu bagikan kode undangan secara pribadi."],
  ["calendar","Kalender Sekolah","Lihat agenda hari ini","Pilih tanggal dan periksa waktu serta peserta."],
- ["attendance","Check-in/check-out","Absen kerja","Catat masuk/pulang sesuai ketentuan sekolah."],
+ ["attendance","Presensi Saya","Absen kerja","Catat masuk/pulang sesuai ketentuan sekolah."],
  ["buku_kerja","Presensi Siswa","Isi presensi siswa","Pilih kelas dan tanggal; simpan status siswa."],
  ["buku_kerja","Jurnal Mengajar","Isi jurnal mengajar","Catat topik, aktivitas, refleksi dan tindak lanjut."],
  ["bk","Kasus & Asesmen","Catat layanan BK","Gunakan kasus dan layanan dengan privasi konselor."],
+ ["library","Dashboard Perpustakaan","Kelola perpustakaan","Koleksi, sirkulasi, kunjungan dan laporan dalam satu data."],
  ["sikas","Pemasukan","Catat keuangan","Siapkan kas dan catat transaksi pada tanggal yang tepat."],
  ["assistant","Universal AI Orchestrator","Susun control plan lintas modul","Tulis tujuan; sistem memetakan dependency, risk, approval, dampak dan verifikasi."],
  ["reports","Ringkasan Laporan","Periksa hasil dan laporan","Pilih laporan, periode dan pratinjau sebelum ekspor."],
@@ -130,7 +132,7 @@ export default function GuideCenter({role,focus,onRoute}:{role:Role;focus?:strin
  useEffect(()=>{setQuery("");setOpen(guides.find(g=>g.feature===focus)?.id||"start")},[focus]);
  const selected=useMemo(()=>{const q=(focus||"").toLowerCase();return guides.filter(g=>(!q||q.includes("mulai")||g.feature.toLowerCase()===q||g.feature.toLowerCase().includes(q)||q.includes(g.feature.toLowerCase()))&&(g.title+" "+g.summary+" "+g.basis+" "+g.steps.map(s=>s.detail).join(" ")).toLowerCase().includes(query.toLowerCase()))},[focus,query]);
  const shortcuts=quickStart.filter(([m,f])=>!!resolveWorkspaceRoute(m,f,role));
- const featureLinks=modules.filter(m=>m.key!=="help"&&(!focus||focus==="Mulai dari Sini"||guideFor(m.key)===focus)).flatMap(m=>visibleFeatures(m,role).map(f=>({module:m.key,feature:f,label:m.label,help:taskHelp(m.key,f)}))).filter(x=>(x.label+" "+x.feature+" "+x.help.purpose).toLowerCase().includes(query.toLowerCase()));
+ const featureLinks=modules.filter(m=>m.key!=="help"&&(!focus||focus==="Mulai dari Sini"||guideFor(m.key)===focus)).flatMap(m=>navigationFeatures(m,role).map(f=>({module:m.key,feature:f,label:m.label,help:taskHelp(m.key,f)}))).filter(x=>(x.label+" "+x.feature+" "+x.help.purpose).toLowerCase().includes(query.toLowerCase()));
  return <section className="guide-center">
   <div className="guide-hero-pro"><div><span className="eyebrow">BUKU PANDUAN LANGKAH DEMI LANGKAH</span><h2>Panduan SekolaPro</h2><p>Pilih pekerjaan Anda, ikuti langkahnya, lalu buka fitur langsung dari panduan. Mulai dengan data yang dibutuhkan; tidak perlu mengisi semua menu sekaligus.</p></div><div className="guide-role-pro"><ShieldCheck size={20}/><span>Akses Anda</span><b>{ROLE_LABELS[role]}</b><a className="button secondary" href="/panduan-school-control.md" download>Unduh panduan</a></div></div>
   {(focus==="Mulai dari Sini"||!focus)&&<section className="panel guide-flow-pro"><div><Target size={19}/><h3>Urutan cepat untuk {ROLE_LABELS[role]}</h3></div><div>{(flow[role]||flow.staff).map((x,i)=><span key={x}><b>{i+1}</b>{x}</span>)}</div></section>}

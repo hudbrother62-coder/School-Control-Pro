@@ -20,7 +20,7 @@ const menu=[
  ["attendance","Presensi Realtime",Clock3,["Check-in/Check-out","Jadwal/Shift","Riwayat Kehadiran","Koreksi Beralasan","Izin","Cuti"]],
  ["performance","Kinerja & Pengembangan",BarChart3,["Kehadiran","Partisipasi Program","Pelatihan","Bukti Capaian","Evaluasi","Tanggapan Guru"]],
  ["finance","Keuangan & Tagihan",WalletCards,["Dashboard Keuangan","Kas/Rekening","Pemasukan","Pengeluaran","Anggaran","Realisasi Anggaran","Tagihan Siswa","Pembayaran","Kuitansi","Buku Kas Umum","Laporan","Import/Export"]],
- ["payroll","Payroll & Slip",BriefcaseBusiness,["Komponen Gaji","Tunjangan","Potongan","Draft Payroll","Review","Approval","Kunci Periode","Rekap Payroll","Laporan HR","Slip Saya"]],
+ ["payroll","Payroll & Slip",BriefcaseBusiness,["Komponen Gaji","Tunjangan","Potongan","Draft Payroll","Review","Approval","Kunci Periode","Rekap Payroll","Slip Saya"]],
  ["access","Akses & Peran",KeyRound,["Tambah Pengguna","Anggota Tim","Struktur Peran","Hak Akses Fitur"]],
  ["settings","Pengaturan Sekolah",Settings,["Profil Sekolah","Identitas & Kontak","Lokasi Sekolah","Akademik","Branding","Memori Sekolah","Langganan","Riwayat Pembayaran"]]
 ] as const;
@@ -82,7 +82,7 @@ function demoReportFeature(active:Key,feature:string){
   ||(active==="counseling"&&feature==="Laporan BK")
   ||(active==="execution"&&feature==="Laporan Program")
   ||(active==="finance"&&["Buku Kas Umum","Realisasi Anggaran","Laporan"].includes(feature))
-  ||(active==="payroll"&&["Rekap Payroll","Laporan HR"].includes(feature));
+  ||(active==="payroll"&&feature==="Rekap Payroll");
 }
 function demoReportTitle(active:Key,feature:string){
  if(active==="academic")return feature==="Laporan Kelas"?"Laporan Kelas":"Laporan Buku Kerja Guru";
@@ -90,7 +90,7 @@ function demoReportTitle(active:Key,feature:string){
  if(active==="counseling")return "Laporan Layanan Bimbingan dan Konseling";
  if(active==="execution")return "Laporan Program Kerja dan Progres Sekolah";
  if(active==="finance")return feature==="Buku Kas Umum"?"Buku Kas Umum":feature==="Realisasi Anggaran"?"Laporan Realisasi Anggaran":"Laporan Keuangan Sekolah";
- return feature==="Laporan HR"?"Laporan SDM dan Operasional":"Rekap Payroll Sekolah";
+ return "Rekap Payroll Sekolah";
 }
 function demoReportRows(active:Key,saved:Record<string,Saved[]>){
  return (reportSourceKeys[active]||[]).flatMap(k=>(saved[k]||[]).map(x=>({source:k.split("::")[1],...x.fields})));

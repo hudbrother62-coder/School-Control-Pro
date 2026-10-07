@@ -39,11 +39,12 @@ const routes:Route[]=[
  {module:"payslip",label:"Slip Gaji Saya",keywords:["slip gaji saya","slip gaji","payslip"]},
  {module:"master",label:"Data Induk",keywords:["data siswa","data guru","kelas","mata pelajaran","master data","import siswa","penugasan guru"]},
  {module:"calendar",label:"Agenda Sekolah",keywords:["agenda","kalender","jadwal kegiatan","pertemuan","rapat"]},
- {module:"attendance",label:"Presensi Realtime",keywords:["absen pribadi","absen guru","presensi guru","check in","check out","kehadiran guru","cuti","izin guru"]},
+ {module:"attendance",label:"Presensi & Kehadiran",keywords:["absen pribadi","absen guru","presensi guru","check in","check out","kehadiran guru","riwayat kehadiran","kehadiran tim","jadwal kerja","shift","lokasi presensi","koreksi presensi","cuti","izin guru"]},
  {module:"guru_ai",label:"Perangkat Ajar AI",keywords:["modul ajar","bahan ajar","lkpd","rpp","soal","asesmen","perangkat ajar"]},
  {module:"buku_kerja",label:"Pembelajaran & Penilaian",keywords:["jurnal mengajar","nilai siswa","presensi siswa","rekap kelas","agenda mengajar","penilaian"]},
  {module:"disiplin",label:"Disiplin & Prestasi",keywords:["disiplin","pelanggaran","prestasi siswa","pembinaan","sanksi","surat panggilan"]},
  {module:"bk",label:"Bimbingan Konseling",keywords:["konseling","kasus bk","rpl","kunjungan rumah","rujukan","karier siswa"]},
+ {module:"library",label:"Perpustakaan",keywords:["perpustakaan","buku perpustakaan","koleksi buku","katalog buku","inventaris buku","eksemplar","barcode buku","peminjaman buku","pinjam buku","pengembalian buku","kunjungan perpustakaan","pengadaan buku","perawatan buku","literasi sekolah"]},
  {module:"kepsek_ai",label:"Perencanaan & Supervisi",keywords:["rkt","rkjm","ksp","kosp","pbd","eds","rkas","supervisi","sop","pkks"]},
  {module:"command",label:"Program, Tugas & Agenda",keywords:["program kerja","pic","tugas sekolah","deadline","hasil rapat","notula","bukti program","kendala","progres"]},
  {module:"sikas",label:"Keuangan",keywords:["keuangan","rekening sekolah","kas sekolah","tagihan","spp","anggaran","bosp","pemasukan","pengeluaran","kuitansi"]},
@@ -61,16 +62,17 @@ function featureFor(module:ModuleKey,text:string){
   case "journals":return has(text,"bulanan","laporan","rekap")?"Rekap Bulanan":has(text,"review")?"Review Jurnal":has(text,"siswa")?"Jurnal Siswa":"Jurnal Harian";
   case "master":return has(text,"penugasan")?"Penugasan Guru":has(text,"staf","tenaga kependidikan")?"Tenaga Kependidikan":has(text,"guru","sdm")?"Guru":has(text,"kelas")?"Kelas":has(text,"mata pelajaran","mapel")?"Mata Pelajaran":has(text,"import")?"Import Excel Keseluruhan":"Siswa";
   case "calendar":return has(text,"pribadi")?"Agenda Pribadi":has(text,"rekap")?"Rekap Agenda":"Kalender Sekolah";
-  case "attendance":return has(text,"cuti")?"Cuti":has(text,"izin")?"Izin":has(text,"jadwal","shift")?"Jadwal/shift":"Check-in/check-out";
+  case "attendance":return has(text,"kehadiran tim")?"Kehadiran Tim":has(text,"lokasi")?"Lokasi Presensi":has(text,"koreksi")?"Koreksi Presensi":has(text,"cuti","izin")?"Izin & Cuti":has(text,"jadwal","shift")?"Jadwal & Shift":has(text,"riwayat")?"Riwayat Kehadiran":"Presensi Saya";
   case "guru_ai":return has(text,"lkpd")?"LKPD":has(text,"rpp")?"RPP":has(text,"bahan ajar")?"Bahan Ajar":has(text,"soal","asesmen")?"Asesmen Soal":"Modul Ajar";
   case "buku_kerja":return has(text,"jurnal")?"Jurnal Mengajar":has(text,"nilai","penilaian")?"Lembar Nilai":has(text,"agenda")?"Agenda Mengajar":has(text,"rekap","laporan")?"Laporan Lengkap":"Presensi Siswa";
   case "disiplin":return has(text,"surat","panggilan")?"Surat & Dokumen":has(text,"pembinaan")?"Pembinaan":has(text,"tindak lanjut","sanksi")?"Tindak Lanjut":has(text,"prestasi")?"Prestasi":"Pelanggaran";
   case "bk":return has(text,"kunjungan")?"Kunjungan Rumah":has(text,"rujukan")?"Rujukan":has(text,"karier")?"Perencanaan Karier":has(text,"tindak lanjut")?"Tindak Lanjut":has(text,"kasus")?"Kasus & Asesmen":"Konseling Individu";
+  case "library":return has(text,"pengembalian","kembali buku")?"Pengembalian":has(text,"peminjaman","pinjam buku")?"Peminjaman":has(text,"kunjungan")?"Kunjungan":has(text,"pengadaan")?"Pengadaan":has(text,"perawatan","rusak")?"Perawatan":has(text,"inventaris","barcode","eksemplar")?"Eksemplar & Inventaris":has(text,"anggota")?"Anggota Perpustakaan":has(text,"literasi","program")?"Program & Literasi":has(text,"laporan","statistik")?"Laporan & Statistik":has(text,"koleksi","katalog","buku")?"Koleksi Buku":"Dashboard Perpustakaan";
   case "kepsek_ai":return has(text,"kosp","ksp")?"KSP/KOSP":has(text,"rkjm")?"RKJM":has(text,"rkt")?"RKT":has(text,"rkas")?"RKAS":has(text,"pbd","eds")?"PBD/EDS":has(text,"sop")?"SOP":has(text,"supervisi")?"Supervisi guru":"PBD/EDS";
   case "command":return has(text,"rapat","notula")?"Tindak Lanjut Rapat":has(text,"bukti")?"Verifikasi Bukti":has(text,"tugas","deadline")?"Tugas":"Program Kerja";
   case "sikas":return has(text,"tagihan","spp")?"Tagihan Siswa":has(text,"anggaran")?"Realisasi Anggaran":has(text,"pemasukan")?"Pemasukan":has(text,"pengeluaran")?"Pengeluaran":has(text,"kuitansi")?"Riwayat Pembayaran":"Buku Kas Umum";
   case "gajian":return has(text,"lembur")?"Lembur":has(text,"kasbon")?"Kasbon":has(text,"reimburse")?"Reimburse":has(text,"rekrut")?"Rekrutmen":has(text,"lokasi")?"Lokasi Presensi":has(text,"payroll","gaji")?"Proses Payroll":"Pengajuan SDM";
-  case "performance":return has(text,"evaluasi")?"Evaluasi":has(text,"pelatihan")?"Pelatihan":"Bukti capaian";
+  case "performance":return has(text,"evaluasi")?"Evaluasi":has(text,"tanggapan")?"Tanggapan guru":"Bukti Kinerja & Pengembangan";
   case "payslip":return "Riwayat Slip";
   case "access":return "Struktur Peran & Hak Akses";
   case "settings":return has(text,"langganan","trial")?"Langganan":"Profil sekolah";
@@ -98,6 +100,7 @@ function verificationFor(module:ModuleKey,feature:string,title:string){
  if(module==="gajian")return "Periksa status payroll, komponen, periode, approval dan snapshot slip pada database.";
  if(module==="calendar")return "Pastikan agenda muncul pada kalender pihak yang dituju dengan tanggal, peserta dan lokasi yang benar.";
  if(module==="master")return "Pastikan entitas tersimpan sekali, relasinya benar dan tidak ada duplikasi identitas.";
+ if(module==="library")return "Pastikan judul, eksemplar, anggota dan status sirkulasi konsisten; peminjaman/pengembalian harus tercermin pada status eksemplar.";
  if(module==="disiplin"||module==="bk")return "Periksa siswa, kronologi, hak akses dan jejak tindak lanjut tanpa membuka data di luar kewenangan.";
  return "Periksa hasil pada fitur "+feature+" dan pastikan keadaan aktual sesuai tujuan langkah "+title+".";
 }
@@ -111,6 +114,7 @@ function impactFor(module:ModuleKey,feature:string){
   attendance:"Mempengaruhi riwayat kehadiran.",
   disiplin:"Mempengaruhi arsip pembinaan/ketertiban siswa.",
   bk:"Mempengaruhi catatan layanan BK sesuai pembatasan akses.",
+  library:"Mempengaruhi koleksi, inventaris, sirkulasi, kunjungan atau layanan perpustakaan.",
   command:"Mempengaruhi program, tugas, bukti dan progres.",
   sikas:"Mempengaruhi kas, tagihan atau laporan keuangan.",
   gajian:"Mempengaruhi pengajuan SDM atau periode payroll.",

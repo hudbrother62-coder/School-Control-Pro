@@ -331,3 +331,58 @@ body[data-theme=dark] .risk-critical{color:#ff9ba5;background:#4a1e26}
  border-color:rgba(255,255,255,.32);
  box-shadow:0 10px 26px rgba(17,12,59,.24),inset 0 1px 0 rgba(255,255,255,.16);
 }
+
+
+/* Form readability: labels remain clear without making entered values heavy */
+input,select,textarea,
+.field input,.field select,.field textarea,
+.searchbox input,.smart-search input,.record-tools input[type=search],
+.smart-trigger{
+ font-weight:400!important;
+ letter-spacing:normal;
+}
+.field{font-weight:550!important}
+.smart-label{font-weight:550!important}
+.smart-trigger b,.smart-options b{font-weight:500!important}
+.button{font-weight:600!important}
+.navbtn,.navchildren button,.nav-cluster-toggle{font-weight:520!important}
+.data-table th{font-weight:550!important}
+.entry strong{font-weight:620}
+.card strong{font-weight:680}
+.discipline-filter-select{min-width:190px}
+.discipline-filter-select .smart-label{display:none}
+.discipline-filter-select .smart-trigger{height:42px}
+
+/* Library workspace */
+.library-page{display:grid;gap:14px}
+.library-title{display:flex;align-items:flex-start;gap:12px}
+.library-title>span{
+ width:38px;height:38px;display:grid;place-items:center;flex:0 0 auto;
+ border-radius:11px;background:color-mix(in srgb,var(--accent) 10%,var(--surface));
+ color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 18%,var(--border));
+}
+.library-title h2{margin:0 0 5px}
+.library-title p{margin:0;line-height:1.55}
+.library-list{display:grid}
+.library-alert{
+ border:1px solid color-mix(in srgb,#d97706 30%,var(--border));
+ border-radius:14px;padding:15px 17px;
+ background:color-mix(in srgb,#f59e0b 7%,var(--surface));
+}
+.library-alert>strong{display:block;margin-bottom:8px;font-size:13px;font-weight:620}
+.library-program-card,.library-report-summary{
+ display:flex;align-items:center;justify-content:space-between;gap:18px;
+ border:1px solid var(--border);border-radius:14px;padding:18px;
+ background:color-mix(in srgb,var(--bg) 30%,var(--surface));
+}
+.library-program-card>div{min-width:0}
+.library-program-card p,.library-report-summary p{margin:6px 0 0;line-height:1.65}
+.library-money{font-size:clamp(16px,2vw,25px)!important;overflow-wrap:anywhere}
+.library-page .record-tools{margin:2px 0 4px}
+.library-page .smart-trigger b{font-weight:500}
+@media(max-width:740px){
+ .discipline-filter-select{width:100%;min-width:0}
+ .library-title{align-items:center}
+ .library-program-card,.library-report-summary{align-items:stretch;flex-direction:column}
+ .library-program-card .button{width:100%}
+}
