@@ -73,6 +73,7 @@ const NAV_HIDDEN:Partial<Record<ModuleKey,Set<string>>>={
 };
 /** Sidebar/menu representation only. Hidden legacy routes remain resolvable so saved links and workflows do not lose functionality. */
 export function navigationFeatures(m:FeatureModule,role:Role):string[]{
+ if(m.key==="payslip")return [];
  const hidden=NAV_HIDDEN[m.key];
  return visibleFeatures(m,role).filter(f=>!hidden?.has(f));
 }
