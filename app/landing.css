@@ -475,3 +475,10 @@
 @media(max-width:760px){.sp-demo-welcome{padding:8px 0}.sp-demo-welcome h3{font-size:15px;line-height:1.25;margin:6px 0}.sp-demo-welcome>small{font-size:6px}.sp-demo-metrics{margin-bottom:0}.sp-demo-metrics>div{padding:6px}.sp-demo-metrics span,.sp-demo-metrics b{margin-top:4px}}
 /* Clip artwork without creating an internal scroll container for focused controls. */
 .sp-stage{overflow:clip}
+
+/* Mobile artwork stays clear of the oversized decorative cap. */
+@media(max-width:760px){.sp-cap-wrap{display:none}}
+/* Text entrance and exit are controlled by reversible scroll progress. */
+.sp-scene.is-active .sp-copy,.sp-scene.is-active .sp-preview{animation:none}
+.sp-copy .sp-eyebrow,.sp-copy h1,.sp-copy h2,.sp-copy .sp-description,.sp-feature-list>span,.sp-scene-actions>*,.sp-copy .sp-audience{will-change:opacity,transform}
+@media(prefers-reduced-motion:reduce){.sp-copy .sp-eyebrow,.sp-copy h1,.sp-copy h2,.sp-copy .sp-description,.sp-feature-list>span,.sp-scene-actions>*,.sp-copy .sp-audience{will-change:auto;transform:none!important}}

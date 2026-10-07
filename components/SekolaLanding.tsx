@@ -6,7 +6,7 @@ import {gsap} from 'gsap';
 import {ScrollTrigger} from 'gsap/ScrollTrigger';
 import {ArrowRight,ArrowUpRight,BookOpen,CalendarDays,Check,ChevronLeft,ChevronRight,ClipboardList,FileText,GraduationCap,HeartHandshake,Menu,Moon,Mouse,Search,ShieldCheck,Sun,Users,WalletCards,Wrench,X} from 'lucide-react';
 import {plans,rupiah} from '@/lib/pricing';
-import {tourPosition,tourScrollTarget,tourBlend,tourCamera} from '@/lib/landing-scroll';
+import {tourPosition,tourScrollTarget,tourBlend,tourCamera,tourTextPose} from '@/lib/landing-scroll';
 const SchoolStage=dynamic(()=>import('./SchoolStage'),{ssr:false});
 const scenes=[
  {label:'Beranda',eyebrow:'RUANG KERJA SEKOLAH, DALAM SATU SISTEM',title:<>Satu sekolah.<br/>Semua <em>terkelola.</em></>,description:'Dari pembelajaran sampai laporan. Guru, kepala sekolah, dan tim bekerja dari data yang saling terhubung.',audience:'Untuk kepala sekolah, guru, dan tim sekolah',icon:GraduationCap,features:['Satu data sekolah','Akses sesuai peran','Administrasi terhubung','Asisten AI']},
@@ -38,6 +38,8 @@ export default function SekolaLanding(){
   gsap.registerPlugin(ScrollTrigger);
   const el=tour.current;if(!el)return;
   const panes=Array.from(el.querySelectorAll<HTMLElement>('.sp-scene'));
+  const textGroups=panes.map(pane=>Array.from(pane.querySelectorAll<HTMLElement>('.sp-copy .sp-eyebrow,.sp-copy h1,.sp-copy h2,.sp-copy .sp-description,.sp-feature-list>span,.sp-scene-actions>*,.sp-copy .sp-audience')));
+  const previews=panes.map(pane=>pane.querySelector<HTMLElement>('.sp-preview'));
   const art=Array.from(el.querySelectorAll<HTMLElement>('.sp-school-art'));
   const camera=el.querySelector<HTMLElement>('.sp-camera');
   const controller={value:0};let lastIndex=-1;
@@ -50,6 +52,8 @@ export default function SekolaLanding(){
     panes.forEach((pane,i)=>{pane.style.opacity=i===state.index?'1':'0';pane.style.visibility=i===state.index?'visible':'hidden';});
 
    }
+   textGroups[state.index].forEach((text,order)=>{const pose=reduced?{opacity:1,y:0}:tourTextPose(value,state.index,scenes.length,order);text.style.opacity=String(pose.opacity);text.style.transform=`translate3d(0,${pose.y}px,0)`;});
+   const preview=previews[state.index];if(preview){const pose=reduced?{opacity:1,y:0}:tourTextPose(value,state.index,scenes.length,2);preview.style.opacity=String(pose.opacity);preview.style.transform=`translate3d(${(1-pose.opacity)*24}px,${pose.y}px,0)`;}
    art.forEach(image=>{
     const indices=(image.dataset.scenes||'0').split(',').map(Number);
     image.style.opacity=String(indices.reduce((total,index)=>total+(reduced?(index===state.index?1:0):weights[index]),0));

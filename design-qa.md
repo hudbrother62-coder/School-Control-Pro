@@ -25,3 +25,9 @@ Idle movement uses a separate 18-second CSS perspective orbit layer. Scroll lens
 Browser evidence: idle matrix changed while document scroll remained stationary; zoom reached approximately 1.14 during a boundary scroll versus 1.04 at rest; reverse scrolling restored hero while stage top remained zero. All day assets loaded. Inspected daytime hero, classroom, counseling, administration, facilities, access; desktop 1363 × 936 and mobile 390 × 844 / 320 × 640. Compacted mobile metric preview to avoid clipped values.
 
 Also reproduced focus-induced scrolling inside `overflow:hidden` stage (internal scrollTop 57, header top -58). Changed stage overflow to clip, removing the internal scroll container; navigation now leaves internal scrollTop 0 and header top 0. Artwork remains clipped. No application console errors observed.
+
+## Mobile cap and scene typography revision
+- Hide decorative graduation cap below 760px; preserve the brand logo.
+- All scene copy and preview text enter and leave with reversible scroll progress, staggered by element. Reduced motion remains static.
+- Mobile browser verified: cap display none, stage scrollTop zero, resting heading opacity 1, outgoing heading opacity 0.073 and translateY -14.831px. Light and dark hero remain readable.
+- TypeScript and pure motion bounds tests passed.

@@ -37,3 +37,19 @@ for(let i=0;i<=1000;i++){
 }
 assert.equal(tourCamera(.4,1).scale,1.04);
 console.log('Camera zoom boundaries and continuous reversible poses: passed');
+const {tourTextPose}=moduleScope.exports;
+for(let scene=0;scene<6;scene++){
+ assert.equal(tourTextPose(scene/5,scene,6).opacity,1,'Every resting scene has fully readable text');
+ for(let step=0;step<=100;step++){
+  const pose=tourTextPose(step/100,scene,6,7);
+  assert.ok(pose.opacity>=0&&pose.opacity<=1);
+  assert.ok(pose.y>=-16&&pose.y<=20);
+ }
+}
+assert.equal(tourTextPose(.1,0,6).opacity,0,'Outgoing copy finishes before the next scene');
+assert.equal(tourTextPose(.1,1,6).opacity,0,'Incoming copy begins at the same boundary');
+assert.ok(tourTextPose(.08,0,6).opacity>0&&tourTextPose(.08,0,6).y<0,'Copy animates upward on exit');
+assert.ok(tourTextPose(.12,1,6).opacity>0&&tourTextPose(.12,1,6).y>0,'Copy animates upward on entrance');
+assert.ok(tourTextPose(.14,1,6,7).opacity<tourTextPose(.14,1,6,0).opacity,'Text elements enter with a stagger');
+assert.deepEqual(tourTextPose(.4,0,1),{opacity:1,y:0});
+console.log('Scene text entrance, exit, stagger and resting visibility: passed');
