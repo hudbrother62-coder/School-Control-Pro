@@ -83,8 +83,8 @@ const extraGuides:{id:string;feature:string;module:ModuleKey;features:string[]}[
  {id:"attendance",feature:"Presensi Guru & Staf",module:"attendance",features:["Presensi Saya","Riwayat Kehadiran","Jadwal & Shift","Izin & Cuti"]},
  {id:"planning",feature:"Perencanaan & Supervisi",module:"kepsek_ai",features:["PBD/EDS","Pusat dokumen","Persetujuan dokumen","Supervisi guru"]},
  {id:"library",feature:"Perpustakaan",module:"library",features:["Dashboard Perpustakaan","Koleksi Buku","Peminjaman","Laporan & Statistik"]},
- {id:"performance",feature:"Kinerja & Pengembangan",module:"performance",features:["Kehadiran","Bukti capaian","Evaluasi","Tanggapan guru"]},
- {id:"reports",feature:"Laporan & Arsip",module:"reports",features:["Ringkasan Laporan","Akademik","Keuangan","Arsip Laporan"]},
+ {id:"performance",feature:"Kinerja & Pengembangan",module:"performance",features:["Bukti Kinerja & Pengembangan","Evaluasi","Tanggapan guru"]},
+ {id:"reports",feature:"Laporan & Arsip",module:"reports",features:["Ringkasan Laporan","Template Laporan Sekolah","Arsip Laporan"]},
 ];
 for(const g of extraGuides){const h=taskHelp(g.module,"");guides.push({id:g.id,feature:g.feature,title:g.feature,basis:"SekolaPro",summary:h.purpose,before:[h.before],steps:h.steps.map((detail,i)=>({title:String(i+1)+". "+(g.features[i]||g.feature),detail,result:h.result})),success:[h.result],problems:[{problem:"Fitur atau data tidak muncul.",fix:"Periksa peran akun, data prasyarat dan pesan validasi. Gunakan tombol Buka fitur yang tersedia untuk peran Anda."}]})}
 const stepRoutes:Record<string,[ModuleKey,string][]>={
@@ -97,7 +97,7 @@ const stepRoutes:Record<string,[ModuleKey,string][]>={
  bk:[["bk","Kasus & Asesmen"],["bk","Konseling Individu"],["bk","Laporan BK"]],
  command:[["command","Program Kerja"],["command","Tugas"],["command","Hasil Rapat"],["command","Bukti Kegiatan"]],
  finance:[["sikas","Kas/Rekening"],["sikas","Pemasukan"],["sikas","Tagihan Siswa"],["sikas","Pembayaran"],["sikas","Laporan"]],
- payroll:[["gajian","Tim SDM"],["gajian","Jadwal Kerja"],["gajian","Komponen Gaji"],["gajian","Proses Payroll"]],
+ payroll:[["gajian","Tim SDM"],["attendance","Jadwal & Shift"],["gajian","Komponen Gaji"],["gajian","Proses Payroll"]],
  access:[["access","Tambah Pengguna"],["gajian","Tim SDM"],["settings","Profil sekolah"]],
  ...Object.fromEntries(extraGuides.map(g=>[g.id,g.features.map(f=>[g.module,f])])),
 };
@@ -106,7 +106,7 @@ const quickStart:[ModuleKey,string,string,string][]=[
  ["master","Kelas","Siapkan kelas dan data siswa","Buat kelas, lalu tambah/import siswa dari template."],
  ["access","Tambah Pengguna","Undang guru dan staf","Pilih peran lalu bagikan kode undangan secara pribadi."],
  ["calendar","Kalender Sekolah","Lihat agenda hari ini","Pilih tanggal dan periksa waktu serta peserta."],
- ["attendance","Check-in/check-out","Absen kerja","Catat masuk/pulang sesuai ketentuan sekolah."],
+ ["attendance","Presensi Saya","Absen kerja","Catat masuk/pulang sesuai ketentuan sekolah."],
  ["buku_kerja","Presensi Siswa","Isi presensi siswa","Pilih kelas dan tanggal; simpan status siswa."],
  ["buku_kerja","Jurnal Mengajar","Isi jurnal mengajar","Catat topik, aktivitas, refleksi dan tindak lanjut."],
  ["bk","Kasus & Asesmen","Catat layanan BK","Gunakan kasus dan layanan dengan privasi konselor."],
