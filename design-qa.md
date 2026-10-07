@@ -1,42 +1,15 @@
-# SekolaPro connected school — design QA
+# SekolaPro scroll book — design QA
 
-Final result: passed
+Implementation reviewed against the approved 1024×1536 book storyboard (exec-ff32fbbd-d1fb-4944-a92b-9c49f393644f.png). The hero reference and actual 1280×430 viewport were normalized and viewed together at /workspace/scratch/sekolapro-book-comparison.jpg.
 
-## Target and approach
-Approved image: exec-868e57f0-378c-4e97-b42d-f16f72cc8666.png, 1024 × 1536. One connected terraced school with warm learning rooms, real-looking school activities, lush gardens, purple illuminated stairs and a twilight blue environment. Native HTML retains the approved short headlines, feature chips, application preview and CTA. Two clean 1024 × 1536 WebP backgrounds preserve the same geometry in evening/daylight; no raster UI or wall slogans. The illustration is a rendered 3D visual, with continuous image framing rather than a live 3D mesh.
+## Composition
+Short native headings and CTA remain beside the ivory book; feature textures use the purple/blue brand. The implementation intentionally uses clean generated feature spreads rather than the reference desk scenery. Light mode has a pale continuous background and dark readable copy. Book contents are 1536×1024 lossless texture assets; camera projection and bending sheets are drawn into one persistent canvas. No WebGL dependency, so the test browser with GPU disabled still displays the moving book.
 
-## Full composition and focused comparison
-Browser desktop: 1363 × 936, native full story approximately 2044 px tall. Captured full-page implementation at /workspace/scratch/sekolapro-terraces-desktop.jpg, normalized the 2:3 story area to the reference 1024 × 1536 for a side-by-side comparison at /workspace/scratch/352384837b93/sekolapro-design-comparison.jpg. Focused hero comparison also inspected. Subsequent browser viewport inspection covered the final hero, learning, students, management and application preview after alignment fixes.
+## Motion and interaction
+Each chapter has 480 viewport heights of scroll divided across approach, zoom, feature browsing, retreat and a physical page turn. Text enters and exits with scroll. Forward/reverse traversal, zoom before/after page turns, the final CTA, chapter navigation, student feature dialog, theme and registration destination were inspected. Native touch scrolling remains enabled. Reduced motion uses ordinary reading sections and a static book. No account form submitted.
 
-Findings and fixes: initially dim reveal text was raised to 85% before entry; local soft shades keep copy readable without covering the central staircase or people. Hero top spacing reduced from 11vw to 8vw and display type from 5.8vw to 5.4vw. Removed an unnecessary paragraph line break. Students and management moved upward to align with their rooms; the four-tile preview moved from below the management area to the right terrace beside it. Daylight shading was softened to avoid large white patches.
+## Viewports and corrections
+Desktop 1363×936; compact desktop 1280×430; phones 390×844 and 320×640; landscape 667×375 and 844×390. Native information stays outside the central book. Fixed triangle seams with overlapping texture clipping, adjusted headline width, and removed minimum stage height for short landscape screens so navigation remains visible. Actual final 844×390 and 1280×430 layouts inspected after that correction.
 
-Typography: self-hosted Plus Jakarta Sans, bold display hierarchy, short two-line headings, compact body copy. Consistent Lucide stroke icons, readable native feature chips and purple-to-blue CTAs. Brand mark retained. Image compression visually inspected at desktop and mobile sizes; room activity remains sharp. No placeholder avatars or procedural/CSS school substitutions.
-
-## Viewport resilience
-Inspected 390 × 844 portrait, 320 × 640 small portrait and 667 × 375 landscape via temporary iframe QA route. Route removed before publishing. Mobile shows an unobstructed sticky school view above native-flow information, panning through the same image as scrolling progresses. Reduced blank section spacing from 55svh to 38svh. No horizontal clipping or unusable navigation observed at 320 px; shorter landscape image window keeps native text reachable. Desktop copy occupies outer margins and the main staircase remains visible.
-
-## States, functionality and accessibility
-- Mobile menu opens a native dialog; close and Escape work. Focus returns without intentional scrolling.
-- Sarpras search displays facility inventory, borrowing, maintenance, procurement and stock checks. Nonsense searches show a clear empty state.
-- Data siswa chip opens matching school/student features instead of an empty search. Other chips use contextual search.
-- Pricing shows the existing monthly/yearly plans and current 7-day trial. FAQ expansion checked for facility management.
-- Theme toggles display matching day/evening assets, not a recolored night illustration. Light modal and small-screen contrast inspected.
-- Native links keep existing /masuk and /daftar routes. No registration, payment, permissions or backend behavior changed.
-- Semantic headings/buttons/landmarks, visible focus indicators, labeled search/theme/menu/close controls, dialog focus handling, decorative image hidden from assistive technology.
-- Reduced-motion CSS removes transforms/entrance transitions; JS removes reveal animation and zoom. Scrolling remains native, without snapping, input interception or per-chapter image/camera resets.
-
-## Verification
-Camera regression first failed before implementation and now passes 1000 progress samples, endpoint clamping, monotonic pan and continuous zoom. npm test: all 17 regression scripts passed. TypeScript/lint passed. Production build passed; final build rerun after removal of the temporary QA route.
-
-Browser full-page screenshots intermittently timed out; full composition was captured successfully once and compared, with final adjustments verified in focused native viewport screenshots. Browser proof images: /workspace/scratch/sekolapro-terraces-top.jpg and /workspace/scratch/sekolapro-terraces-mobile.jpg.
-
-## Scroll and sharpness revision — 2026-10-07
-Replaced both architectural assets with refined, lossless WebP images. Source remains 1024 × 1536; no claim of native 4K resolution. Removed unnecessary image enlargement. Mobile image movement now uses a compositor transform with eased interpolation instead of repainting object-position. Lenis smooths wheel input, while touch remains native and dialogs retain independent scrolling.
-
-Copy now enters, holds for reading, and exits through scrubbed staggered timelines; reverse scrolling reverses the transitions. Hero has a short initial entrance. Reduced motion skips Lenis and text timelines. Removed moving backdrop blur from feature chips and the preview. Theme switching waits for image decoding.
-
-Browser checked desktop day/night, 320 × 640 portrait and 667 × 375 landscape, mobile feature dialog open/close, and reverse scrolling. Earlier forward-scroll inspection recorded hero opacity 0 and newly entering management opacity 0.9482; reverse returned hero opacity 1. New image loads fully and uses the new asset filename. Composition and short typography match the approved terraced-school direction; central staircase and people remain visible.
-
-All 17 regression scripts and TypeScript check passed. Pixel-pan tests cover clipping bounds, short images, mobile/landscape sizes and 1000 monotonic progress samples.
-
-Final result: passed
+## Validation
+Pure scroll regression covers endpoints, 10,000 bounded continuity samples, chapter boundaries and reversal. Full existing test suite passed. TypeScript and production build passed before publication. Independent review found one landscape navigation issue, now corrected and visually verified. Browser app-error inspection was clean after replacing the unsupported WebGL prototype.
