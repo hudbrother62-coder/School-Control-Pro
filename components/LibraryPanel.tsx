@@ -92,7 +92,7 @@ export default function LibraryPanel({schoolId,userId,role,staff,focus,onRoute}:
   {key:"purpose",label:"Tujuan",options:unique(visits.map(x=>x.purpose)).map(v=>({value:v,label:v})),value:x=>x.purpose||""}
  ]);
  const acqList=useRecordList(acquisitions,x=>[x.item_title,x.supplier,x.source_fund,x.status].join(" "),[
-  {key:"status",label:"Status",options:["requested","ordered","received","cancelled"].map(v=>({value:v,label:statusLabel(v)})),matches:(x,v)=>x.status===v},
+  {key:"status",label:"Status",options:["requested","ordered","received","cancelled"].map(v=>({value:v,label:statusLabel(v)})),value:x=>x.status},
   {key:"source",label:"Sumber dana",options:unique(acquisitions.map(x=>x.source_fund)).map(v=>({value:v,label:v})),value:x=>x.source_fund||""}
  ]);
  const maintenanceList=useRecordList(maintenance,x=>[copyLabel(x.copy_id||""),x.action,x.condition_before,x.condition_after,x.notes].join(" "),[
