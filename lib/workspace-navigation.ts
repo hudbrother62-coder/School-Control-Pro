@@ -36,6 +36,7 @@ const aliases:Record<string,WorkspaceRoute>={
  "access::Hak Akses Fitur":{module:"access",feature:"Struktur Peran & Hak Akses"},
  "settings::Undang anggota":{module:"access",feature:"Tambah Pengguna"},
  "settings::Identitas & Kontak":{module:"settings",feature:"Profil sekolah"},
+ "settings::Riwayat pembayaran":{module:"settings",feature:"Riwayat Langganan"},
 };
 export function resolveWorkspaceRoute(module:string,feature:string,role:Role):WorkspaceRoute|null{
  const target=aliases[module+"::"+feature]||{module:module as ModuleKey,feature};
