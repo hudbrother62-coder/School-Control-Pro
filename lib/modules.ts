@@ -52,7 +52,7 @@ export function visibleFeatures(m:FeatureModule,role:Role):string[]{
   if(m.key==="attendance"&&f==="Koreksi beralasan")return managerRoles.includes(role);
   if(m.key==="gajian"){
    if(["Komponen Gaji","Komponen Dinamis","Proses Payroll"].includes(f))return payrollRoles.includes(role);
-   if(["Jadwal Kerja","Lokasi Presensi","Rekrutmen","Laporan HR"].includes(f))return managerRoles.includes(role);
+   if(["Jadwal Kerja","Lokasi Presensi","Rekrutmen"].includes(f))return managerRoles.includes(role);
    if(f==="Tim SDM")return payrollRoles.includes(role);
    if(["Tim Saya","Kehadiran Tim","Approval Tim","Rekap Tim"].includes(f))return [...managerRoles,"supervisor"].includes(role);
   }
