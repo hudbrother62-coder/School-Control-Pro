@@ -489,3 +489,38 @@ input,select,textarea,
  .sarpras-setup>.flow:first-of-type .button{flex:1;min-width:135px}
  .sarpras-setup>.flow:not(:first-of-type) .button{flex:1 1 calc(50% - 8px);min-width:0;text-align:center}
 }
+
+/* Compact, accessible quick actions for every workspace size. */
+.top-title{min-width:0}
+.top .actions{flex-shrink:0;gap:7px}
+.top .actions .iconbutton{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:38px;height:38px;padding:0;flex:0 0 38px;
+ transition:background .18s ease,border-color .18s ease;
+}
+.top .actions .iconbutton:hover:not(:disabled){background:var(--accent-soft);border-color:var(--accent)}
+.top .actions .iconbutton:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.top .actions .workspace-header-tools{flex-wrap:nowrap;gap:7px}
+.workspace-notice-dot{
+ position:absolute;right:5px;top:5px;width:8px;height:8px;
+ border-radius:50%;background:#e46f41;border:2px solid var(--surface);
+ box-sizing:content-box;
+}
+@keyframes sekolapro-header-refresh{to{transform:rotate(360deg)}}
+.top .actions .iconbutton.refreshing svg{animation:sekolapro-header-refresh .8s linear infinite}
+@media(max-width:1040px){
+ .top{flex-wrap:wrap}
+ .top .actions{margin-left:auto}
+}
+@media(max-width:860px){
+ .top .actions{width:100%;justify-content:flex-end}
+}
+@media(max-width:740px){
+ .top{align-items:center;gap:8px}
+ .top .actions{gap:6px}
+ .top .actions .workspace-header-tools{gap:6px}
+ .top .actions .iconbutton{width:36px;height:36px;flex-basis:36px}
+}
+@media(prefers-reduced-motion:reduce){
+ .top .actions .iconbutton.refreshing svg{animation:none}
+}
