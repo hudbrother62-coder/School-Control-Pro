@@ -34,7 +34,7 @@ assert.equal(nav.resolveWorkspaceRoute('assistant','','viewer'),null);
 assert.equal(nav.resolveWorkspaceRoute('attendance','','viewer'),null);
 assert.equal(nav.resolveWorkspaceRoute('calendar','Agenda Pribadi','viewer'),null);
 assert.equal(nav.resolveWorkspaceRoute('calendar','Kehadiran Agenda','viewer'),null);
-assert.deepEqual(nav.resolveWorkspaceRoute('calendar','Kalender Sekolah','viewer'),{module:'calendar',feature:'Kalender Sekolah'});
+assert.equal(nav.resolveWorkspaceRoute('calendar','Kalender Sekolah','viewer'),null);
 assert.deepEqual(nav.resolveWorkspaceRoute('library','Koleksi Buku','teacher'),{module:'library',feature:'Koleksi Buku'});
 assert.deepEqual(nav.resolveWorkspaceRoute('sarpras','Inventaris','teacher'),{module:'sarpras',feature:'Inventaris'});
 assert.equal(catalog.navigationFeatures(catalog.modules.find(m=>m.key==='sarpras'),'owner').length,5);
