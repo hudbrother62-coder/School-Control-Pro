@@ -155,8 +155,8 @@ export default function Home(){
  {module==="access"&&<AccessPanel schoolId={schoolId} role={role} focus={featureFocus}/>}
  {module==="help"&&<GuideCenter role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}
  {module==="settings"&&<>
- {(!featureFocus||!["Langganan","Riwayat pembayaran","Undang anggota"].includes(featureFocus))&&<SchoolProfile schoolId={schoolId} role={role} focus={featureFocus}/>}
- {(!featureFocus||["Langganan","Riwayat pembayaran"].includes(featureFocus))&&<BillingPanel schoolId={schoolId} isOwner={role==="owner"} busy={loading} onCheckout={plan=>void checkout(plan)} focus={featureFocus}/>}
+ {(!featureFocus||!["Langganan","Riwayat Langganan","Riwayat pembayaran","Undang anggota"].includes(featureFocus))&&<SchoolProfile schoolId={schoolId} role={role} focus={featureFocus}/>}
+ {(!featureFocus||["Langganan","Riwayat Langganan","Riwayat pembayaran"].includes(featureFocus))&&<BillingPanel schoolId={schoolId} isOwner={role==="owner"} busy={loading} onCheckout={plan=>void checkout(plan)} focus={featureFocus}/>}
  </>}
  {module==="assistant"&&<>
  {featureFocus==="Asisten Guru"&&<AIProjectManager schoolId={schoolId} module="guru_ai" mode="chat"/>}
