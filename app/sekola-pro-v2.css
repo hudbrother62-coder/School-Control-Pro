@@ -453,3 +453,21 @@ input,select,textarea,
  .sarpras-page .sectionhead>.flow .button{flex:1}
  .sarpras-stocktake{align-items:flex-start}
 }
+
+/* Sarpras onboarding: use existing neutral surface tokens in both themes. */
+.sarpras-setup{
+ display:grid;gap:12px;padding:clamp(14px,2vw,20px);
+ border:1px solid var(--border);border-radius:16px;
+ background:color-mix(in srgb,var(--accent) 3%,var(--surface));
+}
+.sarpras-setup h3,.sarpras-setup h4{margin:0;font-weight:700;letter-spacing:-.015em}
+.sarpras-setup h3{font-size:17px}
+.sarpras-setup h4{font-size:13px;margin-top:7px}
+.sarpras-setup>p{margin:0;line-height:1.6}
+.sarpras-setup>.flow{gap:7px}
+.sarpras-setup>.flow .button{min-height:34px;font-size:12px;padding:7px 11px}
+@media(max-width:620px){
+ .sarpras-setup{padding:14px}
+ .sarpras-setup>.flow:first-of-type .button{flex:1;min-width:135px}
+ .sarpras-setup>.flow:not(:first-of-type) .button{flex:1 1 calc(50% - 8px);min-width:0;text-align:center}
+}
