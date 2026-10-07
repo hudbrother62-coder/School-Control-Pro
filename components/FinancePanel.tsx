@@ -12,11 +12,11 @@ import {csvExport,saveCsv} from "@/lib/csv";
 import {downloadExcel,readExcel} from "@/lib/excel";
 import {issueAndExport,loadReportIdentity,previewOfficialReport,type OfficialReportModel} from "@/lib/report-engine";
 type Account={id:string;name:string;kind:string;opening_balance:number};
-type Tx={id:string;occurred_at:string;kind:string;category:string;amount:number;account_id:string|null;description:string|null;number:string|null;activity_name:string|null;proof_path:string|null};
+type Tx={id:string;occurred_at:string;kind:string;category:string;amount:number;account_id:string|null;description:string|null;number:string|null;activity_name:string|null;proof_path:string|null;status:string};
 type Budget={id:string;fiscal_year:number;category:string;amount:number;notes:string|null;source_fund:string|null;activity_name:string|null};
 type Student={id:string;name:string;nis:string|null};
 type Bill={id:string;student_id:string;title:string;amount_due:number;due_on:string;period:string|null;status:string};
-type Payment={id:string;bill_id:string;amount:number;receipt_no:string;paid_at:string;payment_method:string|null;proof_path:string|null};
+type Payment={id:string;bill_id:string;transaction_id:string;amount:number;receipt_no:string;paid_at:string;payment_method:string|null;proof_path:string|null};
 type Totals={income:number;expense:number;opening:number;budget:number;billed:number;paid:number};
 type Balance={account_id:string;account_name:string;kind:string;balance:number};
 type ModalKind="account"|"transaction"|"budget"|"bill"|"payment"|null;
@@ -26,23 +26,38 @@ export default function FinancePanel({schoolId,userId,focus}:{schoolId:string;us
  const db=useMemo(()=>browserDb(),[]);
  const [accounts,setAccounts]=useState<Account[]>([]),[tx,setTx]=useState<Tx[]>([]),[budgets,setBudgets]=useState<Budget[]>([]),[students,setStudents]=useState<Student[]>([]),[bills,setBills]=useState<Bill[]>([]),[payments,setPayments]=useState<Payment[]>([]),[totals,setTotals]=useState<Totals|null>(null),[balances,setBalances]=useState<Balance[]>([]);
  const [tab,setTab]=useState("overview"),[modal,setModal]=useState<ModalKind>(null),[name,setName]=useState(""),[accountKind,setAccountKind]=useState("cash"),[opening,setOpening]=useState("0"),[accountId,setAccountId]=useState(""),[txKind,setTxKind]=useState("income"),[category,setCategory]=useState(""),[activityName,setActivityName]=useState(""),[sourceFund,setSourceFund]=useState(""),[amount,setAmount]=useState(""),[description,setDescription]=useState(""),[date,setDate]=useState(localDay()),[year,setYear]=useState(String(new Date().getFullYear())),[period,setPeriod]=useState(localDay().slice(0,7)),[studentId,setStudentId]=useState(""),[billTitle,setBillTitle]=useState(""),[billId,setBillId]=useState(""),[receipt,setReceipt]=useState(""),[paymentMethod,setPaymentMethod]=useState("Tunai"),[proofFile,setProofFile]=useState<File|null>(null);
- const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[financePreview,setFinancePreview]=useState<Record<string,unknown>[]>([]),[importFile,setImportFile]=useState(""),[reportKind,setReportKind]=useState("financial");
+ const [busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[financePreview,setFinancePreview]=useState<Record<string,unknown>[]>([]),[importFile,setImportFile]=useState(""),[reportKind,setReportKind]=useState("financial"),[reportMonth,setReportMonth]=useState(localDay().slice(0,7)),[reportAccount,setReportAccount]=useState("");
  useRealtimeRefresh(schoolId,()=>load());
  async function load(){if(!db)return;const r=await Promise.all([
  readAllRows(db.from("sc_finance_accounts").select("id,name,kind,opening_balance").eq("school_id",schoolId).order("name").order("id")),
- readAllRows(db.from("sc_finance_transactions").select("id,occurred_at,kind,category,amount,account_id,description,number,activity_name,proof_path").eq("school_id",schoolId).order("occurred_at",{ascending:false}).order("id")),
+ readAllRows(db.from("sc_finance_transactions").select("id,occurred_at,kind,category,amount,account_id,description,number,activity_name,proof_path,status").eq("school_id",schoolId).order("occurred_at",{ascending:false}).order("id")),
  readAllRows(db.from("sc_budget_lines").select("id,fiscal_year,category,amount,notes,source_fund,activity_name").eq("school_id",schoolId).order("fiscal_year",{ascending:false}).order("id")),
  readAllRows(db.from("sc_students").select("id,name,nis").eq("school_id",schoolId).eq("status","active").order("name").order("id")),
  readAllRows(db.from("sc_student_bills").select("id,student_id,title,amount_due,due_on,period,status").eq("school_id",schoolId).order("due_on",{ascending:false}).order("id")),
- readAllRows(db.from("sc_bill_payments").select("id,bill_id,amount,receipt_no,paid_at,payment_method,proof_path").eq("school_id",schoolId).order("paid_at",{ascending:false}).order("id")),
+ readAllRows(db.from("sc_bill_payments").select("id,bill_id,transaction_id,amount,receipt_no,paid_at,payment_method,proof_path").eq("school_id",schoolId).order("paid_at",{ascending:false}).order("id")),
  db.rpc("sc_finance_summary",{p_school:schoolId}),db.rpc("sc_account_balances",{p_school:schoolId})
  ]);setAccounts((r[0].data||[]) as Account[]);setTx((r[1].data||[]) as Tx[]);setBudgets((r[2].data||[]) as Budget[]);setStudents((r[3].data||[]) as Student[]);setBills((r[4].data||[]) as Bill[]);setPayments((r[5].data||[]) as Payment[]);setTotals((r[6].data||null) as Totals|null);setBalances((r[7].data||[]) as Balance[]);for(const x of r){if(x.error){setError(x.error.message);break}}}
  useEffect(()=>{void load()},[db,schoolId]);
- useEffect(()=>{const f=(focus||"").toLowerCase();setModal(null);if(f.includes("dashboard"))setTab("dashboard");else if(f.includes("kas")||f.includes("rekening"))setTab("overview");else if(f.includes("pemasukan")){setTab("transaction");setTxKind("income")}else if(f.includes("pengeluaran")){setTab("transaction");setTxKind("expense")}else if(f.includes("anggaran"))setTab("budget");else if(f.includes("tagihan"))setTab("bill");else if(f.includes("pembayaran")||f.includes("kuitansi"))setTab("payment");else if(f.includes("laporan")||f.includes("import")||f.includes("export"))setTab("report")},[focus]);
+ useEffect(()=>{const f=(focus||"").toLowerCase();setModal(null);if(f.includes("dashboard"))setTab("dashboard");else if(f.includes("kas")||f.includes("rekening"))setTab("overview");else if(f.includes("pemasukan")){setTab("transaction");setTxKind("income")}else if(f.includes("pengeluaran")){setTab("transaction");setTxKind("expense")}else if(f.includes("realisasi")||f.includes("buku kas"))setTab("report");else if(f.includes("bukti"))setTab("transaction");else if(f.includes("anggaran"))setTab("budget");else if(f.includes("tagihan"))setTab("bill");else if(f.includes("pembayaran")||f.includes("kuitansi"))setTab("payment");else if(f.includes("laporan")||f.includes("import")||f.includes("export"))setTab("report")},[focus]);
  async function run(fn:()=>Promise<void>){setBusy(true);setError("");setOk("");try{await fn();await load();setOk("Data keuangan berhasil tersimpan.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function insert(table:string,row:Record<string,unknown>){if(!db)throw Error("Database belum terhubung");const {error}=await db.from(table).insert({...row,school_id:schoolId});if(error)throw error}
  async function rpc(fn:string,row:Record<string,unknown>){if(!db)throw Error("Database belum terhubung");const {data,error}=await db.rpc(fn,row);if(error)throw error;return data}
- async function uploadProof(prefix:string){if(!db||!proofFile)return null;if(proofFile.size>6*1024*1024)throw Error("Bukti maksimal 6 MB");const path=schoolId+"/finance/"+prefix+"-"+crypto.randomUUID()+"-"+proofFile.name.replace(/[^\\w.\\-]/g,"_").slice(0,90);const {error}=await db.storage.from("sc-evidence").upload(path,proofFile,{upsert:false,contentType:proofFile.type});if(error)throw error;return path}
+ async function uploadEvidence(file:File,prefix:string){
+  if(!db)throw Error("Database belum terhubung");
+  if(file.size>6*1024*1024)throw Error("Bukti maksimal 6 MB.");
+  if(!["image/jpeg","image/png","image/webp","application/pdf"].includes(file.type))throw Error("Bukti harus berupa JPG, PNG, WebP, atau PDF.");
+  const path=schoolId+"/finance/"+prefix+"-"+crypto.randomUUID()+"-"+file.name.replace(/[^\\w.-]/g,"_").slice(0,90);
+  const {error}=await db.storage.from("sc-evidence").upload(path,file,{upsert:false,contentType:file.type});
+  if(error)throw error;
+  return path;
+ }
+ async function uploadProof(prefix:string){return proofFile?uploadEvidence(proofFile,prefix):null}
+ async function viewProof(path:string|null){if(!db||!path)return;const {data,error}=await db.storage.from("sc-evidence").createSignedUrl(path,180);if(error){setError(error.message);return}window.open(data.signedUrl,"_blank","noopener,noreferrer")}
+ async function attachProof(kind:"transaction"|"payment",id:string,file:File|null){
+  if(!file)return;
+  await run(async()=>{const path=await uploadEvidence(file,kind);await rpc("sc_attach_finance_proof",{p_school:schoolId,p_kind:kind,p_record:id,p_path:path})});
+ }
+
  async function editEntity(entity:string,id:string,patch:Record<string,unknown>){await run(()=>rpc("sc_update_operational",{p_school:schoolId,p_entity:entity,p_id:id,p_patch:patch}).then(()=>{}))}
  async function deleteEntity(entity:string,id:string){if(!confirm("Hapus data ini? Data bersejarah/terkait pembayaran akan ditolak."))return;await run(()=>rpc("sc_delete_operational",{p_school:schoolId,p_entity:entity,p_id:id}).then(()=>{}))}
  async function reverseTx(id:string){const reason=prompt("Alasan koreksi transaksi");if(!reason)return;await run(()=>rpc("sc_reverse_finance_transaction",{p_school:schoolId,p_tx:id,p_reason:reason}).then(()=>{}))}
