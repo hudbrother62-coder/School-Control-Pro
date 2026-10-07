@@ -71,6 +71,7 @@ export default function Home(){
  const contentRef=useRef<HTMLDivElement>(null),drawerRef=useRef<HTMLDivElement>(null),navReady=useRef(false);
  const [schools,setSchools]=useState<SchoolAccess[]>([]),[schoolId,setSchoolId]=useState(""),[module,setModule]=useState<ModuleKey>("overview");
  const [loading,setLoading]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState("");
+ const [refreshing,setRefreshing]=useState(false),[refreshNonce,setRefreshNonce]=useState(0),[signingOut,setSigningOut]=useState(false);
  const [accessSuspended,setAccessSuspended]=useState(false);
  const [theme,setTheme]=useState("light"),[openMenu,setOpenMenu]=useState(false),[expandedNav,setExpandedNav]=useState<ModuleKey|null>(null),[featureFocus,setFeatureFocus]=useState("Ringkasan Operasional");
  const [staff,setStaff]=useState<Staff[]>([]),[attendance,setAttendance]=useState<Attendance[]>([]);
@@ -88,7 +89,7 @@ export default function Home(){
  const access=schools.find(s=>s.school.id===schoolId); const role=access?.role||"viewer";
  const selected=modules.find(m=>m.key===module)||modules[0]; const selectedFeatures=visibleFeatures(selected,role); const instructions=taskHelp(module,featureFocus); const visible=modules.filter(m=>canAccess(m,role)&&navigationFeatures(m,role).length>0);
  const isManager=isAdmin(role)||role==="hr";
- useEffect(()=>{setMounted(true);const t=localStorage.getItem("sekolapro-theme")||localStorage.getItem("school-control-theme")||"light";setTheme(t);document.body.dataset.theme=t},[]);
+ useEffect(()=>{setMounted(true);const saved=localStorage.getItem("sekolapro-theme")||localStorage.getItem("school-control-theme");const t=saved==="dark"?"dark":"light";setTheme(t);document.body.dataset.theme=t},[]);
  useEffect(()=>{if(!db)return;let active=true;void db.auth.getUser().then(({data})=>{if(!active)return;setUser(data.user);setAuthReady(true)}).catch(()=>{if(active)setAuthReady(true)}); const {data:{subscription:sub}}=db.auth.onAuthStateChange((_event,session)=>{if(!active)return;setUser(session?.user||null);setAuthReady(true)});return ()=>{active=false;sub.unsubscribe()};},[db]);
  useEffect(()=>{if(mounted&&authReady&&db&&!user)window.location.replace("/masuk")},[mounted,authReady,db,user]);
  useEffect(()=>{if(!db||!user){setSchools([]);setSchoolId("");return;}let active=true;(async()=>{
@@ -111,6 +112,41 @@ export default function Home(){
  if(module==="performance"){const {data,error:e}=await db.rpc("sc_performance_summary",{p_school:schoolId,p_user:performanceUser||user?.id});if(alive){setSummary((data||null) as Summary|null);if(e)setError(e.message);}}
  })();return ()=>{alive=false};},[db,schoolId,module,user,performanceUser,revision]);
  async function refresh(){if(!db||!schoolId)return;const [{data:a},{data:s}]=await Promise.all([db.from("sc_attendance").select("*").eq("school_id",schoolId).order("duty_date",{ascending:false}).limit(30),db.from("sc_staff").select("id,school_id,user_id,name,position,shift_start,late_tolerance_minutes").eq("school_id",schoolId).order("name")]);setAttendance((a||[]) as Attendance[]);setStaff((s||[]) as Staff[]);const day=schoolDay(access?.school.timezone||"Asia/Jakarta");const {data:own}=await db.from("sc_attendance").select("*").eq("school_id",schoolId).eq("user_id",user!.id).eq("duty_date",day).maybeSingle();setOwnAttendance((own||null) as Attendance|null);if(module==="performance"){const {data}=await db.rpc("sc_performance_summary",{p_school:schoolId,p_user:performanceUser||user!.id});setSummary((data||null) as Summary|null)}}
+ async function refreshWorkspace(){
+  if(!db||!schoolId||!user||refreshing)return;
+  setRefreshing(true);setError("");setMessage("");
+  try{
+   const day=schoolDay(access?.school.timezone||"Asia/Jakarta");
+   const [attendanceResult,staffResult,ownResult,subscriptionResult,membersResult]=await Promise.all([
+    db.from("sc_attendance").select("id,duty_date,check_in_at,check_out_at,status,source,user_id,notes").eq("school_id",schoolId).order("duty_date",{ascending:false}).limit(30),
+    db.from("sc_staff").select("id,school_id,user_id,name,position,shift_start,late_tolerance_minutes").eq("school_id",schoolId).order("name"),
+    db.from("sc_attendance").select("*").eq("school_id",schoolId).eq("user_id",user.id).eq("duty_date",day).maybeSingle(),
+    db.from("sc_subscriptions").select("status,trial_ends_at,current_period_end").eq("school_id",schoolId).maybeSingle(),
+    db.from("sc_members").select("school_id,role,is_active").eq("user_id",user.id)
+   ]);
+   for(const response of [attendanceResult,staffResult,ownResult,subscriptionResult,membersResult])if(response.error)throw response.error;
+   const memberships=((membersResult.data||[]).filter(x=>x.is_active!==false)) as Membership[];
+   const schoolResult=memberships.length?await db.from("sc_schools").select("id,name,timezone,is_paused").in("id",memberships.map(x=>x.school_id)):null;
+   if(schoolResult?.error)throw schoolResult.error;
+   const available=memberships.flatMap(x=>{const school=(schoolResult?.data||[]).find(s=>s.id===x.school_id);return school?[{school:school as School,role:x.role}]:[];});
+   setAccessSuspended((membersResult.data||[]).length>0&&memberships.length===0);
+   setSchools(available);
+   setSchoolId(current=>available.some(x=>x.school.id===current)?current:(available[0]?.school.id||""));
+   setAttendance((attendanceResult.data||[]) as Attendance[]);
+   setStaff((staffResult.data||[]) as Staff[]);
+   setOwnAttendance((ownResult.data||null) as Attendance|null);
+   setSubscription(subscriptionResult.data||null);setSubscriptionSchoolId(schoolId);
+   if(module==="performance"){
+    const performance=await db.rpc("sc_performance_summary",{p_school:schoolId,p_user:performanceUser||user.id});
+    if(performance.error)throw performance.error;
+    setSummary((performance.data||null) as Summary|null);
+   }
+   // Remount the active module so every feature reloads its own data, not just staff attendance.
+   setRefreshNonce(n=>n+1);
+   setMessage("Data terbaru berhasil dimuat dari server.");
+  }catch(e){setError("Gagal menyegarkan data: "+feedback(e))}finally{setRefreshing(false)}
+ }
+ async function signOut(){if(!db||signingOut)return;setSigningOut(true);setError("");try{const {error:e}=await db.auth.signOut();if(e)throw e;window.location.replace("/masuk")}catch(e){setError("Gagal keluar dari akun: "+feedback(e));setSigningOut(false)}}
  async function run(job:()=>Promise<void>){setLoading(true);setError("");setMessage("");try{await job()}catch(e){setError(feedback(e))}finally{setLoading(false)}}
  async function selfStaff(){if(!db)return;await run(async()=>{const {error:e}=await db.rpc("sc_ensure_own_staff",{p_school:schoolId});if(e)throw e;await refresh();setMessage("Profil SDM Anda telah diaktifkan.");});}
  async function clock(action:"sc_check_in_geo"|"sc_check_out_geo"){if(!db)return;await run(async()=>{const pos=await new Promise<{lat:number|null;lng:number|null;accuracy:number|null}>(resolve=>{if(!navigator.geolocation){resolve({lat:null,lng:null,accuracy:null});return}navigator.geolocation.getCurrentPosition(p=>resolve({lat:p.coords.latitude,lng:p.coords.longitude,accuracy:p.coords.accuracy}),()=>resolve({lat:null,lng:null,accuracy:null}),{enableHighAccuracy:true,timeout:7000,maximumAge:30000})});const {error:e}=await db.rpc(action,{p_school:schoolId,p_lat:pos.lat,p_lng:pos.lng,p_accuracy:pos.accuracy});if(e)throw e;await refresh();setMessage(action==="sc_check_in_geo"?"Presensi masuk tercatat dengan waktu server dan lokasi perangkat bila diizinkan.":"Presensi pulang tercatat.");});}
@@ -126,7 +162,7 @@ export default function Home(){
  if(!authReady)return <div className="authwrap"><div className="panel">Memeriksa sesi akun…</div></div>;
  if(!user)return <div className="authwrap"><div className="panel">Kembali ke beranda…</div></div>;
  if(!schoolId&&accessSuspended)return <div className="authwrap"><div className="authbox panel"><img width="45" src="/sekola-pro-mark.svg" alt="SekolaPro"/><h1>Akun sementara dinonaktifkan</h1><p>Akses sekolah sedang ditangguhkan oleh pengelola. Akun ini tidak dapat membuka modul maupun melakukan presensi sampai diaktifkan kembali.</p><p className="muted">Hubungi kepala sekolah atau Super Admin untuk informasi lebih lanjut.</p><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button></div></div>;
- if(!schoolId)return <div className="authwrap"><div className="authbox panel"><img width="46" src="/sekola-pro-mark.svg" alt=""/><h1>Akses sekolah belum tersedia</h1><p>Pengelola SekolaPro akan menghubungkan akun Anda ke sekolah. Akun dan langganan baru hanya dapat dibuat oleh Super Admin.</p><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button>{error&&<p className="banner error">{error}</p>}</div></div>;
+ if(!schoolId)return <div className="authwrap"><div className="authbox panel"><img width="46" src="/sekola-pro-mark.svg" alt=""/><h1>Akses sekolah belum tersedia</h1><p>Pengelola SekolaPro akan menghubungkan akun Anda ke sekolah. Akun dan langganan baru hanya dibuat oleh Super Admin.</p><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button>{error&&<p className="banner error">{error}</p>}</div></div>;
 const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendance;const today=new Date().toLocaleDateString("id-ID",{timeZone:access?.school.timezone||"Asia/Jakarta"});
  const navProps={items:visible,role,module,feature:featureFocus,expanded:expandedNav,icons,onChoose:choose,onExpand:setExpandedNav};
  if(subscriptionSchoolId!==schoolId||entitlementSchool!==schoolId)return <div className="authwrap"><div className="panel">Memeriksa izin dan masa aktif sekolah…</div></div>;
@@ -134,9 +170,9 @@ const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendanc
  if(!subscriptionOpen)return <div><div className="flow" style={{justifyContent:"space-between",padding:"16px 22px"}}><Link href="/" className="lp-brand"><img src="/sekola-pro-mark.svg" alt="" width={35} height={35}/><strong>SekolaPro</strong></Link><div className="flow"><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button></div></div><SupportChat key={schoolId} schoolId={schoolId} schoolName={access?.school.name||"Sekolah"} userId={user.id}/>{error&&<div className="banner error" role="alert">{error}</div>}<PaymentWall schoolName={access?.school.name||"Sekolah"} trialEnd={subscription?.trial_ends_at||new Date().toISOString()} status={subscription?.status||"unknown"} owner={role==="owner"} paused={!!access?.school.is_paused} busy={loading} onCheckout={plan=>void checkout(plan)} onRefresh={()=>void checkSubscription()}/></div>;
  return <div className="shell">
   <aside className="side"><div className="brand"><img src="/sekola-pro-mark.svg" alt=""/><div><strong>SekolaPro</strong><small>Satu Sistem, Semua Urusan Sekolah</small></div></div><WorkspaceNavigation {...navProps}/></aside>
-  <main className="main" aria-hidden={openMenu?true:undefined}><header className="top"><div className="top-title">{schools.length>1?<label className="school-switch"><select aria-label="Pilih sekolah" value={schoolId} onChange={e=>setSchoolId(e.target.value)}>{schools.map(x=><option key={x.school.id} value={x.school.id}>{x.school.name}</option>)}</select><small>{ROLE_LABELS[role]}</small></label>:<small>{access?.school.name} · {ROLE_LABELS[role]}</small>}<h1>{featureFocus||selected.label}</h1></div><div className="actions"><button className="iconbutton mobile-menu-trigger" aria-label="Buka menu" onClick={()=>setOpenMenu(true)}><Menu size={18}/></button><button className="iconbutton" aria-label="Petunjuk menu ini" onClick={()=>choose("help",guideFor(module))}><CircleHelp size={18}/></button><WorkspaceTools schoolId={schoolId} role={role} onRoute={(m,f)=>choose(m,f||"")}/><button className="iconbutton" aria-label="Ganti tema" onClick={changeTheme}>{theme==="light"?<Moon size={17}/>:<Sun size={17}/>}</button><button className="iconbutton" aria-label="Segarkan" onClick={()=>void refresh()}><RefreshCw size={17}/></button><button className="iconbutton" aria-label="Keluar" onClick={()=>void db.auth.signOut()}><LogOut size={17}/></button></div></header>
+  <main className="main" aria-hidden={openMenu?true:undefined}><header className="top"><div className="top-title">{schools.length>1?<label className="school-switch"><select aria-label="Pilih sekolah" value={schoolId} onChange={e=>setSchoolId(e.target.value)}>{schools.map(x=><option key={x.school.id} value={x.school.id}>{x.school.name}</option>)}</select><small>{ROLE_LABELS[role]}</small></label>:<small>{access?.school.name} · {ROLE_LABELS[role]}</small>}<h1>{featureFocus||selected.label}</h1></div><div className="actions" role="group" aria-label="Aksi cepat SekolaPro"><button type="button" className="iconbutton mobile-menu-trigger" aria-label="Buka menu" onClick={()=>setOpenMenu(true)}><Menu size={18}/></button><button type="button" className="iconbutton" title="Petunjuk fitur" aria-label="Petunjuk menu ini" onClick={()=>choose("help",guideFor(module))}><CircleHelp size={18}/></button><WorkspaceTools schoolId={schoolId} role={role} refreshSignal={refreshNonce} onRoute={(m,f)=>choose(m,f||"")}/><button type="button" className="iconbutton" aria-label={theme==="light"?"Aktifkan tema gelap":"Aktifkan tema terang"} title={theme==="light"?"Mode gelap":"Mode terang"} onClick={changeTheme}>{theme==="light"?<Moon size={17}/>:<Sun size={17}/>}</button><button type="button" className={"iconbutton "+(refreshing?"refreshing":"")} aria-label={refreshing?"Sedang menyegarkan data":"Segarkan data halaman ini"} title={refreshing?"Memperbarui data…":"Segarkan data"} aria-busy={refreshing} disabled={refreshing} onClick={()=>void refreshWorkspace()}><RefreshCw size={17}/></button><button type="button" className="iconbutton" aria-label="Keluar" title="Keluar dari akun" disabled={signingOut} onClick={()=>void signOut()}><LogOut size={17}/></button></div></header>
 
-  <div className="content" key={schoolId+":"+module+":"+featureFocus} ref={contentRef} tabIndex={-1} aria-label={featureFocus||selected.label}>{error&&<div role="alert" className="banner error">{error}</div>}{message&&<div role="status" className="banner success">{message}</div>}
+  <div className="content" key={schoolId+":"+module+":"+featureFocus+":"+refreshNonce} ref={contentRef} tabIndex={-1} aria-label={featureFocus||selected.label}>{error&&<div role="alert" className="banner error">{error}</div>}{message&&<div role="status" className="banner success">{message}</div>}
   {module!=="help"&&<details className="task-help"><summary>Petunjuk {featureFocus||selected.label}</summary><p>{instructions.purpose}</p><p><b>Sebelum mulai:</b> {instructions.before}</p><ol>{instructions.steps.map(s=><li key={s}>{s}</li>)}</ol><p><b>Hasil:</b> {instructions.result}</p><button className="button secondary" onClick={()=>choose("help",guideFor(module))}>Buka panduan lengkap</button></details>}
   {module==="journals"&&<WorkJournal schoolId={schoolId} userId={user.id} role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}
   {module==="overview"&&<>{featureFocus==="Ruang Kerja"&&<WorkHub role={role} onRoute={(m,f)=>choose(m,f||"")}/>}<DashboardOverview schoolId={schoolId} userId={user.id} role={role} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>{(!featureFocus||featureFocus==="Agenda & Deadline")&&<SchoolCalendar timezone={access?.school.timezone||"Asia/Jakarta"} schoolId={schoolId} userId={user.id} role={role} compact/>}</>}
