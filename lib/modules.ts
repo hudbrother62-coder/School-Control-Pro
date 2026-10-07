@@ -13,7 +13,7 @@ export const modules:FeatureModule[]=[
  {key:"master",label:"Data Induk",section:"Utama",description:"Sumber data utama seluruh sistem.",features:["Siswa","Kelas","Guru","Tenaga Kependidikan","Mata Pelajaran","Penugasan Guru","Import Excel Keseluruhan"]},
  {key:"calendar",label:"Agenda Sekolah",section:"Utama",description:"Kalender sekolah dan agenda setiap pengguna.",features:["Kalender Sekolah","Rekap Agenda","Agenda Mengajar","Agenda Pribadi","Kehadiran Agenda"]},
  {key:"journals",label:"Jurnal & Pemantauan",section:"Utama",description:"Jurnal kegiatan harian, pengamatan siswa dan rekap bulanan sesuai akses.",features:["Jurnal Harian","Jurnal Siswa","Jurnal Mengajar","Rekap Bulanan","Review Jurnal","Arsip Jurnal"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
- {key:"reports",label:"Pusat Laporan",section:"Utama",description:"Semua laporan resmi sekolah, template standar, ekspor dan arsip.",features:["Ringkasan Laporan","Akademik","Kehadiran","Disiplin","BK","Program & Tugas","Keuangan","Perpustakaan","SDM & Payroll","Supervisi","Jurnal","Template Laporan Sekolah","Arsip Laporan"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
+ {key:"reports",label:"Pusat Laporan",section:"Utama",description:"Semua laporan resmi sekolah, template standar, ekspor dan arsip.",features:["Ringkasan Laporan","Akademik","Kehadiran","Disiplin","BK","Program & Tugas","Keuangan","Perpustakaan","Supervisi","Jurnal","Template Laporan Sekolah","Arsip Laporan"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"guru_ai",label:"Perangkat Ajar AI",section:"Pembelajaran",description:"Workspace perangkat pembelajaran berbasis proyek dan versi.",features:["Proyek Pembelajaran","Modul Ajar","RPP","LKPD","Asesmen Soal","Strategi Pembelajaran","Bahan Ajar","Rubrik Penilaian","Panduan Presentasi","Peta Konsep","Riwayat draf","Dokumen Pembelajaran"],roles:["owner","principal","vice_principal","teacher"]},
  {key:"assistant",label:"Asisten AI",section:"Asisten AI",description:"Bantuan mengajar, pengelolaan kelas, kepala sekolah dan Universal AI Orchestrator lintas modul.",features:["Asisten Guru","Asisten Kepala Sekolah","Asisten Kelas","Universal AI Orchestrator","Koneksi AI"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"buku_kerja",label:"Pembelajaran & Penilaian",section:"Pembelajaran",description:"Administrasi kelas, penilaian, agenda dan laporan guru.",features:["Mode Kerja Guru","Presensi Siswa","Lembar Nilai","Jurnal Mengajar","Jadwal Mingguan","Rekap Bulanan","Laporan Lengkap","Import/Export Excel"],roles:["owner","principal","vice_principal","teacher"]},
@@ -22,8 +22,8 @@ export const modules:FeatureModule[]=[
  {key:"library",label:"Perpustakaan",section:"Layanan Sekolah",description:"Koleksi, inventaris, anggota, sirkulasi, kunjungan, pengadaan, perawatan, program literasi dan laporan.",features:["Dashboard Perpustakaan","Koleksi Buku","Eksemplar & Inventaris","Anggota Perpustakaan","Peminjaman","Pengembalian","Kunjungan","Pengadaan","Perawatan","Program & Literasi","Laporan & Statistik"],roles:["owner","principal","vice_principal","teacher","counselor","staff","hr","treasurer","finance_staff","supervisor"]},
  {key:"kepsek_ai",label:"Perencanaan & Supervisi",section:"Manajemen",description:"Perencanaan sekolah, dokumen, pustaka, kinerja kepala sekolah dan supervisi.",features:["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP","Kinerja Kepala Sekolah","Supervisi guru","Pusat dokumen","Workflow Dokumen","Sumber Dokumen","Pustaka Format","Persetujuan dokumen"],roles:["owner","principal","vice_principal"]},
  {key:"command",label:"Program & Tugas",section:"Manajemen",description:"Eksekusi program dari PIC sampai bukti terverifikasi dan laporan.",features:["Program Kerja","PIC","Tugas","Deadline","Progres","Kendala","Hasil Rapat","Tindak Lanjut Rapat","Bukti Kegiatan","Verifikasi Bukti","Laporan Program"]},
- {key:"attendance",label:"Presensi Realtime",section:"SDM",description:"Presensi berbasis waktu server dan lokasi perangkat.",features:["Check-in/check-out","Jadwal/shift","Riwayat kehadiran","Koreksi beralasan","Izin","Cuti"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
- {key:"performance",label:"Kinerja & Pengembangan",section:"SDM",description:"Rekap kinerja dan pengembangan berbasis bukti.",features:["Kehadiran","Partisipasi program","Pelatihan","Bukti capaian","Evaluasi","Tanggapan guru"]},
+ {key:"attendance",label:"Presensi & Kehadiran",section:"SDM",description:"Satu pusat presensi kerja, riwayat, tim, jadwal, lokasi, koreksi, izin dan cuti.",features:["Presensi Saya","Riwayat Kehadiran","Kehadiran Tim","Jadwal & Shift","Lokasi Presensi","Koreksi Presensi","Izin & Cuti","Check-in/check-out","Jadwal/shift","Riwayat kehadiran","Koreksi beralasan","Izin","Cuti"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
+ {key:"performance",label:"Kinerja & Pengembangan",section:"SDM",description:"Bukti kinerja, pengembangan, evaluasi dan tanggapan guru.",features:["Bukti Kinerja & Pengembangan","Evaluasi","Tanggapan guru","Kehadiran","Partisipasi program","Pelatihan","Bukti capaian"]},
  {key:"gajian",label:"SDM, Payroll & Kompensasi",section:"SDM",description:"Pengajuan pegawai, tim, jadwal, lokasi presensi, payroll dan rekrutmen sekolah.",features:["Pengajuan SDM","Lembur","Kasbon","Reimburse","Tim SDM","Tim Saya","Kehadiran Tim","Approval Tim","Rekap Tim","Jadwal Kerja","Lokasi Presensi","Komponen Dinamis","Komponen Gaji","Proses Payroll","Rekrutmen"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"payslip",label:"Slip Gaji Saya",section:"SDM",description:"Riwayat slip gaji pribadi.",features:["Riwayat Slip"],roles:["owner","principal","vice_principal","teacher","counselor","hr","treasurer","finance_staff","supervisor","staff"]},
  {key:"sikas",label:"Keuangan, Anggaran & Tagihan",section:"Keuangan",description:"Kas, anggaran, tagihan, bukti transaksi, kuitansi dan laporan.",features:["Dashboard Keuangan","Kas/Rekening","Pemasukan","Pengeluaran","Bukti Transaksi","Anggaran","Realisasi Anggaran","Tagihan Siswa","Pembayaran","Riwayat Pembayaran","WhatsApp Tagihan","Buku Kas Umum","Laporan","Import/Export","Tim Keuangan"],roles:["owner","principal","treasurer","finance_staff"]},
@@ -49,7 +49,8 @@ export function visibleFeatures(m:FeatureModule,role:Role):string[]{
   }
   if(m.key==="calendar"&&f==="Agenda Mengajar")return teachingRoles.includes(role);
   if(m.key==="calendar"&&["Agenda Pribadi","Kehadiran Agenda"].includes(f))return role!=="viewer";
-  if(m.key==="attendance"&&f==="Koreksi beralasan")return managerRoles.includes(role);
+  if(m.key==="attendance"&&["Koreksi beralasan","Koreksi Presensi","Jadwal & Shift","Lokasi Presensi"].includes(f))return managerRoles.includes(role);
+  if(m.key==="attendance"&&f==="Kehadiran Tim")return [...managerRoles,"supervisor"].includes(role);
   if(m.key==="gajian"){
    if(["Komponen Gaji","Komponen Dinamis","Proses Payroll"].includes(f))return payrollRoles.includes(role);
    if(["Jadwal Kerja","Lokasi Presensi","Rekrutmen"].includes(f))return managerRoles.includes(role);
@@ -58,4 +59,19 @@ export function visibleFeatures(m:FeatureModule,role:Role):string[]{
   }
   return true;
  });
+}
+
+
+const NAV_HIDDEN:Partial<Record<ModuleKey,Set<string>>>={
+ journals:new Set(["Jurnal Mengajar"]),
+ reports:new Set(["Akademik","Kehadiran","Disiplin","BK","Program & Tugas","Keuangan","Perpustakaan","Supervisi","Jurnal"]),
+ performance:new Set(["Kehadiran","Partisipasi program","Pelatihan","Bukti capaian"]),
+ gajian:new Set(["Lembur","Kasbon","Reimburse","Kehadiran Tim","Jadwal Kerja","Lokasi Presensi"]),
+ command:new Set(["PIC","Deadline","Progres","Kendala"]),
+ attendance:new Set(["Check-in/check-out","Jadwal/shift","Riwayat kehadiran","Koreksi beralasan","Izin","Cuti"])
+};
+/** Sidebar/menu representation only. Hidden legacy routes remain resolvable so saved links and workflows do not lose functionality. */
+export function navigationFeatures(m:FeatureModule,role:Role):string[]{
+ const hidden=NAV_HIDDEN[m.key];
+ return visibleFeatures(m,role).filter(f=>!hidden?.has(f));
 }
