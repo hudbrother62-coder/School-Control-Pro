@@ -20,6 +20,8 @@ assert.equal(nav.resolveWorkspaceRoute('attendance','','viewer'),null);
 assert.equal(nav.resolveWorkspaceRoute('calendar','Agenda Pribadi','viewer'),null);
 assert.equal(nav.resolveWorkspaceRoute('calendar','Kehadiran Agenda','viewer'),null);
 assert.deepEqual(nav.resolveWorkspaceRoute('calendar','Kalender Sekolah','viewer'),{module:'calendar',feature:'Kalender Sekolah'});
+assert.deepEqual(nav.resolveWorkspaceRoute('library','Koleksi Buku','teacher'),{module:'library',feature:'Koleksi Buku'});
+assert.equal(nav.resolveWorkspaceRoute('library','Koleksi Buku','viewer'),null);
 assert.equal(nav.resolveWorkspaceRoute('sikas','Pembayaran','teacher'),null);
 assert.equal(nav.resolveWorkspaceRoute('invalid','bad','owner'),null);
 assert.equal(nav.resolveWorkspaceRoute('master','bad','owner'),null);
