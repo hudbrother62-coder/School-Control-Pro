@@ -83,15 +83,15 @@ export default function DisciplinePanel({schoolId,userId,role,focus}:{schoolId:s
 
  const list=useRecordList(filteredEvents,x=>studentName(x.student_id)+" "+x.title);
  const coachingList=useRecordList(coaching,x=>[studentName(x.student_id),x.form,x.reason,x.result,x.notes,x.recorder_name].join(" "),[
-  {key:"status",label:"Status",options:unique(coaching.map(x=>x.status)).map(v=>({value:v,label:v})),matches:(x,v)=>x.status===v},
-  {key:"form",label:"Bentuk pembinaan",options:unique(coaching.map(x=>x.form)).map(v=>({value:v,label:v})),matches:(x,v)=>x.form===v}
+  {key:"status",label:"Status",options:unique(coaching.map(x=>x.status)).map(v=>({value:v,label:v})),value:x=>x.status},
+  {key:"form",label:"Bentuk pembinaan",options:unique(coaching.map(x=>x.form)).map(v=>({value:v,label:v})),value:x=>x.form}
  ]);
  const actionList=useRecordList(actions,x=>[studentName(x.student_id),x.sanction_name_snapshot,x.status,x.notes,x.due_date].join(" "),[
-  {key:"status",label:"Status",options:unique(actions.map(x=>x.status)).map(v=>({value:v,label:v})),matches:(x,v)=>x.status===v}
+  {key:"status",label:"Status",options:unique(actions.map(x=>x.status)).map(v=>({value:v,label:v})),value:x=>x.status}
  ]);
  const masterList=useRecordList(master,x=>[x.name,x.type,x.category,x.description].join(" "),[
-  {key:"type",label:"Jenis",options:[{value:"violation",label:"Pelanggaran"},{value:"achievement",label:"Prestasi"},{value:"sanction",label:"Sanksi"}],matches:(x,v)=>x.type===v},
-  {key:"category",label:"Kategori",options:unique(master.map(x=>x.category)).map(v=>({value:v,label:v})),matches:(x,v)=>x.category===v}
+  {key:"type",label:"Jenis",options:[{value:"violation",label:"Pelanggaran"},{value:"achievement",label:"Prestasi"},{value:"sanction",label:"Sanksi"}],value:x=>x.type},
+  {key:"category",label:"Kategori",options:unique(master.map(x=>x.category)).map(v=>({value:v,label:v})),value:x=>x.category||""}
  ]);
  const canDelete=(id:string)=>{const x=filteredEvents.find(e=>e.id===id);return Boolean(x&&(manager||x.created_by===userId))};
  const collectionTools=<RecordListTools list={list} label="kejadian" showSearch={false} canSelect selectable={canDelete} onRefresh={load} busy={busy} actions={[{key:"delete",label:"Hapus pilihan",description:"Hapus catatan kejadian yang boleh dikelola. Poin dan laporan akan mengikuti perubahan sumber data.",danger:true,eligible:canDelete,run:async id=>{if(!db)throw Error("Database belum terhubung");const {error}=await db.rpc("sc_delete_operational",{p_school:schoolId,p_entity:"discipline_event",p_id:id});if(error)throw error}}]}/>;
