@@ -1,0 +1,17 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const ts = require('typescript');
+const file = 'lib/landing-scroll.ts';
+assert.ok(fs.existsSync(file), 'Landing scroll must safely map native scrolling to the pinned tour');
+const source = ts.transpileModule(fs.readFileSync(file, 'utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const moduleScope={exports:{}};
+new Function('module','exports',source)(moduleScope,moduleScope.exports);
+const {tourPosition,tourScrollTarget}=moduleScope.exports;
+assert.deepEqual(tourPosition(-100,6000,6),{progress:0,index:0});
+assert.deepEqual(tourPosition(9000,6000,6),{progress:1,index:5});
+assert.deepEqual(tourPosition(3000,6000,6),{progress:.5,index:3});
+assert.deepEqual(tourPosition(3000,0,6),{progress:0,index:0});
+assert.equal(tourScrollTarget(5,100,6000,6),6100);
+assert.equal(tourScrollTarget(-1,100,6000,6),100);
+assert.equal(tourScrollTarget(2,100,3000,6),1300);
+console.log('Landing scroll bounds and resized navigation: passed');

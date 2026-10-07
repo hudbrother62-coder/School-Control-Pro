@@ -3,27 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/dev.cjs",
     "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
-    "test": "node scripts/verify-isolation.cjs && node scripts/verify-errors.cjs && node scripts/verify-excel.cjs && node scripts/verify-hr-validation.cjs && node scripts/verify-midtrans.cjs && node scripts/verify-staff-import.cjs && node scripts/verify-url.cjs && node scripts/verify-registration.cjs && node scripts/verify-navigation.cjs && node scripts/verify-orchestrator-api.cjs && node scripts/verify-record-lists.cjs && node scripts/verify-report-templates.cjs && node scripts/verify-ai-output.cjs && node scripts/verify-subscription-timeline.cjs && node scripts/verify-journal-analytics.cjs && node scripts/verify-agenda.cjs"
+    "test": "node scripts/verify-isolation.cjs && node scripts/verify-errors.cjs && node scripts/verify-excel.cjs && node scripts/verify-hr-validation.cjs && node scripts/verify-midtrans.cjs && node scripts/verify-staff-import.cjs && node scripts/verify-url.cjs && node scripts/verify-registration.cjs && node scripts/verify-navigation.cjs && node scripts/verify-orchestrator-api.cjs && node scripts/verify-record-lists.cjs && node scripts/verify-report-templates.cjs && node scripts/verify-ai-output.cjs && node scripts/verify-subscription-timeline.cjs && node scripts/verify-journal-analytics.cjs && node scripts/verify-agenda.cjs && node scripts/verify-landing-scroll.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
     "docx": "^9.7.1",
     "docxtemplater": "^3.71.0",
+    "gsap": "^3.15.0",
     "lucide-react": "^0.468.0",
     "next": "^15.5.0",
     "pizzip": "^3.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "three": "^0.186.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.186.0",
     "typescript": "^5.9.0"
   }
 }
