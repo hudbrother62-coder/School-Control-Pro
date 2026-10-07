@@ -1,5 +1,6 @@
 "use client";
 import SchoolAnalytics from "@/components/SchoolAnalytics";
+import TeacherDashboard from "@/components/TeacherDashboard";
 import {readAllRows} from "@/lib/read-all-rows";
 import {useSchoolRevision} from "@/lib/school-realtime";
 import {useEffect,useMemo,useState} from "react";
@@ -17,7 +18,7 @@ type RouteAction={label:string;caption:string;module:ModuleKey;feature:string;ic
 
 const dayKey=(d:Date)=>d.toLocaleDateString("en-CA",{timeZone:"Asia/Jakarta"});
 
-export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{schoolId:string;userId:string;role:Role;focus?:string;onRoute?:(module:ModuleKey,feature?:string)=>void}){
+function SchoolDashboardOverview({schoolId,userId,role,focus,onRoute}:{schoolId:string;userId:string;role:Role;focus?:string;onRoute?:(module:ModuleKey,feature?:string)=>void}){
  const revision=useSchoolRevision(schoolId);
  const db=useMemo(()=>browserDb(),[]);
  const [students,setStudents]=useState<Student[]>([]),[classes,setClasses]=useState<ClassRow[]>([]),[staff,setStaff]=useState<Staff[]>([]);
@@ -125,4 +126,11 @@ export default function DashboardOverview({schoolId,userId,role,focus,onRoute}:{
   </div>}
   {error&&<div className="banner error" role="alert">{error}</div>}
  </>;
+}
+
+
+/** A teacher gets a private work dashboard; managers keep the whole-school overview. */
+export default function DashboardOverview(props:{schoolId:string;userId:string;role:Role;focus?:string;onRoute?:(module:ModuleKey,feature?:string)=>void}){
+ if(props.role==="teacher")return <TeacherDashboard schoolId={props.schoolId} userId={props.userId} onRoute={props.onRoute}/>;
+ return <SchoolDashboardOverview {...props}/>;
 }
