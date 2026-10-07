@@ -80,7 +80,7 @@ const guides:Guide[]=[
 
 const extraGuides:{id:string;feature:string;module:ModuleKey;features:string[]}[]=[
  {id:"assistant",feature:"Asisten AI",module:"assistant",features:["Asisten Guru","Asisten Kepala Sekolah","Asisten Kelas","Universal AI Orchestrator"]},
- {id:"attendance",feature:"Presensi Guru & Staf",module:"attendance",features:["Check-in/check-out","Riwayat kehadiran","Izin","Cuti"]},
+ {id:"attendance",feature:"Presensi Guru & Staf",module:"attendance",features:["Presensi Saya","Riwayat Kehadiran","Jadwal & Shift","Izin & Cuti"]},
  {id:"planning",feature:"Perencanaan & Supervisi",module:"kepsek_ai",features:["PBD/EDS","Pusat dokumen","Persetujuan dokumen","Supervisi guru"]},
  {id:"library",feature:"Perpustakaan",module:"library",features:["Dashboard Perpustakaan","Koleksi Buku","Peminjaman","Laporan & Statistik"]},
  {id:"performance",feature:"Kinerja & Pengembangan",module:"performance",features:["Kehadiran","Bukti capaian","Evaluasi","Tanggapan guru"]},
