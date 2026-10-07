@@ -16,6 +16,16 @@ export default function SupportChat({schoolId,schoolName='Sekolah',userId='',adm
  const [open,setOpen]=useState(embedded),[contacts,setContacts]=useState<Contact[]>([]),[selected,setSelected]=useState<Contact|null>(null),[thread,setThread]=useState(''),[messages,setMessages]=useState<Message[]>([]),[query,setQuery]=useState(''),[contactPage,setContactPage]=useState(0),[text,setText]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(false),[hasMore,setHasMore]=useState(false),[connected,setConnected]=useState(false);
  const [recording,setRecording]=useState(false),[seconds,setSeconds]=useState(0),[voice,setVoice]=useState<{blob:Blob;url:string;seconds:number}|null>(null);
  const recorder=useRef<MediaRecorder|null>(null),stream=useRef<MediaStream|null>(null),recordTimer=useRef<ReturnType<typeof setInterval>|null>(null),aborted=useRef(false),started=useRef(0),mounted=useRef(true);
+ useEffect(()=>{
+  if(admin||!schoolId||open)return;
+  let active=true;
+  const sync=async()=>{const {data,error:e}=await db.rpc('sc_school_chat_directory',{p_school:schoolId});if(e||!active)return;
+   const dir=data as {group?:{unread?:number}|null;contacts?:Array<{unread?:number}>}|null;
+   setSchoolUnread(Number(dir?.group?.unread||0)+(dir?.contacts||[]).reduce((n,c)=>n+Number(c.unread||0),0));
+  };
+  void sync();const timer=setInterval(()=>void sync(),20000);
+  return()=>{active=false;clearInterval(timer);};
+ },[admin,schoolId,open,db]);
  const current=useRef({open,thread,admin});current.current={open,thread,admin};
  const scroll=useRef<HTMLDivElement>(null),nearBottom=useRef(true),dialog=useRef<HTMLDivElement>(null),request=useRef(0),audioUrls=useRef(new Map<string,{url:string;until:number}>());
  const micPending=useRef(false);
