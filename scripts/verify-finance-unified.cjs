@@ -31,4 +31,7 @@ assert.ok(finance.includes('t.status!=="void"'),"void transactions excluded");
 assert.ok(migration.includes('storage.objects')&&migration.includes('o.owner_id=auth.uid()::text'),"attach must verify file ownership");
 assert.ok(migration.includes('for update')&&migration.includes('finance.proof_attached'),"proof mutation is locked and audited");
 assert.ok(migration.includes('update public.sc_bill_payments')&&migration.includes('update public.sc_finance_transactions'),"proof propagation keeps ledger and receipt consistent");
+const correction=read("supabase/migrations/20261008071000_finance_safe_corrections.sql");
+assert.ok(correction.includes("transaction_id=p_tx")&&correction.includes("finance.transaction.reversed"),"payment reversal prohibited and duplicate correction checked");
+assert.ok(finance.includes('eligible:id=>!payments.some'),"batch correction must skip student payment ledgers");
 console.log("PASS unified finance navigation, attached evidence, period reports and backend audit guards.");
