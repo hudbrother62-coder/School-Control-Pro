@@ -49,7 +49,7 @@ export function visibleFeatures(m:FeatureModule,role:Role):string[]{
   }
   if(m.key==="calendar"&&f==="Agenda Mengajar")return teachingRoles.includes(role);
   if(m.key==="calendar"&&["Agenda Pribadi","Kehadiran Agenda"].includes(f))return role!=="viewer";
-  if(m.key==="attendance"&&["Koreksi beralasan","Koreksi Presensi","Jadwal & Shift","Lokasi Presensi"].includes(f))return managerRoles.includes(role);
+  if(m.key==="attendance"&&["Koreksi beralasan","Koreksi Presensi","Lokasi Presensi"].includes(f))return managerRoles.includes(role);
   if(m.key==="attendance"&&f==="Kehadiran Tim")return [...managerRoles,"supervisor"].includes(role);
   if(m.key==="gajian"){
    if(["Komponen Gaji","Komponen Dinamis","Proses Payroll"].includes(f))return payrollRoles.includes(role);
