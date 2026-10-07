@@ -75,7 +75,12 @@ export default function Home(){
  const [staff,setStaff]=useState<Staff[]>([]),[attendance,setAttendance]=useState<Attendance[]>([]);
  const [summary,setSummary]=useState<Summary|null>(null),[performanceUser,setPerformanceUser]=useState("");const [ownAttendance,setOwnAttendance]=useState<Attendance|null>(null);
  const [subscription,setSubscription]=useState<{status:string;trial_ends_at:string;current_period_end:string|null}|null>(null),[subscriptionSchoolId,setSubscriptionSchoolId]=useState("");
+ const [entitlement,setEntitlement]=useState<boolean|null>(null),[entitlementSchool,setEntitlementSchool]=useState("");
  const revision=useSchoolRevision(user?"*":"");
+ useEffect(()=>{if(!db||!user||!schoolId){setEntitlement(null);setEntitlementSchool("");return;}let alive=true;
+ const check=async()=>{const {data,error:e}=await db.rpc("sc_member",{p_school:schoolId});if(alive){setEntitlement(!e&&data===true);setEntitlementSchool(schoolId);}};
+ void check();const timer=setInterval(()=>void check(),30000);return()=>{alive=false;clearInterval(timer);};
+ },[db,user,schoolId,revision]);
  const [clockTick,setClockTick]=useState(0);
  useEffect(()=>{const t=setInterval(()=>setClockTick(n=>n+1),30000);return()=>clearInterval(t)},[]);
  useEffect(()=>{if(!db||!user)return;void db.rpc("sc_is_platform_admin").then(({data})=>{if(data===true&&window.location.pathname==="/app")window.location.replace("/admin")})},[db,user,revision]);
@@ -122,8 +127,8 @@ export default function Home(){
  if(!schoolId)return <div className="authwrap"><div className="authbox panel"><img width="46" src="/sekola-pro-mark.svg" alt=""/><h1>Akses sekolah belum tersedia</h1><p>Akun ini belum ditautkan ke sekolah. Pembuatan akun dan aktivasi sekolah hanya dilakukan oleh Super Admin SekolaPro.</p><p className="muted">Hubungi pengelola untuk mendapatkan akses.</p><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button>{error&&<p className="banner error">{error}</p>}</div></div>;
 const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendance;const today=new Date().toLocaleDateString("id-ID",{timeZone:access?.school.timezone||"Asia/Jakarta"});
  const navProps={items:visible,role,module,feature:featureFocus,expanded:expandedNav,icons,onChoose:choose,onExpand:setExpandedNav};
- if(subscriptionSchoolId!==schoolId)return <div className="authwrap"><div className="panel">Memeriksa status langganan sekolah…</div></div>;
- const subscriptionOpen=!!subscription&&subscription.status==="active"&&!access?.school.is_paused&&!!subscription.current_period_end&&Date.parse(subscription.current_period_end)>Date.now();
+ if(subscriptionSchoolId!==schoolId||entitlementSchool!==schoolId)return <div className="authwrap"><div className="panel">Memeriksa izin dan masa aktif sekolah…</div></div>;
+ const subscriptionOpen=entitlement===true&&!!subscription&&subscription.status==="active"&&!access?.school.is_paused&&!!subscription.current_period_end&&Date.parse(subscription.current_period_end)>Date.now();
  if(!subscriptionOpen)return <div><div className="flow" style={{justifyContent:"space-between",padding:"16px 22px"}}><Link href="/" className="lp-brand"><img src="/sekola-pro-mark.svg" alt="" width={35} height={35}/><strong>SekolaPro</strong></Link><div className="flow"><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button></div></div><SupportChat key={schoolId} schoolId={schoolId} schoolName={access?.school.name||"Sekolah"} userId={user.id}/>{error&&<div className="banner error" role="alert">{error}</div>}<PaymentWall schoolName={access?.school.name||"Sekolah"} trialEnd={subscription?.trial_ends_at||new Date().toISOString()} status={subscription?.status||"unknown"} owner={role==="owner"} paused={!!access?.school.is_paused} busy={loading} onCheckout={plan=>void checkout(plan)} onRefresh={()=>void checkSubscription()}/></div>;
  return <div className="shell">
   <aside className="side"><div className="brand"><img src="/sekola-pro-mark.svg" alt=""/><div><strong>SekolaPro</strong><small>Satu Sistem, Semua Urusan Sekolah</small></div></div><WorkspaceNavigation {...navProps}/></aside>
