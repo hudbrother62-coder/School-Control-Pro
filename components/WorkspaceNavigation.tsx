@@ -3,7 +3,7 @@ import {useState} from "react";
 import {ChevronRight,ClipboardCheck,Clock3,Search,Sparkles,type LucideIcon} from "lucide-react";
 import {navigationFeatures,type FeatureModule,type ModuleKey,type Role} from "@/lib/modules";
 
-const group=(key:ModuleKey)=>key==="overview"?"Beranda":key==="master"?"Data Induk":["calendar","journals"].includes(key)?"Agenda & Jurnal":key==="reports"?"Laporan":["guru_ai","buku_kerja"].includes(key)?"Mengajar & Penilaian":["disiplin","bk"].includes(key)?"Kesiswaan":["library","sarpras"].includes(key)?"Layanan Sekolah":key==="assistant"?"Asisten AI":["command","kepsek_ai"].includes(key)?"Manajemen Sekolah":["attendance","performance","gajian","payslip"].includes(key)?"SDM & Kehadiran":key==="sikas"?"Keuangan":"Pengaturan & Bantuan";
+const group=(key:ModuleKey)=>key==="overview"?"Beranda":key==="master"?"Data Induk":["calendar","journals","notes"].includes(key)?"Agenda & Jurnal":key==="reports"?"Laporan":["guru_ai","buku_kerja"].includes(key)?"Mengajar & Penilaian":["disiplin","bk"].includes(key)?"Kesiswaan":["library","sarpras"].includes(key)?"Layanan Sekolah":key==="assistant"?"Asisten AI":["command","kepsek_ai"].includes(key)?"Manajemen Sekolah":["attendance","performance","gajian","payslip"].includes(key)?"SDM & Kehadiran":key==="sikas"?"Keuangan":"Pengaturan & Bantuan";
 
 export default function WorkspaceNavigation({items,role,module,feature,expanded,icons,onChoose,onExpand}:{items:FeatureModule[];role:Role;module:ModuleKey;feature:string;expanded:ModuleKey|null;icons:Record<ModuleKey,LucideIcon>;onChoose:(m:ModuleKey,f?:string)=>void;onExpand:(m:ModuleKey|null)=>void}){
  const [query,setQuery]=useState("");
