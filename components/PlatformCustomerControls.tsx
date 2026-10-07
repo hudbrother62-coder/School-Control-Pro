@@ -2,7 +2,7 @@
 import {useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
 
-type School={id:string;name:string;is_paused?:boolean;subscription_status:string;current_period_end:string|null};
+type School={id:string;name:string;is_paused?:boolean;subscription_status:string;current_period_end:string|null;updated_at?:string|null};
 type Account={user_id:string;school_id:string;account_name:string;email:string;role:string;banned_until:string|null};
 const roles=[["principal","Kepala Sekolah"],["vice_principal","Wakil Kepala Sekolah"],["teacher","Guru"],["counselor","Guru BK"],["hr","SDM"],["treasurer","Bendahara"],["staff","Staf"],["viewer","Viewer"]] as const;
 const fmt=(value:string|null)=>value?new Date(value).toLocaleDateString("id-ID",{dateStyle:"long",timeZone:"Asia/Jakarta"}):"—";
@@ -66,11 +66,11 @@ export default function PlatformCustomerControls({schools,accounts,onRefresh}:{s
    </form>
   </section>
   <section className="platform-panel"><div className="platform-panel-header"><div><h2>Kontrol Masa Aktif Sekolah</h2><p>Pengingat mulai muncul 7 hari sebelum jatuh tempo. Tanpa konfirmasi pembayaran, akses otomatis tertutup pada tenggatnya.</p></div></div>
-   <div className="platform-table-wrap"><table><thead><tr><th>Sekolah</th><th>Batas Akses</th><th>Status</th><th>Aksi Super Admin</th></tr></thead><tbody>{schools.map(s=>{
+   <div className="platform-table-wrap"><table><thead><tr><th>Sekolah</th><th>Batas Akses</th><th>Terakhir Diperbarui</th><th>Status</th><th>Aksi Super Admin</th></tr></thead><tbody>{schools.map(s=>{
     const ms=s.current_period_end?Date.parse(s.current_period_end)-Date.now():0;
     const days=Math.max(0,Math.ceil(ms/86400000));
     const expired=ms<=0;
-    return <tr key={s.id}><td><b>{s.name}</b></td><td>{fmt(s.current_period_end)}<small>{expired?"Lewat tenggat":days<=7?"Tagih sekarang · "+days+" hari lagi":days+" hari tersisa"}</small></td>
+    return <tr key={s.id}><td><b>{s.name}</b></td><td>{fmt(s.current_period_end)}<small>{expired?"Lewat tenggat":days<=7?"Tagih sekarang · "+days+" hari lagi":days+" hari tersisa"}</small></td><td>{fmt(s.updated_at||null)}<small>Tersinkron ke menu Langganan sekolah</small></td>
       <td><span className={"platform-status "+(s.is_paused?"inactive":expired?"inactive":"active")}>{s.is_paused?"Dijeda manual":expired?"Nonaktif otomatis":"Aktif"}</span></td>
       <td><div className="platform-customer-buttons"><button type="button" disabled={busy} onClick={()=>void renew(s)}>Konfirmasi Bayar +1 Bulan</button><button type="button" disabled={busy} onClick={()=>void toggleSchool(s)}>{s.is_paused?"Buka Sekolah":"Jeda Sekolah"}</button></div></td>
      </tr>})}</tbody></table>{schools.length===0&&<div className="platform-empty">Belum ada sekolah.</div>}</div>
