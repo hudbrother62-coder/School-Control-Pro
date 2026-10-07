@@ -164,7 +164,6 @@ export default function Home(){
  {featureFocus==="Asisten Kepala Sekolah"&&<AIProjectManager schoolId={schoolId} module="kepsek_ai" mode="chat"/>}
  {featureFocus==="Asisten Kelas"&&<AcademicLegacyParity schoolId={schoolId} userId={user.id} role={role} focus="Asisten Kelas"/>}
  {featureFocus==="Universal AI Orchestrator"&&<UniversalOrchestrator schoolId={schoolId} role={role} onRoute={(m,f)=>choose(m,f||"")}/>}
- {featureFocus==="Koneksi AI"&&<AIProjectManager schoolId={schoolId} module="guru_ai" mode="connection"/>}
  </>}
  {module==="guru_ai"&&<>
  {featureFocus==="Proyek Pembelajaran"&&<><AIProjectManager schoolId={schoolId} module="guru_ai" mode="projects"/><AIWorkbench schoolId={schoolId} module="guru_ai" focus="Proyek Pembelajaran"/></>}
