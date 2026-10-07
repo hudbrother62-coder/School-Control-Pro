@@ -4,6 +4,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import {Archive,BookOpenText,Filter,Pin,PinOff,Plus,RefreshCw,RotateCcw,Search,SquarePen,Trash2} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import {errorMessage} from "@/lib/error-message";
+import {readAllRows} from "@/lib/read-all-rows";
 import {useSchoolRevision} from "@/lib/school-realtime";
 import {ROLE_LABELS,type Role} from "@/lib/modules";
 import DataEntryModal from "./DataEntryModal";
@@ -43,9 +44,9 @@ export default function SchoolNotes({schoolId,userId,role,focus}:{schoolId:strin
   if(!db)return;
   const current=++epoch.current;
   const [result,people]=await Promise.all([
-   db.from("sc_notes").select("id,school_id,author_id,scope,target_role,title,body,is_pinned,archived_at,created_at,updated_at")
-    .eq("school_id",schoolId).order("updated_at",{ascending:false}).limit(1000),
-   db.from("sc_staff").select("user_id,name").eq("school_id",schoolId)
+   readAllRows(db.from("sc_notes").select("id,school_id,author_id,scope,target_role,title,body,is_pinned,archived_at,created_at,updated_at")
+    .eq("school_id",schoolId).order("updated_at",{ascending:false}).order("id")),
+   readAllRows(db.from("sc_staff").select("user_id,name").eq("school_id",schoolId).order("id"))
   ]);
   if(current!==epoch.current)return;
   if(result.error)throw result.error;
