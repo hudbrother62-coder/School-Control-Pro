@@ -5,7 +5,9 @@ import {gsap} from 'gsap';
 import {ScrollTrigger} from 'gsap/ScrollTrigger';
 import {ArrowRight,ArrowUpRight,BookOpen,CalendarDays,Check,ChevronRight,ClipboardList,FileText,HeartHandshake,Menu,Moon,Search,ShieldCheck,Sun,Users,WalletCards,Wrench,X} from 'lucide-react';
 import {plans,rupiah} from '@/lib/pricing';
-import {storyCamera} from '@/lib/landing-scroll';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
+import {storyPanPixels} from '@/lib/landing-scroll';
 const catalogue=[
  {title:'Pembelajaran',icon:BookOpen,roles:'Guru, wali kelas, kepala sekolah',items:['Presensi siswa dan rekap kehadiran','Lembar nilai dan rekap bulanan','Jurnal mengajar dan pengamatan siswa','Jadwal mingguan dan agenda mengajar','Modul ajar, RPP, LKPD dan bahan ajar','Asesmen soal dan rubrik penilaian','Proyek perangkat ajar dan riwayat draf']},
  {title:'Kesiswaan',icon:HeartHandshake,roles:'Guru BK, wali kelas, pengelola kesiswaan sesuai peran',items:['Data induk siswa, kelas dan penugasan','Catatan disiplin dan prestasi','Pembinaan dan tindak lanjut','Layanan konseling individu dan kelompok','Asesmen, rencana layanan dan rujukan','Surat pembinaan dan laporan siswa']},
@@ -22,28 +24,51 @@ export default function SekolaLanding(){
  useEffect(()=>{
   gsap.registerPlugin(ScrollTrigger);
   const el=tour.current;if(!el)return;
-  const chapters=Array.from(el.querySelectorAll<HTMLElement>('.sp-story-section'));
-  const update=(value:number)=>{const pose=storyCamera(value);el.style.setProperty('--story-pan',`${pose.pan}%`);el.style.setProperty('--story-zoom',String(reduced?1:pose.zoom));if(progressFill.current)progressFill.current.style.transform=`scaleX(${value})`;};
+  const image=el.querySelector<HTMLImageElement>('.sp-architecture img');
+  const viewport=el.querySelector<HTMLElement>('.sp-architecture');
+  if(!image||!viewport)return;
+  const mobile=matchMedia('(max-width:760px)');
+  let currentProgress=0;
+  const moveImage=gsap.quickTo(image,'y',{duration:.45,ease:'power3.out'});
+  const positionImage=(value:number,immediate=false)=>{
+   currentProgress=value;
+   const framedProgress=matchMedia('(max-height:500px)').matches ? .12+value*.88 : value;
+   const target=mobile.matches?storyPanPixels(framedProgress,viewport.clientWidth,viewport.clientHeight):0;
+   if(reduced||immediate)gsap.set(image,{y:target});else moveImage(target);
+   if(progressFill.current)progressFill.current.style.transform=`scaleX(${value})`;
+  };
+  const lenis=reduced?null:new Lenis({lerp:.085,smoothWheel:true,syncTouch:false,anchors:true,prevent:node=>!!node.closest('.sp-dialog')});
+  const tick=(time:number)=>lenis?.raf(time*1000);
+  if(lenis){lenis.on('scroll',ScrollTrigger.update);gsap.ticker.add(tick);}
   const context=gsap.context(()=>{
-   ScrollTrigger.create({trigger:el,start:'top top',end:'bottom bottom',onUpdate:self=>update(self.progress),onRefresh:self=>update(self.progress)});
-   chapters.forEach((chapter,index)=>{
-    if(reduced||index===0)return;
-    const targets=chapter.querySelectorAll('.sp-story-copy>*' );
-    gsap.fromTo(targets,{opacity:.85,y:20},{opacity:1,y:0,ease:'none',stagger:.06,scrollTrigger:{trigger:chapter,start:'top 88%',end:'top 36%',scrub:true,invalidateOnRefresh:true}});
+   ScrollTrigger.create({trigger:el,start:'top top',end:'bottom bottom',onUpdate:self=>positionImage(self.progress),onRefresh:self=>positionImage(self.progress,true)});
+   if(reduced)return;
+   gsap.matchMedia().add({mobile:'(max-width:760px)',desktop:'(min-width:761px)'},ctx=>{
+    el.querySelectorAll<HTMLElement>('.sp-story-section').forEach((section,index)=>{
+     const copy=section.querySelector('.sp-story-copy');if(!copy)return;
+     const targets=copy.querySelectorAll('h1,h2,p,.sp-button,.sp-chips>button');
+     const isMobile=ctx.conditions?.mobile;
+     const timeline=gsap.timeline({scrollTrigger:{trigger:copy,start:index===0?'top top':isMobile?'top 92%':'top 94%',end:isMobile?'bottom 32%':'bottom 8%',scrub:.45,invalidateOnRefresh:true}});
+     if(index===0)timeline.fromTo(targets,{opacity:1,y:0},{opacity:1,y:0,duration:.28});
+     else timeline.fromTo(targets,{opacity:0,y:24},{opacity:1,y:0,duration:.28,stagger:.035,ease:'power2.out'});
+     timeline.to(targets,{opacity:1,y:0,duration:.42});
+     if(index<4)timeline.to(targets,{opacity:0,y:-18,duration:.24,stagger:.025,ease:'power2.in'});
+    });
    });
   },el);
-  return()=>context.revert();
+  const resize=new ResizeObserver(()=>positionImage(currentProgress,true));resize.observe(viewport);
+  return()=>{resize.disconnect();context.revert();moveImage.tween.kill();gsap.ticker.remove(tick);lenis?.destroy();};
  },[reduced]);
  useEffect(()=>{const d=dialog.current;if(!d)return;if(modal){if(!d.open)d.showModal();const original=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=original;};}if(d.open)d.close();modalOpener.current?.focus({preventScroll:true});},[modal]);
  const open=(type:Modal)=>{modalOpener.current=document.activeElement as HTMLElement;setModal(type);setFilter('');};
  const close=()=>setModal(null);
  const feature=(label:string)=>{open('features');setFilter(label==='Data siswa'?'siswa':label);};
- const toggleTheme=()=>{setDark(!dark);try{localStorage.setItem('school-control-theme',dark?'light':'dark');}catch{}};
+ const toggleTheme=async()=>{const next=!dark;const preload=new Image();preload.src=next?'/landing/terraced-school-night-crisp.webp':'/landing/terraced-school-day-crisp.webp';try{await preload.decode();}catch{}setDark(next);try{localStorage.setItem('school-control-theme',next?'dark':'light');}catch{}};
  const matching=catalogue.filter(c=>(c.title+' '+c.roles+' '+c.items.join(' ')).toLowerCase().includes(filter.toLowerCase()));
  return <div className="sp" data-theme={dark?'dark':'light'}><a className="sp-skip" href="#tour-content">Lewati navigasi</a>
  <header className="sp-header"><Link className="sp-brand" href="/" aria-label="SekolaPro beranda"><img src="/sekola-pro-mark.svg" alt="" width={38} height={38}/><span>SekolaPro</span></Link><nav className="sp-nav" aria-label="Navigasi landing"><button onClick={()=>open('features')}>Fitur</button><button onClick={()=>open('pricing')}>Harga</button></nav><div className="sp-header-actions"><button className="sp-icon-btn" onClick={toggleTheme} aria-label={dark?'Aktifkan tema terang':'Aktifkan tema gelap'}>{dark?<Sun size={18}/>:<Moon size={18}/>}</button><Link className="sp-login" href="/masuk">Masuk</Link><Link className="sp-button sp-button-small" href="/daftar">Coba gratis <ArrowUpRight size={15}/></Link><button className="sp-icon-btn sp-mobile-menu" aria-label="Buka fitur dan informasi" onClick={()=>open('features')}><Menu size={20}/></button></div></header>
  <main id="tour-content" className="sp-story" ref={tour} tabIndex={-1}>
- <div className="sp-architecture" aria-hidden="true"><img src={dark?'/landing/terraced-school-night.webp':'/landing/terraced-school-day.webp'} width={1024} height={1536} alt="" fetchPriority="high"/></div>
+ <div className="sp-architecture" aria-hidden="true"><img src={dark?'/landing/terraced-school-night-crisp.webp':'/landing/terraced-school-day-crisp.webp'} width={1024} height={1536} alt="" fetchPriority="high"/></div>
  <div className="sp-story-content">
  <section className="sp-story-section sp-hero"><div className="sp-story-copy"><h1>Satu sekolah.<br/>Semua terkelola.</h1><p>Belajar, mengelola, dan berkembang bersama.</p><Link href="/daftar" className="sp-button">Coba gratis <ArrowRight size={18}/></Link></div></section>
  <section className="sp-story-section sp-learning"><div className="sp-story-copy"><h2>Mengajar<br/>lebih fokus.</h2><div className="sp-chips">{[[Users,'Presensi'],[ClipboardList,'Nilai'],[BookOpen,'Perangkat ajar']].map(([Icon,label])=>{const I=Icon as typeof Users;return <button key={String(label)} onClick={()=>feature(String(label))}><I size={17}/>{String(label)}</button>;})}</div></div></section>
@@ -52,7 +77,7 @@ export default function SekolaLanding(){
  <section className="sp-story-section sp-outro"><div className="sp-story-copy"><h2>Satu ruang untuk seluruh tim.</h2><p>Terhubung. Terarah. Bersama SekolaPro.</p><Link href="/daftar" className="sp-button">Mulai sekarang <ArrowRight size={18}/></Link></div></section>
  </div></main><div className="sp-reading-progress" aria-hidden="true"><span ref={progressFill}/></div>
  <footer className="sp-end"><Link className="sp-brand" href="/"><img src="/sekola-pro-mark.svg" alt="" width={28} height={28}/><span>SekolaPro</span></Link><div><button onClick={()=>open('features')}>Fitur</button><button onClick={()=>open('pricing')}>Harga</button><button onClick={()=>open('faq')}>FAQ</button><Link href="/masuk">Masuk</Link></div><small>© {new Date().getFullYear()} SekolaPro</small></footer>
- <dialog className="sp-dialog" ref={dialog} onCancel={close} onClose={()=>{if(modal)setModal(null);}} onClick={e=>{if(e.target===e.currentTarget){const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}}} aria-labelledby="sp-dialog-title"><div className="sp-dialog-head"><div><span className="sp-eyebrow">SATU SISTEM UNTUK TIM SEKOLAH</span><h2 id="sp-dialog-title">{modal==='pricing'?'Paket SekolaPro':modal==='faq'?'Sebelum Anda mulai':'Temukan ruang kerja Anda.'}</h2></div><button className="sp-icon-btn" autoFocus onClick={close} aria-label="Tutup informasi"><X size={22}/></button></div><nav className="sp-dialog-nav" aria-label="Informasi produk">{(['features','pricing','faq'] as const).map(k=><button key={k} aria-pressed={modal===k} onClick={()=>{setModal(k);setFilter('');}}>{k==='features'?'Semua fitur':k==='pricing'?'Harga':'FAQ'}</button>)}</nav><div className="sp-dialog-body">
+ <dialog data-lenis-prevent className="sp-dialog" ref={dialog} onCancel={close} onClose={()=>{if(modal)setModal(null);}} onClick={e=>{if(e.target===e.currentTarget){const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}}} aria-labelledby="sp-dialog-title"><div className="sp-dialog-head"><div><span className="sp-eyebrow">SATU SISTEM UNTUK TIM SEKOLAH</span><h2 id="sp-dialog-title">{modal==='pricing'?'Paket SekolaPro':modal==='faq'?'Sebelum Anda mulai':'Temukan ruang kerja Anda.'}</h2></div><button className="sp-icon-btn" autoFocus onClick={close} aria-label="Tutup informasi"><X size={22}/></button></div><nav className="sp-dialog-nav" aria-label="Informasi produk">{(['features','pricing','faq'] as const).map(k=><button key={k} aria-pressed={modal===k} onClick={()=>{setModal(k);setFilter('');}}>{k==='features'?'Semua fitur':k==='pricing'?'Harga':'FAQ'}</button>)}</nav><div className="sp-dialog-body">
  {modal==='features'&&<><p className="sp-dialog-intro">Fitur berdasarkan pekerjaan Anda. Akses mengikuti peran dan izin dalam aplikasi; data konseling dan gaji tetap terbatas.</p><label className="sp-search"><Search size={19}/><input value={filter} onChange={e=>setFilter(e.target.value)} placeholder="Cari fitur atau tanggung jawab…" aria-label="Cari fitur atau tanggung jawab"/></label><div className="sp-catalogue">{matching.map(c=>{const Icon=c.icon;return <article key={c.title}><div className="sp-catalogue-title"><Icon size={22}/><h3>{c.title}</h3></div><p>{c.roles}</p><ul>{c.items.map(item=><li key={item}><Check size={14}/>{item}</li>)}</ul></article>;})}</div>{!matching.length&&<p role="status" className="sp-empty">Fitur belum ditemukan. Coba “nilai”, “laporan”, atau “sarpras”.</p>}<div className="sp-dialog-note"><ShieldCheck size={18}/><span>Nama tanggung jawab membantu memilih kebutuhan. Daftar peran dan hak akses mengikuti konfigurasi yang tersedia di sekolah.</span></div></>}
  {modal==='pricing'&&<><p className="sp-dialog-intro">Satu paket per sekolah. Pilih masa aktif sesuai kebutuhan, dengan uji coba 7 hari sesuai ketentuan aplikasi saat ini.</p><div className="sp-price-grid">{(['monthly','yearly'] as const).map(k=><article key={k}><span className="sp-eyebrow">{k==='yearly'?'HEMAT SETARA DUA BULAN':'MULAI FLEKSIBEL'}</span><h3>{k==='monthly'?'Bulanan':'Tahunan'}</h3><strong>{rupiah(plans[k].price)}</strong><small>/{plans[k].days} hari</small><ul>{['Satu workspace sekolah','Anggota sesuai peran','Template laporan sekolah','200 permintaan generator AI/bulan'].map(item=><li key={item}><Check size={15}/>{item}</li>)}</ul><Link className="sp-button" href="/daftar">Mulai gratis <ArrowRight size={17}/></Link></article>)}</div><p className="sp-dialog-intro">Uji coba mencakup 15 permintaan generator AI bersama. Akses setiap fitur mengikuti peran dan izin sekolah.</p></>}
  {modal==='faq'&&<div className="sp-faq">{[['Siapa yang dapat menggunakan SekolaPro?','Kepala sekolah, guru, wali kelas, guru BK, bendahara, SDM, dan staf sesuai peran yang tersedia. Tanggung jawab kesiswaan dan pengelola kegiatan dijalankan melalui peran serta izin yang sesuai.'],['Bagaimana akses data sensitif?','Catatan konseling, data keuangan, dan slip pribadi mengikuti pembatasan akses aplikasi. Promosi fitur tidak memberi akses tambahan kepada pengguna.'],['Apa saja yang bisa dikelola untuk fasilitas?','Inventaris barang dan ruangan, peminjaman, perawatan, pengadaan, bahan habis pakai, serta stok opname. Akses mengikuti peran dan izin pengguna.'],['Bagaimana memulai dan memasukkan data?','Daftar sekolah, lengkapi identitas, dan masukkan data melalui template Excel. Tim masuk menggunakan akun masing-masing sesuai peran.'],['Apakah laporan bisa mengikuti format sekolah?','Sekolah dapat menggunakan template Word serta identitas, logo, tanda tangan, dan stempel. Ekspor mengikuti dukungan pada masing-masing laporan.'],['Berapa lama uji cobanya?','Ketentuan aplikasi saat ini adalah 7 hari, dengan 15 permintaan generator AI bersama. Pilihan paket dan masa aktif ditampilkan saat pendaftaran.']].map(([q,a])=><details key={q}><summary>{q}<ChevronRight size={17}/></summary><p>{a}</p></details>)}</div>}

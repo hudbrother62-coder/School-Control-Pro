@@ -29,3 +29,14 @@ Inspected 390 × 844 portrait, 320 × 640 small portrait and 667 × 375 landscap
 Camera regression first failed before implementation and now passes 1000 progress samples, endpoint clamping, monotonic pan and continuous zoom. npm test: all 17 regression scripts passed. TypeScript/lint passed. Production build passed; final build rerun after removal of the temporary QA route.
 
 Browser full-page screenshots intermittently timed out; full composition was captured successfully once and compared, with final adjustments verified in focused native viewport screenshots. Browser proof images: /workspace/scratch/sekolapro-terraces-top.jpg and /workspace/scratch/sekolapro-terraces-mobile.jpg.
+
+## Scroll and sharpness revision — 2026-10-07
+Replaced both architectural assets with refined, lossless WebP images. Source remains 1024 × 1536; no claim of native 4K resolution. Removed unnecessary image enlargement. Mobile image movement now uses a compositor transform with eased interpolation instead of repainting object-position. Lenis smooths wheel input, while touch remains native and dialogs retain independent scrolling.
+
+Copy now enters, holds for reading, and exits through scrubbed staggered timelines; reverse scrolling reverses the transitions. Hero has a short initial entrance. Reduced motion skips Lenis and text timelines. Removed moving backdrop blur from feature chips and the preview. Theme switching waits for image decoding.
+
+Browser checked desktop day/night, 320 × 640 portrait and 667 × 375 landscape, mobile feature dialog open/close, and reverse scrolling. Earlier forward-scroll inspection recorded hero opacity 0 and newly entering management opacity 0.9482; reverse returned hero opacity 1. New image loads fully and uses the new asset filename. Composition and short typography match the approved terraced-school direction; central staircase and people remain visible.
+
+All 17 regression scripts and TypeScript check passed. Pixel-pan tests cover clipping bounds, short images, mobile/landscape sizes and 1000 monotonic progress samples.
+
+Final result: passed

@@ -1,5 +1,6 @@
-/** Continuous framing of the same connected school, without chapter resets. */
-export function storyCamera(progress:number){
+/** Translate an image layer without changing its crop/paint on every frame. */
+export function storyPanPixels(progress:number,width:number,viewportHeight:number){
  const p=Math.min(1,Math.max(0,progress));
- return {pan:p*100,zoom:1+Math.sin(p*Math.PI)*.035};
+ const distance=Math.max(0,width*1.5-viewportHeight);
+ return p===0||distance===0?0:-distance*p;
 }
