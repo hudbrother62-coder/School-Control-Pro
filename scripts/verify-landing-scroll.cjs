@@ -15,3 +15,13 @@ assert.equal(tourScrollTarget(5,100,6000,6),6100);
 assert.equal(tourScrollTarget(-1,100,6000,6),100);
 assert.equal(tourScrollTarget(2,100,3000,6),1300);
 console.log('Landing scroll bounds and resized navigation: passed');
+const {tourBlend}=moduleScope.exports;
+for(let i=0;i<=100;i++){
+ const weights=tourBlend(i/100,6);
+ assert.ok(Math.abs(weights.reduce((a,b)=>a+b,0)-1)<1e-8,'Every transition must retain a visible scene');
+ assert.ok(weights.every(w=>w>=0&&w<=1));
+}
+assert.deepEqual(tourBlend(0,6),[1,0,0,0,0,0]);
+assert.deepEqual(tourBlend(1,6),[0,0,0,0,0,1]);
+assert.ok(Math.abs(tourBlend(.1,6)[0]-.5)<1e-8);
+console.log('Reversible scene blends: passed');
