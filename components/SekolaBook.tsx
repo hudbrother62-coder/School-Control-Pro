@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState,type MutableRefObject} from 'react';
 import {PerspectiveCamera,Vector3} from 'three';
-import {bookFrame} from '@/lib/landing-scroll';
+import {bookFrame,bookCameraScale} from '@/lib/landing-scroll';
 
 const W=4.05,H=5.4;
 const spreads=['overview','learning','students','management'].map(name=>`/landing/book-${name}.webp`);
@@ -81,6 +81,9 @@ export default function SekolaBook({progress,dark,reduced}:{progress:MutableRefO
     const extent=Math.max(...corners.map(q=>Math.max(Math.abs(q.x-width/2)/(width*.46),Math.abs(q.y-height/2)/(height*.45))));
     if(extent<=1.005)break;distance*=extent;
    }
+   distance*=bookCameraScale(frame.zoom,portrait);
+   camera.position.set(target,-distance*(.43-.12*frame.zoom),distance*.9);
+   camera.lookAt(target,0,.08);camera.updateMatrixWorld();
    ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
    const cover=[{x:-W-.14,y:H/2+.13,z:-.48},{x:W+.14,y:H/2+.13,z:-.48},{x:W+.14,y:-H/2-.13,z:-.48},{x:-W-.14,y:-H/2-.13,z:-.48}];
    ctx.save();ctx.shadowColor=theme.current?'#000000c0':'#233d6745';ctx.shadowBlur=34;ctx.shadowOffsetY=22;outline(cover,'#101831');ctx.restore();

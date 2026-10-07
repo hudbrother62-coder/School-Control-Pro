@@ -9,6 +9,7 @@ import {plans,rupiah} from '@/lib/pricing';
 import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 import {bookFrame} from '@/lib/landing-scroll';
+import SekolaDemo from './SekolaDemo';
 const SekolaBook=dynamic(()=>import('./SekolaBook'),{ssr:false});
 const chapters=[
  {title:'SekolaPro',heading:<>Semua kebutuhan sekolah.<br/>Dalam satu buku.</>,description:'Jelajahi fitur SekolaPro.',features:['Pembelajaran','Kesiswaan','Administrasi','Fasilitas']},
@@ -91,7 +92,7 @@ export default function SekolaLanding(){
  </div>
  <nav className="sp-book-chapters" aria-label="Bab fitur SekolaPro">{chapters.map((item,index)=><button key={item.title} onClick={()=>goToChapter(index)} aria-current={chapter===index?'step':undefined} aria-label={`Ke bab ${item.title}`}><span className="sp-book-dot"/><span>{item.title}</span></button>)}</nav>
  </div>
- </main><div className="sp-reading-progress" aria-hidden="true"><span ref={progressFill}/></div>
+ </main><SekolaDemo/><div className="sp-reading-progress" aria-hidden="true"><span ref={progressFill}/></div>
 
  <footer className="sp-end"><Link className="sp-brand" href="/"><img src="/sekola-pro-mark.svg" alt="" width={28} height={28}/><span>SekolaPro</span></Link><div><button onClick={()=>open('features')}>Fitur</button><button onClick={()=>open('pricing')}>Harga</button><button onClick={()=>open('faq')}>FAQ</button><a href="/masuk">Masuk</a></div><small>© {new Date().getFullYear()} SekolaPro</small></footer>
  <dialog data-lenis-prevent className="sp-dialog" ref={dialog} onCancel={close} onClose={()=>{if(modal)setModal(null);}} onClick={e=>{if(e.target===e.currentTarget){const r=e.currentTarget.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}}} aria-labelledby="sp-dialog-title"><div className="sp-dialog-head"><div><span className="sp-eyebrow">SATU SISTEM UNTUK TIM SEKOLAH</span><h2 id="sp-dialog-title">{modal==='pricing'?'Paket SekolaPro':modal==='faq'?'Sebelum Anda mulai':'Temukan ruang kerja Anda.'}</h2></div><button className="sp-icon-btn" autoFocus onClick={close} aria-label="Tutup informasi"><X size={22}/></button></div><nav className="sp-dialog-nav" aria-label="Informasi produk">{(['features','pricing','faq'] as const).map(k=><button key={k} aria-pressed={modal===k} onClick={()=>{setModal(k);setFilter('');}}>{k==='features'?'Semua fitur':k==='pricing'?'Harga':'FAQ'}</button>)}</nav><div className="sp-dialog-body">

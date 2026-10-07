@@ -16,3 +16,6 @@ Pure scroll regression covers endpoints, 10,000 bounded continuity samples, chap
 
 ## Full-book focus revision
 The initial frame now starts focused with no exterior text. Desktop canvas expands across the stage during focus, and projected cover bounds fit within its edges. Exterior copy is gated to the final portion of retreat (zoom below 0.3). Portrait cameras show a whole selected page and travel between left and right before retreat rather than fitting a tiny two-page spread in an empty tall viewport. Desktop initial and retreat states and 390×844 portrait framing were visually checked. Regression asserts no exterior copy during focused frames.
+
+## Camera travel and demo revision
+Found and fixed the fit loop cancelling camera zoom. Actual distance scaling now applies after bounds fitting, with an immediate scroll-driven approach from the initial focused state and a longer retreat. Browser inspection confirmed visible enlargement then reduction of the same book, rather than fixed camera framing. Final native demo section inspected at #demo. URL validation tested for YouTube/Vimeo/MP4 and rejected invalid or non-HTTPS sources; production build and scroll regression passed. No actual demo URL has been provided, so the pending placeholder is explicit.
