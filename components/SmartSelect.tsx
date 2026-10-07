@@ -3,14 +3,20 @@ import {useEffect,useId,useMemo,useRef,useState} from "react";
 import {Check,ChevronDown,Plus,Search,X} from "lucide-react";
 
 export type SmartOption={value:string;label:string;subtitle?:string;search?:string};
+const systemValues=new Set(["active","inactive","archived","deleted","draft","pending","approved","rejected","completed","cancelled","canceled","present","absent","late","sick","permission","excused","hadir","izin","sakit","alpa","alpha","l","p","owner","admin","teacher","staff","student","principal","vice_principal","subject","homeroom","combined","true","false","yes","no"]);
+export function customTextAllowed(options:SmartOption[]){
+ const entries=options.filter(x=>x.value.trim());
+ return entries.length>0 && entries.every(x=>!systemValues.has(x.value.trim().toLocaleLowerCase("id-ID")) && x.value.trim().toLocaleLowerCase("id-ID")===x.label.trim().toLocaleLowerCase("id-ID"));
+}
 
 export default function SmartSelect({
- label,value,options,onChange,placeholder="Pilih data",allowCustom=false,customLabel="Gunakan teks ini",disabled=false
+ label,value,options,onChange,placeholder="Pilih data",allowCustom,customLabel="Gunakan teks ini",disabled=false
 }:{label:string;value:string;options:SmartOption[];onChange:(value:string)=>void;placeholder?:string;allowCustom?:boolean;customLabel?:string;disabled?:boolean}){
  const root=useRef<HTMLDivElement>(null),optionId=useId();
  useEffect(()=>{function outside(e:PointerEvent){if(root.current&&!root.current.contains(e.target as Node))setOpen(false)}document.addEventListener("pointerdown",outside);return()=>document.removeEventListener("pointerdown",outside)},[]);
  const [open,setOpen]=useState(false),[query,setQuery]=useState("");
  const selected=options.find(x=>x.value===value);
+ const canCustom=allowCustom??customTextAllowed(options);
  const filtered=useMemo(()=>{const q=query.trim().toLowerCase();if(!q)return options.slice(0,100);return options.filter(x=>(x.label+" "+(x.subtitle||"")+" "+(x.search||"")).toLowerCase().includes(q)).slice(0,100)},[query,options]);
  const custom=query.trim();
  function choose(v:string){onChange(v);setOpen(false);setQuery("")}
@@ -20,11 +26,11 @@ export default function SmartSelect({
    <span>{selected?<><b>{selected.label}</b>{selected.subtitle&&<small>{selected.subtitle}</small>}</>:value?<b>{value}</b>:<em>{placeholder}</em>}</span><ChevronDown size={16}/>
   </button>
   {open&&<div className="smart-popover">
-   <div className="smart-search"><Search size={15}/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} aria-label={"Cari "+label} placeholder={allowCustom?"Cari atau ketik sendiri…":"Ketik untuk mencari…"}/><button type="button" onClick={()=>setOpen(false)} aria-label="Tutup"><X size={14}/></button></div>
+   <div className="smart-search"><Search size={15}/><input autoFocus value={query} onChange={e=>setQuery(e.target.value)} aria-label={"Cari "+label} placeholder={canCustom?"Cari atau ketik sendiri…":"Ketik untuk mencari…"}/><button type="button" onClick={()=>setOpen(false)} aria-label="Tutup"><X size={14}/></button></div>
    <div className="smart-options" role="listbox" id={optionId} aria-label={label}>
     {filtered.map(x=><button type="button" key={x.value} role="option" aria-selected={x.value===value} className={x.value===value?"selected":""} onClick={()=>choose(x.value)}><span><b>{x.label}</b>{x.subtitle&&<small>{x.subtitle}</small>}</span>{x.value===value&&<Check size={14}/>}</button>)}
-    {allowCustom&&custom&&!options.some(x=>x.label.toLowerCase()===custom.toLowerCase()||x.value.toLowerCase()===custom.toLowerCase())&&<button type="button" className="custom" onClick={()=>choose(custom)}><Plus size={14}/><span><b>{customLabel}</b><small>{custom}</small></span></button>}
-    {!filtered.length&&!allowCustom&&<div className="smart-empty">Data tidak ditemukan.</div>}
+    {canCustom&&custom&&!options.some(x=>x.label.toLowerCase()===custom.toLowerCase()||x.value.toLowerCase()===custom.toLowerCase())&&<button type="button" className="custom" onClick={()=>choose(custom)}><Plus size={14}/><span><b>{customLabel}</b><small>{custom}</small></span></button>}
+    {!filtered.length&&!canCustom&&<div className="smart-empty">Data tidak ditemukan.</div>}
    </div>
   </div>}
  </div>;
