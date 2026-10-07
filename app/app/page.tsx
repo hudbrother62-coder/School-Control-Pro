@@ -71,7 +71,7 @@ export default function Home(){
  const contentRef=useRef<HTMLDivElement>(null),drawerRef=useRef<HTMLDivElement>(null),navReady=useRef(false);
  const [schools,setSchools]=useState<SchoolAccess[]>([]),[schoolId,setSchoolId]=useState(""),[module,setModule]=useState<ModuleKey>("overview");
  const [loading,setLoading]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState("");
- const [newSchool,setNewSchool]=useState(""),[inviteCode,setInviteCode]=useState("");
+ const [newSchool,setNewSchool]=useState(""),[inviteCode,setInviteCode]=useState(""),[accessSuspended,setAccessSuspended]=useState(false);
  const [theme,setTheme]=useState("light"),[openMenu,setOpenMenu]=useState(false),[expandedNav,setExpandedNav]=useState<ModuleKey|null>(null),[featureFocus,setFeatureFocus]=useState("Ringkasan Operasional");
  const [staff,setStaff]=useState<Staff[]>([]),[attendance,setAttendance]=useState<Attendance[]>([]);
  const [summary,setSummary]=useState<Summary|null>(null),[performanceUser,setPerformanceUser]=useState("");const [ownAttendance,setOwnAttendance]=useState<Attendance|null>(null);
@@ -87,8 +87,8 @@ export default function Home(){
  useEffect(()=>{if(!db)return;let active=true;void db.auth.getUser().then(({data})=>{if(!active)return;setUser(data.user);setAuthReady(true)}).catch(()=>{if(active)setAuthReady(true)}); const {data:{subscription:sub}}=db.auth.onAuthStateChange((_event,session)=>{if(!active)return;setUser(session?.user||null);setAuthReady(true)});return ()=>{active=false;sub.unsubscribe()};},[db]);
  useEffect(()=>{if(mounted&&authReady&&db&&!user)window.location.replace("/")},[mounted,authReady,db,user]);
  useEffect(()=>{if(!db||!user){setSchools([]);setSchoolId("");return;}let active=true;(async()=>{
- const {data:m,error:e}=await db.from("sc_members").select("school_id,role").eq("user_id",user.id);
- if(e){if(active)setError(e.message);return;} const memberships=(m||[]) as Membership[];
+ const {data:m,error:e}=await db.from("sc_members").select("school_id,role,is_active").eq("user_id",user.id);
+ if(e){if(active)setError(e.message);return;} if(active)setAccessSuspended((m||[]).length>0&&(m||[]).every(x=>x.is_active===false)); const memberships=((m||[]).filter(x=>x.is_active!==false)) as Membership[];
  const {data:s,error:se}=memberships.length?await db.from("sc_schools").select("id,name,timezone").in("id",memberships.map(x=>x.school_id)): {data:[],error:null};
  if(se){if(active)setError(se.message);return;}
  const found=memberships.flatMap(x=>{const sch=(s||[]).find(y=>y.id===x.school_id);return sch?[{school:sch as School,role:x.role}]:[];});
@@ -122,6 +122,7 @@ export default function Home(){
  if(!db)return <div className="authwrap"><div className="authbox panel"><img width="48" src="/sekola-pro-mark.svg" alt="SekolaPro"/><h1>SekolaPro</h1><p>Fondasi aplikasi siap. Hubungkan proyek Supabase khusus melalui environment Vercel untuk mengaktifkan login dan penyimpanan nyata.</p><p className="hint">NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY belum terisi. Mode data palsu sengaja tidak disediakan.</p></div></div>;
  if(!authReady)return <div className="authwrap"><div className="panel">Memeriksa sesi akun…</div></div>;
  if(!user)return <div className="authwrap"><div className="panel">Kembali ke beranda…</div></div>;
+ if(!schoolId&&accessSuspended)return <div className="authwrap"><div className="authbox panel"><img width="45" src="/sekola-pro-mark.svg" alt="SekolaPro"/><h1>Akun sementara dinonaktifkan</h1><p>Akses sekolah sedang ditangguhkan oleh pengelola. Akun ini tidak dapat membuka modul maupun melakukan presensi sampai diaktifkan kembali.</p><p className="muted">Hubungi kepala sekolah atau Super Admin untuk informasi lebih lanjut.</p><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button></div></div>;
  if(!schoolId)return <div className="authwrap"><div className="authbox"><div className="flow"><img width="46" src="/sekola-pro-mark.svg" alt=""/><h1>Mulai SekolaPro</h1><SupportChat schoolName="Pendaftaran akun" userId={user.id}/></div><div className="panel"><h2>Buat sekolah</h2><p className="muted">Masa uji coba 7 hari diaktifkan otomatis. Anda menjadi pemilik akun utama.</p><form className="fields" onSubmit={e=>{e.preventDefault();void createSchool()}}><label className="field full">Nama sekolah<input required value={newSchool} maxLength={120} onChange={e=>setNewSchool(e.target.value)}/></label><button className="button" disabled={loading}>Buat Sekolah</button></form><h3 style={{marginTop:28}}>Sudah diundang?</h3><form className="fields" onSubmit={e=>{e.preventDefault();void acceptInvite()}}><label className="field full">Kode undangan<input required value={inviteCode} onChange={e=>setInviteCode(e.target.value)}/></label><button className="button secondary" disabled={loading}>Gabung Sekolah</button></form><div className="flow" style={{marginTop:20}}><button className="iconbutton" onClick={()=>void db.auth.signOut()}>Keluar</button></div>{error&&<p className="banner error">{error}</p>}{message&&<p className="banner success">{message}</p>}</div></div></div>;
  const trialExpired=subscription?.status==="trial" && new Date(subscription.trial_ends_at).getTime()<=Date.now();const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendance;const today=new Date().toLocaleDateString("id-ID",{timeZone:access?.school.timezone||"Asia/Jakarta"});
  const navProps={items:visible,role,module,feature:featureFocus,expanded:expandedNav,icons,onChoose:choose,onExpand:setExpandedNav};
