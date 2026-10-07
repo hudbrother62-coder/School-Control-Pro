@@ -43,11 +43,13 @@ export default function PlatformCustomerControls({schools,accounts,onRefresh}:{s
   await act({action:"school_status",school_id:s.id,paused:next},next?"Sekolah dijeda sementara.":"Sekolah dibuka kembali, selama periode berlangganan belum habis.");
  }
  async function renew(s:School){
-  const note=window.prompt("Konfirmasi pembayaran telah diterima untuk "+s.name+". Catatan/metode pembayaran (opsional):","");
+  const reference=window.prompt("Masukkan nomor referensi/kwitansi pembayaran untuk "+s.name+". Referensi yang sama tidak boleh memperpanjang dua kali.","");
+  if(reference===null)return;
+  if(reference.trim().length<8||reference.trim().length>100){setError("Nomor referensi pembayaran harus 8–100 karakter.");return;}
+  const note=window.prompt("Catatan pembayaran (metode, tanggal, atau keterangan lain) — opsional:","");
   if(note===null)return;
-  if(!window.confirm("Tambah 1 bulan kalender pada masa aktif "+s.name+"? Tindakan ini mencatat konfirmasi pembayaran oleh Super Admin."))return;
-  const reference="manual-"+crypto.randomUUID();
-  await act({action:"renew",school_id:s.id,confirmation_ref:reference,note},"Perpanjangan berhasil dikonfirmasi.");
+  if(!window.confirm("Saya sudah memverifikasi pembayaran untuk "+s.name+". Tambahkan satu bulan masa aktif?"))return;
+  await act({action:"renew",school_id:s.id,confirmation_ref:reference.trim(),note},"Perpanjangan berhasil dikonfirmasi.");
  }
  const filtered=accounts.filter(a=>(a.email+" "+a.account_name).toLowerCase().includes(search.toLowerCase()));
  return <div className="platform-customer-control">
