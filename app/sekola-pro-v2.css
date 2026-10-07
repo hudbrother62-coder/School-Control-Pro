@@ -313,6 +313,24 @@ body[data-theme=dark] .risk-critical{color:#ff9ba5;background:#4a1e26}
 @media(max-width:560px){.lp-full-logo{width:132px!important;max-height:50px}}
 
 
+
+/* Direct daily attendance access */
+.side .navbtn-attendance-quick,.side .navbtn-student-attendance-quick{
+ margin:5px 0;
+ min-height:44px;
+ border:1px solid color-mix(in srgb,var(--accent) 32%,rgba(255,255,255,.18));
+ background:color-mix(in srgb,var(--accent) 16%,rgba(255,255,255,.08));
+ color:#fff;
+}
+.side .navbtn-attendance-quick:hover,.side .navbtn-student-attendance-quick:hover{
+ background:color-mix(in srgb,var(--accent) 26%,rgba(255,255,255,.10));
+ border-color:color-mix(in srgb,var(--accent) 48%,rgba(255,255,255,.24));
+}
+.side .navbtn-attendance-quick.active,.side .navbtn-student-attendance-quick.active{
+ background:color-mix(in srgb,var(--accent) 46%,rgba(20,20,40,.32));
+ border-color:color-mix(in srgb,var(--accent) 64%,rgba(255,255,255,.28));
+}
+
 /* Primary access to the Universal AI Orchestrator */
 .side .navbtn-orchestrator{
  margin:5px 0 8px;
