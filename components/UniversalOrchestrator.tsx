@@ -9,6 +9,8 @@ import {planWorkflow,type WorkflowPlan,type WorkflowRisk,type WorkflowStep,type 
 import {browserDb} from "@/lib/supabase";
 import type {ModuleKey,Role} from "@/lib/modules";
 
+type CoachTurn={role:"user"|"assistant";content:string};
+type CoachResponse={message:string;refined_goal:string;missing_inputs:string[];suggested_modules:string[]};
 type WorkflowRun={id:string;title:string;request:string;status:string;updated_at:string;source?:string;context?:any};
 type SavedStep={id:string;step_order:number;module_key:ModuleKey;feature:string;title:string;instruction:string;status:string;context?:any};
 const riskLabel:Record<WorkflowRisk,string>={low:"Rendah",medium:"Sedang",high:"Tinggi",critical:"Kritis"};
@@ -22,6 +24,8 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
  const [done,setDone]=useState<Record<number,boolean>>({}),[approvals,setApprovals]=useState<Record<number,boolean>>({}),[stepRows,setStepRows]=useState<SavedStep[]>([]);
  const [activeRunId,setActiveRunId]=useState(""),[savedRuns,setSavedRuns]=useState<WorkflowRun[]>([]);
  const [busy,setBusy]=useState(false),[planning,setPlanning]=useState(false),[status,setStatus]=useState("");
+ const [coachInput,setCoachInput]=useState(""),[coachBusy,setCoachBusy]=useState(false),[coachError,setCoachError]=useState("");
+ const [coachMessages,setCoachMessages]=useState<CoachTurn[]>([]),[coachResult,setCoachResult]=useState<CoachResponse|null>(null),[coachContext,setCoachContext]=useState("");
 
  useRealtimeRefresh(schoolId||"",()=>loadRuns());
  async function loadRuns(){
@@ -32,16 +36,30 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
  }
  useEffect(()=>{void loadRuns()},[db,schoolId]);
 
+ async function consult(value:string){
+  const text=value.trim();if(text.length<3||!schoolId||!db)return;
+  setCoachBusy(true);setCoachError("");setCoachResult(null);
+  try{
+   const {data:{session}}=await db.auth.getSession();if(!session)throw Error("Silakan masuk untuk menggunakan Asisten AI.");
+   const response=await fetch("/api/orchestrator",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},
+    body:JSON.stringify({school_id:schoolId,assistant_mode:"consult",request:text,context_sources:sources,conversation:coachMessages.slice(-8)})});
+   const result=await response.json();if(!response.ok||!result.assistant)throw Error(result.error||"Asisten AI tidak tersedia.");
+   const answer=result.assistant as CoachResponse;
+   setCoachMessages(items=>[...items,{role:"user" as const,content:text},{role:"assistant" as const,content:answer.message}].slice(-12));
+   setCoachResult(answer);setCoachInput("");
+   setCoachContext(result.context?.status==="included"?"Menggunakan agregat dan memori sekolah sesuai akses.":"Menggunakan pengetahuan umum dan katalog fitur; agregat sekolah belum tersedia.");
+  }catch(e){setCoachError(errorMessage(e));}finally{setCoachBusy(false)}
+ }
  async function analyze(value:string){
   const clean=value.trim();if(clean.length<3)return;
   setSubmitted(clean);setPlan(null);setDone({});setApprovals({});setStepRows([]);setActiveRunId("");setStatus("");setPlanning(true);
   try{
    const {data:{session}}=db?await db.auth.getSession():{data:{session:null}};
    if(!session){setPlan({...planWorkflow(clean,role),executionMode});setSource("rencana lokal");return;}
-   const response=await fetch("/api/orchestrator",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({school_id:schoolId,request:clean,context_sources:sources.trim(),execution_mode:executionMode})});
+   const response=await fetch("/api/orchestrator",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+session.access_token},body:JSON.stringify({school_id:schoolId,request:clean,context_sources:sources.trim(),execution_mode:executionMode,conversation:coachMessages.slice(-8)})});
    const result=await response.json();if(!response.ok||!result.plan)throw Error(result.error||"Perencana AI belum tersedia.");
-   setPlan(result.plan as WorkflowPlan);setSource(result.source==="ai"?"AI + policy engine":"deterministic policy engine");
-  }catch{setPlan({...planWorkflow(clean,role),executionMode});setSource("rencana lokal aman");}
+   setPlan(result.plan as WorkflowPlan);setSource(result.source==="ai"?"Gemini + policy engine":"aturan lokal");if(result.warning)setStatus(String(result.warning));
+  }catch(e){setPlan({...planWorkflow(clean,role),executionMode});setSource("rencana lokal aman");setStatus("Gemini tidak dapat digunakan: "+errorMessage(e)+". Rencana lokal tetap tersedia.");}
   finally{setPlanning(false);}
  }
 
@@ -123,6 +141,22 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
    <div className="uao-hero-copy"><span className="uao-kicker"><Sparkles size={14}/> UNIVERSAL AI ORCHESTRATOR</span><h2>Dari tujuan menjadi workflow yang aman, terukur, dan bisa diaudit.</h2><p>Goal lock, policy, impact analysis, approval, checkpoint, verifikasi dan evidence berada dalam satu control plane. AI merencanakan; aksi tetap mengikuti fitur, role dan data SekolaPro.</p></div>
    <div className="uao-hero-orbit"><span><ShieldCheck size={18}/> Policy</span><span><GitBranch size={18}/> Workflow</span><span><FileCheck2 size={18}/> QCL</span><span><Database size={18}/> Evidence</span></div>
   </div>
+
+  <section className="panel" style={{marginBlock:16}}>
+   <div className="sectionhead"><div><h3>Asisten AI Orchestrator</h3><p className="muted">Diskusikan masalah sekolah, minta analisis, lalu ubah hasil diskusi menjadi Control Plan yang terarah.</p></div><Sparkles size={23}/></div>
+   {coachMessages.length>0&&<div role="log" aria-label="Percakapan Asisten Orchestrator" aria-live="polite" style={{display:"grid",gap:10,maxHeight:380,overflowY:"auto",marginBlock:14}}>
+    {coachMessages.map((item,index)=><div key={index} style={{padding:12,borderRadius:12,border:"1px solid var(--border, #80808040)",background:item.role==="assistant"?"var(--surface, transparent)":"var(--surface-2, transparent)"}}>
+     <strong>{item.role==="assistant"?"Asisten SekolaPro":"Anda"}</strong><p style={{whiteSpace:"pre-wrap",marginBottom:0}}>{item.content}</p>
+    </div>)}
+   </div>}
+   <form onSubmit={event=>{event.preventDefault();void consult(coachInput)}} style={{display:"grid",gap:10}}>
+    <label>Diskusi dengan asisten<textarea aria-label="Diskusi dengan Asisten Orchestrator" rows={3} maxLength={4000} value={coachInput} onChange={e=>setCoachInput(e.target.value)} placeholder="Contoh: analisis absensi siswa bulan ini, apa penyebab datanya tidak lengkap dan apa langkah perbaikannya?"/></label>
+    <div className="flow" style={{alignItems:"center",gap:12,flexWrap:"wrap"}}><button className="button" type="submit" disabled={coachBusy||coachInput.trim().length<3||!schoolId}>{coachBusy?"Menganalisis…":"Tanya Asisten AI"}</button><small className="muted">{coachContext||"AI hanya menyarankan, tidak mengubah database otomatis."}</small></div>
+   </form>
+   {coachResult?.refined_goal&&<div style={{display:"grid",gap:8,marginTop:14}}><strong>Tujuan yang disarankan</strong><p style={{margin:0,whiteSpace:"pre-wrap"}}>{coachResult.refined_goal}</p><button type="button" className="button secondary" disabled={planning} onClick={()=>{setRequest(coachResult?.refined_goal||"");void analyze(coachResult?.refined_goal||"")}}>Jadikan Control Plan <ChevronRight size={15}/></button></div>}
+   {(coachResult?.missing_inputs?.length??0)>0&&<p className="muted">Untuk memperjelas rencana: {coachResult?.missing_inputs.join(" • ")}</p>}
+   {coachError&&<div role="alert" className="banner error">{coachError}</div>}
+  </section>
 
   <div className="uao-compose">
    <form onSubmit={event=>{event.preventDefault();void analyze(request)}} className="uao-prompt">

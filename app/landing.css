@@ -41,7 +41,7 @@
 .sp-dialog-note{display:flex;gap:12px;align-items:flex-start;margin-top:23px;color:var(--sp-muted);font-size:12px;line-height:1.8}
 .sp-dialog-note svg{flex-shrink:0;margin-top:4px}
 .sp-dialog-bottom{padding:20px 32px;border-top:1px solid var(--sp-line);display:flex;justify-content:space-between;gap:16px;align-items:center;flex-shrink:0}
-.sp-price-grid{display:grid;grid-template-columns:1fr 1fr;gap:25px;margin-bottom:25px}
+.sp-price-grid{display:grid;grid-template-columns:1fr;gap:25px;max-width:480px;margin:0 auto 25px}
 .sp-price-grid article{padding:25px;background:var(--sp-panel-soft);border:1px solid var(--sp-line);border-radius:14px}
 .sp-price-grid h3{margin:15px 0;font-size:22px}
 .sp-price-grid strong{font-size:33px;letter-spacing:-.04em}
