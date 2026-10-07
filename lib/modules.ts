@@ -33,7 +33,7 @@ export const modules:FeatureModule[]=[
  {key:"help",label:"Panduan Penggunaan",section:"Sistem",description:"Panduan kerja langkah demi langkah berdasarkan modul aplikasi asal.",features:["Mulai dari Sini","Data Induk","Agenda & Absensi","Presensi Guru & Staf","Perangkat Ajar AI","Asisten AI","Jurnal & Penilaian","Disiplin & Prestasi","Bimbingan Konseling","Perpustakaan","Sarana & Prasarana","Perencanaan & Supervisi","Program & Tugas","Keuangan","SDM & Payroll","Kinerja & Pengembangan","Laporan & Arsip","Akses & Pengaturan"]}
 ];
 export const isAdmin=(role:Role)=>ADMIN_ROLES.includes(role);
-export const canAccess=(m:FeatureModule,role:Role)=>!m.roles||m.roles.includes(role);
+export const canAccess=(m:FeatureModule,role:Role)=>role==="viewer"?["overview","help"].includes(m.key):!m.roles||m.roles.includes(role);
 
 const teachingRoles:Role[]=["owner","principal","vice_principal","teacher"];
 const managerRoles:Role[]=["owner","principal","vice_principal","hr"];
