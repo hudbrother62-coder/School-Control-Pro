@@ -20,7 +20,6 @@ const aliases:Record<string,WorkspaceRoute>={
  "calendar::Agenda Pengguna":{module:"calendar",feature:"Rekap Agenda"},
  "journals::Jurnal Mengajar":{module:"buku_kerja",feature:"Jurnal Mengajar"},
  "guru_ai::Ngobrol AI":{module:"assistant",feature:"Asisten Guru"},
- "guru_ai::Koneksi AI":{module:"assistant",feature:"Koneksi AI"},
  "kepsek_ai::Asisten Kepsek":{module:"assistant",feature:"Asisten Kepala Sekolah"},
  "assistant::Rencana Pekerjaan":{module:"assistant",feature:"Universal AI Orchestrator"},
  "buku_kerja::Asisten Kelas":{module:"assistant",feature:"Asisten Kelas"},
