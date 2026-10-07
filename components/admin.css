@@ -45,3 +45,13 @@
 .platform-gemini-dashboard-panel{padding:0 14px 14px}
 .platform-gemini-dashboard-panel>.platform-panel{border-color:#e9e0f0}
 @media(max-width:720px){.platform-gemini-dashboard-intro{padding:17px;align-items:flex-start;flex-wrap:wrap;gap:12px}.platform-gemini-dashboard-icon{flex-basis:42px;height:42px}.platform-gemini-dashboard-copy{flex-basis:calc(100% - 58px)}.platform-gemini-dashboard-intro>button{width:100%}.platform-gemini-dashboard-panel{padding:0 8px 8px}}
+
+/* Subscription confirmation is deliberately distinct from passive status viewing. */
+.platform-success{padding:13px 15px;margin-bottom:16px;border-radius:10px;background:#e3f7ec;border:1px solid #a5dfba;color:#146943;font-size:12px;font-weight:700}
+.platform-renewal-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:17px 18px;margin:16px 0;border-radius:12px;background:#f2f8f4;border:1px solid #d8eadd}
+.platform-renewal-actions strong{display:block;font-size:12px;color:#184f3e}
+.platform-renewal-actions p{font-size:11px;color:#617c70;line-height:1.65;margin:5px 0 0;max-width:540px}
+.platform-renewal-actions button{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#116b54;border:1px solid #116b54;color:white;border-radius:9px;padding:12px 15px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+.platform-renewal-actions button:hover{background:#0c5340}
+.platform-renewal-actions button:disabled{opacity:.6;cursor:wait}
+@media(max-width:650px){.platform-renewal-actions{align-items:stretch}.platform-renewal-actions button{white-space:normal;width:100%}}
