@@ -1,1 +1,2 @@
-import AuthScreen from "@/components/AuthScreen";export default function Daftar(){return <AuthScreen mode="register"/>}
+import {redirect} from "next/navigation";
+export default function Daftar(){redirect("/masuk")}
