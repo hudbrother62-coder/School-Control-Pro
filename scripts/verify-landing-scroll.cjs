@@ -25,3 +25,15 @@ assert.deepEqual(tourBlend(0,6),[1,0,0,0,0,0]);
 assert.deepEqual(tourBlend(1,6),[0,0,0,0,0,1]);
 assert.ok(Math.abs(tourBlend(.1,6)[0]-.5)<1e-8);
 console.log('Reversible scene blends: passed');
+const {tourCamera}=moduleScope.exports;
+assert.deepEqual(tourCamera(-1,6),tourCamera(0,6));
+assert.deepEqual(tourCamera(2,6),tourCamera(1,6));
+assert.ok(tourCamera(.1,6).scale>tourCamera(0,6).scale+.1,'Scene boundary must create a visible lens zoom');
+for(let i=0;i<=1000;i++){
+ const pose=tourCamera(i/1000,6);
+ assert.ok(pose.scale>=1.04&&pose.scale<=1.16+1e-12,'Lens zoom stays within safe overscan');
+ assert.ok(Math.abs(pose.x)<=1.1&&Math.abs(pose.yaw)<=1.5,'Camera orbit stays restrained');
+ if(i){const previous=tourCamera((i-1)/1000,6);assert.ok(Math.abs(pose.scale-previous.scale)<.003,'Lens pose has no discontinuity at scene boundaries');}
+}
+assert.equal(tourCamera(.4,1).scale,1.04);
+console.log('Camera zoom boundaries and continuous reversible poses: passed');

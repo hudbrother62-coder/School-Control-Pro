@@ -13,3 +13,10 @@ export function tourBlend(progress:number,count:number){
  const blend=t*t*(3-2*t);
  return Array.from({length:count},(_,i)=>i===from?1-blend:i===from+1?blend:0);
 }
+
+/** A zoom-through lens movement at each boundary; poses stay reversible. */
+export function tourCamera(progress:number,count:number){
+ const position=Math.min(1,Math.max(0,progress))*Math.max(0,count-1);
+ const pulse=Math.sin((position%1)*Math.PI)**2;
+ return {scale:1.04+pulse*.12,x:Math.sin(position*Math.PI)*1.1,yaw:Math.sin(position*Math.PI)*1.5};
+}
