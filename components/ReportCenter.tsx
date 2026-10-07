@@ -8,7 +8,7 @@ export default function ReportCenter({role,focus,onRoute}:{schoolId:string;role:
  const reportCatalog:ReportRoute[]=[
   {title:"Laporan Jurnal",caption:"Jurnal harian, jurnal siswa dan rekap bulanan per pengguna.",module:"journals",feature:"Rekap Bulanan",icon:BookOpen,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan Akademik",caption:"Nilai, jurnal, presensi siswa dan rekap kelas.",module:"buku_kerja",feature:"Laporan Lengkap",icon:GraduationCap,formats:"PDF · DOCX · XLSX"},
-  {title:"Laporan Kehadiran",caption:"Kehadiran siswa/kelas dan riwayat periode.",module:"buku_kerja",feature:"Laporan Kelas",icon:ClipboardCheck,formats:"PDF · XLSX"},
+  {title:"Laporan Kehadiran",caption:"Kehadiran siswa/kelas, kelengkapan absensi per hari dan riwayat periode.",module:"buku_kerja",feature:"Laporan Kehadiran",icon:ClipboardCheck,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan Disiplin & Prestasi",caption:"Pelanggaran, prestasi, pembinaan dan tindak lanjut.",module:"disiplin",feature:"Template Laporan",icon:ShieldAlert,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan BK",caption:"Layanan, program, kasus dan tindak lanjut BK.",module:"bk",feature:"Laporan BK",icon:HeartHandshake,formats:"PDF · DOCX"},
   {title:"Laporan Program Kerja",caption:"Program, PIC, progres, bukti, kendala dan rapat.",module:"command",feature:"Laporan Program",icon:ListChecks,formats:"PDF · DOCX · XLSX"},
