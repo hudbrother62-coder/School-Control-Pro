@@ -20,6 +20,7 @@ type Coaching={id:string;student_id:string;reason:string;form:string;result:stri
 type Action={id:string;student_id:string;event_id:string|null;sanction_name_snapshot:string;threshold_points:number;status:string;notes:string|null;due_date:string|null;completed_at:string|null;created_by:string};
 const today=()=>new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Jakarta"});
 const localDateTime=()=>{const d=new Date(Date.now()-new Date().getTimezoneOffset()*60000);return d.toISOString().slice(0,16)};
+const unique=(values:(string|null|undefined)[])=>Array.from(new Set(values.map(v=>String(v||"").trim()).filter(Boolean))).sort((a,b)=>a.localeCompare(b,"id"));
 
 export default function DisciplinePanel({schoolId,userId,role,focus}:{schoolId:string;userId:string;role:Role;focus?:string}){
  const db=useMemo(()=>browserDb(),[]),manager=isAdmin(role);
@@ -81,11 +82,22 @@ export default function DisciplinePanel({schoolId,userId,role,focus}:{schoolId:s
  async function importMaster(){if(!db||!importRows.length)return;await job(async()=>{const rows=importRows.map(r=>({school_id:schoolId,type:masterType,name:String(r.Nama||r.name||"").trim(),category:String(r.Kategori||r.category||"").trim()||null,points:Number(r.Poin||r.points||0),min_points:r.Minimal_Poin?Number(r.Minimal_Poin):null,max_points:r.Maksimal_Poin?Number(r.Maksimal_Poin):null,is_active:true})).filter(r=>r.name);for(const row of rows){const {error:e}=await db.from("sc_discipline_master_items").upsert(row,{onConflict:"school_id,type,name",ignoreDuplicates:true});if(e)throw e}setImportRows([])})}
 
  const list=useRecordList(filteredEvents,x=>studentName(x.student_id)+" "+x.title);
+ const coachingList=useRecordList(coaching,x=>[studentName(x.student_id),x.form,x.reason,x.result,x.notes,x.recorder_name].join(" "),[
+  {key:"status",label:"Status",options:unique(coaching.map(x=>x.status)).map(v=>({value:v,label:v})),matches:(x,v)=>x.status===v},
+  {key:"form",label:"Bentuk pembinaan",options:unique(coaching.map(x=>x.form)).map(v=>({value:v,label:v})),matches:(x,v)=>x.form===v}
+ ]);
+ const actionList=useRecordList(actions,x=>[studentName(x.student_id),x.sanction_name_snapshot,x.status,x.notes,x.due_date].join(" "),[
+  {key:"status",label:"Status",options:unique(actions.map(x=>x.status)).map(v=>({value:v,label:v})),matches:(x,v)=>x.status===v}
+ ]);
+ const masterList=useRecordList(master,x=>[x.name,x.type,x.category,x.description].join(" "),[
+  {key:"type",label:"Jenis",options:[{value:"violation",label:"Pelanggaran"},{value:"achievement",label:"Prestasi"},{value:"sanction",label:"Sanksi"}],matches:(x,v)=>x.type===v},
+  {key:"category",label:"Kategori",options:unique(master.map(x=>x.category)).map(v=>({value:v,label:v})),matches:(x,v)=>x.category===v}
+ ]);
  const canDelete=(id:string)=>{const x=filteredEvents.find(e=>e.id===id);return Boolean(x&&(manager||x.created_by===userId))};
  const collectionTools=<RecordListTools list={list} label="kejadian" showSearch={false} canSelect selectable={canDelete} onRefresh={load} busy={busy} actions={[{key:"delete",label:"Hapus pilihan",description:"Hapus catatan kejadian yang boleh dikelola. Poin dan laporan akan mengikuti perubahan sumber data.",danger:true,eligible:canDelete,run:async id=>{if(!db)throw Error("Database belum terhubung");const {error}=await db.rpc("sc_delete_operational",{p_school:schoolId,p_entity:"discipline_event",p_id:id});if(error)throw error}}]}/>;
  if(tab==="events")return <>
   <section className="panel discipline-page"><div className="sectionhead"><div><span className="eyebrow">{activeKind==="violation"?"KEDISIPLINAN":"PRESTASI SISWA"}</span><h2>{activeKind==="violation"?"Pelanggaran":"Prestasi"}</h2><p className="muted">Pilih siswa dan master kejadian. Kategori serta poin mengikuti Master Data otomatis.</p></div><button className="button" onClick={()=>{resetEvent(activeKind as "violation"|"achievement");setModal("event")}}><Plus size={15}/> Catat {activeKind==="violation"?"Pelanggaran":"Prestasi"}</button></div>
-   <div className="discipline-toolbar"><div className="searchbox"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Cari siswa, kejadian, kategori…"/></div><select value={classFilter} onChange={e=>setClassFilter(e.target.value)}><option value="">Semua kelas</option>{classes.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+   <div className="discipline-toolbar"><div className="searchbox"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Cari siswa, kejadian, kategori…"/></div><div className="discipline-filter-select"><SearchableSelect label="Kelas" value={classFilter} onChange={e=>setClassFilter(e.target.value)}><option value="">Semua kelas</option>{classes.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</SearchableSelect></div></div>
    {collectionTools}
    <div className="discipline-recent-grid">{list.visible.map(x=><article className={"discipline-event-card selectable "+activeKind} key={x.id}>{canDelete(x.id)&&<RecordCheckbox list={list} id={x.id} label={studentName(x.student_id)+" "+x.title} disabled={busy}/>}<div className="discipline-event-icon">{activeKind==="violation"?<AlertTriangle size={18}/>:<Trophy size={18}/>}</div><div className="discipline-event-content"><strong>{studentName(x.student_id)}</strong><span>{x.item_name_snapshot||x.title}</span><small>{eventDate(x)} · {x.category_snapshot||"Tanpa kategori"} · {x.points_snapshot} poin</small>{x.chronology&&<p>{x.chronology}</p>}</div>{(manager||x.created_by===userId)&&<button className="button danger" onClick={()=>void remove("sc_discipline_events",x.id)}>Hapus</button>}</article>)}{!filteredEvents.length&&<div className="empty">Belum ada catatan pada filter ini.</div>}</div>
   </section>
