@@ -31,3 +31,14 @@ Also reproduced focus-induced scrolling inside `overflow:hidden` stage (internal
 - All scene copy and preview text enter and leave with reversible scroll progress, staggered by element. Reduced motion remains static.
 - Mobile browser verified: cap display none, stage scrollTop zero, resting heading opacity 1, outgoing heading opacity 0.073 and translateY -14.831px. Light and dark hero remain readable.
 - TypeScript and pure motion bounds tests passed.
+
+## Continuous school journey (2026-10-07)
+- Replace mutually hidden slide sections with six chapters in native document flow. No snap, wheel interception, scene swapping, or inactive content.
+- One persistent school model: open classrooms with students and teacher, counseling, administration, library garden, playground and entrance. Native scroll follows a single smooth camera arc.
+- Static geometry and people are instanced; one walking figure, capped 30fps and device pixel ratio, pause outside viewport and hidden tabs, full renderer cleanup. Reduced motion retains static camera and readable copy.
+- One matching campus image remains visible if WebGL is unavailable, with continuous reversible tilt/lift/zoom. Browser here has no WebGL; fallback path verified, GPU rendering remains unverified in this environment.
+- Desktop: model column between copy and preview, copy right 413.55px, model left 417.88px, model right 984.05px, preview left 984.03px (rounding boundary); preview padding keeps visible content apart.
+- Mobile: sticky school occupies its own upper area. 390x844, 320x640, 667x375 tested; no horizontal overflow, chapter starts below model, mobile floating nav removed.
+- Native scroll forward/back, chapter jump, theme toggle, searchable facilities catalogue and Escape dismissal verified. Camera fallback tilt +3.38 degrees after scrolling, with same image source; resting heading opacity 1.
+- Application regression suite and TypeScript checks passed. Production build recorded separately after preview route removal.
+- Production build passed (14 routes), no QA route shipped. Landing initial JavaScript 163 kB. Webpack rebuilt after recoverable development-cache warnings.
