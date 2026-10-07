@@ -1,1 +1,2 @@
-import AuthScreen from "@/components/AuthScreen";export default function Masuk(){return <AuthScreen mode="login"/>}
+import AuthScreen from "@/components/AuthScreen";
+export default function Masuk(){return <AuthScreen/>}
