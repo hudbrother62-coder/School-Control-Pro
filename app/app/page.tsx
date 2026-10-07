@@ -6,7 +6,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import type {User} from "@supabase/supabase-js";
-import {LayoutDashboard,Users,Clock3,Activity,Sparkles,MessageSquare,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,X,ChevronRight,Plus,RefreshCw,ReceiptText,CalendarDays,KeyRound,CircleHelp} from "lucide-react";
+import {LayoutDashboard,Users,Clock3,Activity,Sparkles,MessageSquare,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,X,ChevronRight,Plus,RefreshCw,ReceiptText,CalendarDays,KeyRound,CircleHelp,Warehouse} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import WorkspaceNavigation from "@/components/WorkspaceNavigation";
 import {taskHelp} from "@/lib/workspace-help";
@@ -29,6 +29,7 @@ const FinancePanel=dynamic(()=>import("@/components/FinancePanel"),{loading:Pane
 const PayrollPanel=dynamic(()=>import("@/components/PayrollPanel"),{loading:PanelLoading});
 const BKPanel=dynamic(()=>import("@/components/BKPanel"),{loading:PanelLoading});
 const LibraryPanel=dynamic(()=>import("@/components/LibraryPanel"),{loading:PanelLoading});
+const SarprasPanel=dynamic(()=>import("@/components/SarprasPanel"),{loading:PanelLoading});
 const AcademicAdvanced=dynamic(()=>import("@/components/AcademicAdvanced"),{loading:PanelLoading});
 const WorkJournal=dynamic(()=>import("@/components/WorkJournal"),{loading:PanelLoading});
 const WorkHub=dynamic(()=>import("@/components/WorkHub"),{loading:PanelLoading});
@@ -59,7 +60,7 @@ const ReportCenter=dynamic(()=>import("@/components/ReportCenter"),{loading:Pane
 type SchoolAccess={school:School;role:Role};
 type Attendance={id:string;duty_date:string;check_in_at:string|null;check_out_at:string|null;status:string;source:string;user_id:string;notes:string|null};
 type Summary={present_days:number;late_days:number;programs:number;trainings:number;verified_events:number};
-const icons={journals:BookOpen,overview:LayoutDashboard,master:Users,calendar:CalendarDays,reports:ReceiptText,attendance:Clock3,performance:Activity,guru_ai:Sparkles,assistant:MessageSquare,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,library:BookOpen,command:ListChecks,sikas:Wallet,gajian:CreditCard,payslip:ReceiptText,access:KeyRound,settings:Settings,help:CircleHelp};
+const icons={journals:BookOpen,overview:LayoutDashboard,master:Users,calendar:CalendarDays,reports:ReceiptText,attendance:Clock3,performance:Activity,guru_ai:Sparkles,assistant:MessageSquare,kepsek_ai:SchoolIcon,buku_kerja:BookOpen,disiplin:ShieldAlert,bk:HeartHandshake,library:BookOpen,sarpras:Warehouse,command:ListChecks,sikas:Wallet,gajian:CreditCard,payslip:ReceiptText,access:KeyRound,settings:Settings,help:CircleHelp};
 const formatDate=(s:string|null|undefined)=>s?new Date(s).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"}):"—";
 const schoolDay=(tz:string)=>{const p=new Intl.DateTimeFormat("en-US",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());const get=(k:string)=>p.find(x=>x.type===k)?.value||"";return get("year")+"-"+get("month")+"-"+get("day")};
 function feedback(error:unknown){return errorMessage(error)}
