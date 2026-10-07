@@ -185,7 +185,7 @@ export default function Home(){
  {["Agenda Mengajar","Import/Export Excel"].includes(featureFocus)&&<SchoolData mode="academic" schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
  {featureFocus==="Lembar Nilai"&&<GradeBook schoolId={schoolId} userId={user.id} role={role}/>}
  {featureFocus==="Jurnal Mengajar"&&<TeachingJournal schoolId={schoolId} userId={user.id} role={role}/>}
- {["Presensi Siswa","Rekap Bulanan","Laporan Kelas"].includes(featureFocus)&&<AcademicAdvanced schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
+ {["Presensi Siswa","Rekap Bulanan","Laporan Kelas","Laporan Kehadiran"].includes(featureFocus)&&<AcademicAdvanced schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
  </>}
   {module==="disiplin"&&(["Rekap & Laporan","Analitik Disiplin","Arsip Siswa","Import Riwayat","Surat & Dokumen"].includes(featureFocus)?<DisciplineLegacyParity schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>:featureFocus.toLowerCase().includes("template")?<DisciplineReportTemplate schoolId={schoolId}/>:<DisciplinePanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>)}
   {module==="command"&&(["Verifikasi Bukti","Tindak Lanjut Rapat","Laporan Program"].includes(featureFocus)?<CommandLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>:<CommandBoard schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus}/>)}
@@ -197,6 +197,6 @@ export default function Home(){
   </div></main>
   {openMenu&&<div className="mobiledrawer" onClick={e=>{if(e.target===e.currentTarget)setOpenMenu(false)}}><div className="drawer-panel" ref={drawerRef} role="dialog" aria-modal="true" aria-labelledby="drawer-title"><div className="drawer-head"><strong id="drawer-title">Menu sekolah</strong><button className="iconbutton" aria-label="Tutup menu" onClick={()=>setOpenMenu(false)}><X size={20}/></button></div><WorkspaceNavigation {...navProps}/></div></div>}
   <SupportChat key={schoolId} schoolId={schoolId} schoolName={access?.school.name||"Sekolah"} userId={user.id}/>
-  <nav className="bottomnav" aria-label="Navigasi utama">{(["overview","calendar","attendance",visible.some(m=>m.key==="assistant")?"assistant":"help"] as ModuleKey[]).filter((k,i,a)=>visible.some(m=>m.key===k)&&a.indexOf(k)===i).map(k=>{const Icon=icons[k];return <button key={k} className={module===k?"active":""} onClick={()=>choose(k)}><Icon size={20}/>{k==="attendance"?"Presensi":k==="assistant"?"Asisten AI":modules.find(x=>x.key===k)?.label}</button>})}<button onClick={()=>setOpenMenu(true)}><Menu size={20}/>Menu</button></nav>
+  <nav className="bottomnav" aria-label="Navigasi utama">{(["overview","calendar","attendance",visible.some(m=>m.key==="assistant")?"assistant":"help"] as ModuleKey[]).filter((k,i,a)=>visible.some(m=>m.key===k)&&a.indexOf(k)===i).map(k=>{const Icon=icons[k];return <button key={k} className={module===k?"active":""} onClick={()=>choose(k)}><Icon size={20}/>{k==="attendance"?"Check-in":k==="assistant"?"Asisten AI":modules.find(x=>x.key===k)?.label}</button>})}<button onClick={()=>setOpenMenu(true)}><Menu size={20}/>Menu</button></nav>
  </div>;
 }
