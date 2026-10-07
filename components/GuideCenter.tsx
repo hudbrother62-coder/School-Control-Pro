@@ -83,6 +83,7 @@ const extraGuides:{id:string;feature:string;module:ModuleKey;features:string[]}[
  {id:"attendance",feature:"Presensi Guru & Staf",module:"attendance",features:["Presensi Saya","Riwayat Kehadiran","Jadwal & Shift","Izin & Cuti"]},
  {id:"planning",feature:"Perencanaan & Supervisi",module:"kepsek_ai",features:["PBD/EDS","Pusat dokumen","Persetujuan dokumen","Supervisi guru"]},
  {id:"library",feature:"Perpustakaan",module:"library",features:["Dashboard Perpustakaan","Koleksi Buku","Peminjaman","Laporan & Statistik"]},
+ {id:"sarpras",feature:"Sarana & Prasarana",module:"sarpras",features:["Dashboard Sarpras","Inventaris","Permintaan & Peminjaman","Perawatan & Pengadaan","Opname & Laporan"]},
  {id:"performance",feature:"Kinerja & Pengembangan",module:"performance",features:["Bukti Kinerja & Pengembangan","Evaluasi","Tanggapan guru"]},
  {id:"reports",feature:"Laporan & Arsip",module:"reports",features:["Ringkasan Laporan","Template Laporan Sekolah","Arsip Laporan"]},
 ];
@@ -111,6 +112,7 @@ const quickStart:[ModuleKey,string,string,string][]=[
  ["buku_kerja","Jurnal Mengajar","Isi jurnal mengajar","Catat topik, aktivitas, refleksi dan tindak lanjut."],
  ["bk","Kasus & Asesmen","Catat layanan BK","Gunakan kasus dan layanan dengan privasi konselor."],
  ["library","Dashboard Perpustakaan","Kelola perpustakaan","Koleksi, sirkulasi, kunjungan dan laporan dalam satu data."],
+ ["sarpras","Dashboard Sarpras","Kelola sarpras","Inventaris, merek, peminjaman, perawatan, pengadaan dan opname dalam lima menu ringkas."],
  ["sikas","Pemasukan","Catat keuangan","Siapkan kas dan catat transaksi pada tanggal yang tepat."],
  ["assistant","Universal AI Orchestrator","Susun control plan lintas modul","Tulis tujuan; sistem memetakan dependency, risk, approval, dampak dan verifikasi."],
  ["reports","Ringkasan Laporan","Periksa hasil dan laporan","Pilih laporan, periode dan pratinjau sebelum ekspor."],
