@@ -15,4 +15,4 @@ export function bookFrame(progress:number){
 export type BookFrame=ReturnType<typeof bookFrame>;
 
 /** Apply after framing so bounds fitting cannot cancel camera travel. */
-export const bookCameraScale=(zoom:number,portrait=false)=>1-clamp(zoom)*(portrait?.16:.34);
+export const bookCameraScale=(zoom:number,portrait=false)=>1-clamp(zoom)*(portrait?.12:.22);

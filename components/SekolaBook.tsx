@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState,type MutableRefObject} from 'react';
 import {PerspectiveCamera,Vector3} from 'three';
 import {bookFrame,bookCameraScale} from '@/lib/landing-scroll';
+import {makeBookSpread} from '@/lib/book-spreads';
 
 const W=4.05,H=5.4;
 const spreads=['overview','learning','students','management'].map(name=>`/landing/book-${name}.webp`);
@@ -18,21 +19,21 @@ export default function SekolaBook({progress,dark,reduced}:{progress:MutableRefO
   const canvas=canvasRef.current;if(!canvas)return;const ctx=canvas.getContext('2d',{alpha:true});
   if(!ctx){setFailed(true);return;}
   
-  const images:HTMLImageElement[]=[];
+  const images:(HTMLImageElement|HTMLCanvasElement)[]=[];
   const camera=new PerspectiveCamera(36,1,.1,100),vector=new Vector3();
-  let disposed=false,loaded=false,width=0,height=0,ratio=1,rotation=0,lastProgress=-1,lastTheme=!theme.current,animation=0;
+  let disposed=false,loaded=false,width=0,height=0,ratio=1,rotation=0,sceneWidth=0,sceneHeight=0,offsetX=0,lastProgress=-1,lastTheme=!theme.current,animation=0;
   const project=(p:Point):Point=>{
    const cos=Math.cos(rotation),sin=Math.sin(rotation);
    vector.set(p.x*cos-p.y*sin,p.x*sin+p.y*cos,p.z).project(camera);
-   return {x:(vector.x+1)*width/2,y:(1-vector.y)*height/2,z:vector.z};
+   return {x:(vector.x+1)*sceneWidth/2+offsetX,y:(1-vector.y)*sceneHeight/2,z:vector.z};
   };
   const outline=(points:Point[],fill:string,stroke?:string)=>{
    ctx.beginPath();points.forEach((point,index)=>{const p=project(point);if(index)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);});ctx.closePath();ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke();}
   };
   const curve=(x:number)=>.05+.13*Math.exp(-Math.abs(x)*4)+.045*(x/W)**2;
   const vertex=(x:number,y:number,u:number,v:number,z=curve(x)):Vertex=>({x,y,z,u,v});
-  const triangle=(image:HTMLImageElement,vertices:Vertex[])=>{
-   const dest=vertices.map(project),sx=vertices.map(p=>p.u*image.naturalWidth),sy=vertices.map(p=>p.v*image.naturalHeight);
+  const triangle=(image:HTMLImageElement|HTMLCanvasElement,vertices:Vertex[])=>{
+   const dest=vertices.map(project),sx=vertices.map(p=>p.u*image.width),sy=vertices.map(p=>p.v*image.height);
    const det=sx[0]*(sy[1]-sy[2])+sx[1]*(sy[2]-sy[0])+sx[2]*(sy[0]-sy[1]);if(Math.abs(det)<.0001)return;
    const affine=(values:number[])=>[
     (values[0]*(sy[1]-sy[2])+values[1]*(sy[2]-sy[0])+values[2]*(sy[0]-sy[1]))/det,
@@ -46,9 +47,9 @@ export default function SekolaBook({progress,dark,reduced}:{progress:MutableRefO
    if(!winding)return;
    const edges=dest.map((p,i)=>{const q=dest[(i+1)%3],dx=q.x-p.x,dy=q.y-p.y,len=Math.hypot(dx,dy)||1;const nx=winding*dy/len,ny=-winding*dx/len;return {nx,ny,c:nx*p.x+ny*p.y+1};});
    const expanded=edges.map((edge,i)=>{const prev=edges[(i+2)%3],det=prev.nx*edge.ny-edge.nx*prev.ny;if(Math.abs(det)<.00001)return dest[i];return {x:(prev.c*edge.ny-edge.c*prev.ny)/det,y:(prev.nx*edge.c-edge.nx*prev.c)/det};});
-   ctx.save();ctx.beginPath();expanded.forEach((p,index)=>{if(index)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);});ctx.closePath();ctx.clip();ctx.transform(a,b,c,d,e,f);const sx0=Math.max(0,Math.min(...sx)-16),sy0=Math.max(0,Math.min(...sy)-16),sx1=Math.min(image.naturalWidth,Math.max(...sx)+16),sy1=Math.min(image.naturalHeight,Math.max(...sy)+16);ctx.drawImage(image,sx0,sy0,sx1-sx0,sy1-sy0,sx0,sy0,sx1-sx0,sy1-sy0);ctx.restore();
+   ctx.save();ctx.beginPath();expanded.forEach((p,index)=>{if(index)ctx.lineTo(p.x,p.y);else ctx.moveTo(p.x,p.y);});ctx.closePath();ctx.clip();ctx.transform(a,b,c,d,e,f);const sx0=Math.max(0,Math.min(...sx)-16),sy0=Math.max(0,Math.min(...sy)-16),sx1=Math.min(image.width,Math.max(...sx)+16),sy1=Math.min(image.height,Math.max(...sy)+16);ctx.drawImage(image,sx0,sy0,sx1-sx0,sy1-sy0,sx0,sy0,sx1-sx0,sy1-sy0);ctx.restore();
   };
-  const page=(image:HTMLImageElement,side:'left'|'right'|'turn',turn=0)=>{
+  const page=(image:HTMLImageElement|HTMLCanvasElement,side:'left'|'right'|'turn',turn=0)=>{
    const strips=24,triangles:Vertex[][]=[];
    const make=(t:number,y:number,v:number)=>{
     if(side==='left')return vertex((t-1)*W,y,t*.5,v);
@@ -67,18 +68,20 @@ export default function SekolaBook({progress,dark,reduced}:{progress:MutableRefO
    const p=progress.current;if(!loaded||!width||!height||document.hidden)return;
    if(Math.abs(p-lastProgress)<.000001&&theme.current===lastTheme)return;
    const frame=bookFrame(p),next=Math.min(3,frame.chapter+1);
-   camera.aspect=width/height;camera.updateProjectionMatrix();
+   const mobile=width<761&&height>width;
+   sceneWidth=mobile?width:width*(.69+.31*frame.zoom);sceneHeight=mobile?height*(.5+.5*frame.zoom):height;offsetX=width-sceneWidth;
+   camera.aspect=sceneWidth/sceneHeight;camera.updateProjectionMatrix();
    const fit=Math.max(H/2/Math.tan(Math.PI/10),W/camera.aspect/Math.tan(Math.PI/10))*1.12;
-   const portrait=width/height<.8;
+   const portrait=sceneWidth/sceneHeight<.8;
    const target=portrait?frame.pan*W/2:0;
    let distance=fit*(portrait?1-.48*frame.zoom:1);
    const halfWidth=W*(portrait?1-.5*frame.zoom:1)+.2;
-   rotation=-.045+.04*frame.zoom;
+   rotation=-.045+.04*frame.zoom+.018*Math.sin(frame.local*Math.PI*2)*frame.zoom;
    // Fit the projected cover, including perspective, rather than cropping feature edges.
    for(let attempt=0;attempt<5;attempt++){
     camera.position.set(target,-distance*.43,distance*.9);camera.lookAt(target,0,.08);camera.updateMatrixWorld();
     const corners=[[target-halfWidth,-H/2-.2],[target+halfWidth,-H/2-.2],[target-halfWidth,H/2+.2],[target+halfWidth,H/2+.2]].map(([x,y])=>project({x,y,z:.2}));
-    const extent=Math.max(...corners.map(q=>Math.max(Math.abs(q.x-width/2)/(width*.46),Math.abs(q.y-height/2)/(height*.45))));
+    const extent=Math.max(...corners.map(q=>Math.max(Math.abs(q.x-offsetX-sceneWidth/2)/(sceneWidth*.46),Math.abs(q.y-sceneHeight/2)/(sceneHeight*.45))));
     if(extent<=1.005)break;distance*=extent;
    }
    distance*=bookCameraScale(frame.zoom,portrait);
@@ -104,9 +107,9 @@ export default function SekolaBook({progress,dark,reduced}:{progress:MutableRefO
    }
    lastProgress=p;lastTheme=theme.current;
   };
-  const resize=()=>{width=container.clientWidth;height=container.clientHeight;ratio=Math.min(devicePixelRatio,width<760?1.5:2);canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);lastProgress=-1;draw();};
+  const resize=()=>{width=container.clientWidth;height=container.clientHeight;ratio=Math.min(devicePixelRatio,2);canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);lastProgress=-1;draw();};
   const observer=new ResizeObserver(resize);observer.observe(container);resize();
-  Promise.all(spreads.map(async(src,index)=>{const image=new Image();image.src=src;await image.decode();images[index]=image;})).then(()=>{if(!disposed){loaded=true;draw();setReady(true);}}).catch(()=>{if(!disposed)setFailed(true);});
+  Promise.all(spreads.map(async(src,index)=>{const image=new Image();image.src=src;await image.decode();await document.fonts.ready;images[index]=makeBookSpread(image,index);})).then(()=>{if(!disposed){loaded=true;draw();setReady(true);}}).catch(()=>{if(!disposed)setFailed(true);});
   const tick=()=>{if(disposed)return;draw();animation=requestAnimationFrame(tick);};animation=requestAnimationFrame(tick);
   return()=>{disposed=true;cancelAnimationFrame(animation);observer.disconnect();ctx.clearRect(0,0,canvas.width,canvas.height);};
  },[progress,reduced]);

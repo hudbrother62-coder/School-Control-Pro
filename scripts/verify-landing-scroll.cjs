@@ -3,7 +3,7 @@ const fs=require('node:fs');const ts=require('typescript');
 const scope={exports:{}};
 new Function('module','exports',ts.transpileModule(fs.readFileSync('lib/landing-scroll.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText)(scope,scope.exports);
 const {bookFrame,bookCameraScale}=scope.exports;
-assert.equal(bookCameraScale(0),1);assert.ok(bookCameraScale(1)<.7,'Focused camera moves substantially closer after fitting');assert.ok(bookCameraScale(.5)>bookCameraScale(1));
+assert.equal(bookCameraScale(0),1);assert.ok(bookCameraScale(1)<.8,'Focused camera moves substantially closer after fitting');assert.ok(bookCameraScale(.5)>bookCameraScale(1));
 assert.equal(typeof bookFrame,'function','Scroll must control reversible book camera and sheet motion');
 // Catch a page turn while the viewer is still zoomed into feature details.
 assert.equal(bookFrame(0).chapter,0);assert.equal(bookFrame(0).zoom,.65);assert.equal(bookFrame(0).copy,0);

@@ -28,7 +28,7 @@ const catalogue=[
 type Modal='features'|'pricing'|'faq'|null;
 export default function SekolaLanding(){
  const tour=useRef<HTMLDivElement>(null),dialog=useRef<HTMLDialogElement>(null),modalOpener=useRef<HTMLElement|null>(null),progressFill=useRef<HTMLSpanElement>(null);
- const bookProgress=useRef(0);
+ const bookProgress=useRef(0),smoothScroll=useRef<Lenis|null>(null);
  const [chapter,setChapter]=useState(0),[ending,setEnding]=useState(false),[copyVisible,setCopyVisible]=useState(false);
  const [dark,setDark]=useState(true),[reduced,setReduced]=useState(false),[modal,setModal]=useState<Modal>(null),[filter,setFilter]=useState('');
  useEffect(()=>{try{const saved=localStorage.getItem('school-control-theme');if(saved)setDark(saved==='dark');}catch{}const query=matchMedia('(prefers-reduced-motion: reduce)');const change=()=>setReduced(query.matches);change();query.addEventListener('change',change);return()=>query.removeEventListener('change',change);},[]);
@@ -36,7 +36,7 @@ export default function SekolaLanding(){
   const el=tour.current;if(!el)return;
   gsap.registerPlugin(ScrollTrigger);
   if(reduced){bookProgress.current=0;setChapter(0);setEnding(false);return;}
-  const copy=Array.from(el.querySelectorAll<HTMLElement>('.sp-book-copy'));
+  const copy=Array.from(el.querySelectorAll<HTMLElement>('.sp-book-copy:not(.sp-book-outro)'));
   const outro=el.querySelector<HTMLElement>('.sp-book-outro');
   let active=-1,wasEnding=false,wasVisible=true;
   const motion={value:0};
@@ -49,18 +49,20 @@ export default function SekolaLanding(){
    if(wasEnding!==isEnding){wasEnding=isEnding;setEnding(isEnding);}
    copy.forEach((element,index)=>{
     const opacity=index===frame.chapter?frame.copy:0;
-    element.style.opacity=String(opacity);element.style.transform=`translate3d(0,${(1-opacity)*18}px,0)`;
+    element.style.opacity=String(opacity);element.style.transform=`translate3d(0,${(1-opacity)*24}px,0)`;
+    Array.from(element.children).forEach((child,i)=>{const item=child as HTMLElement;const reveal=Math.max(0,Math.min(1,(opacity-i*.07)/(1-i*.07)));item.style.opacity=String(reveal);item.style.transform=`translate3d(0,${(1-reveal)*14}px,0)`;});
    });
    if(outro){outro.style.opacity=String(frame.outro);outro.style.transform=`translate3d(0,${(1-frame.outro)*18}px,0)`;}
    if(progressFill.current)progressFill.current.style.transform=`scaleX(${motion.value})`;
   };
-  const lenis=new Lenis({lerp:.075,smoothWheel:true,syncTouch:false,anchors:true,prevent:node=>!!node.closest('.sp-dialog')});
+  const lenis=new Lenis({lerp:.1,smoothWheel:true,syncTouch:false,anchors:true,prevent:node=>!!node.closest('.sp-dialog')});
+  smoothScroll.current=lenis;
   const tick=(time:number)=>lenis.raf(time*1000);lenis.on('scroll',ScrollTrigger.update);gsap.ticker.add(tick);
   const context=gsap.context(()=>{
-   gsap.to(motion,{value:1,ease:'none',onUpdate:draw,scrollTrigger:{trigger:el,start:'top top',end:'bottom bottom',scrub:.75,invalidateOnRefresh:true}});
+   gsap.to(motion,{value:1,ease:'none',onUpdate:draw,scrollTrigger:{trigger:el,start:'top top',end:'bottom bottom',scrub:.35,invalidateOnRefresh:true}});
    draw();
   },el);
-  return()=>{context.revert();gsap.ticker.remove(tick);lenis.destroy();};
+  return()=>{context.revert();gsap.ticker.remove(tick);smoothScroll.current=null;lenis.destroy();};
  },[reduced]);
  useEffect(()=>{const d=dialog.current;if(!d)return;if(modal){if(!d.open)d.showModal();const original=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=original;};}if(d.open)d.close();modalOpener.current?.focus({preventScroll:true});},[modal]);
  const open=(type:Modal)=>{modalOpener.current=document.activeElement as HTMLElement;setModal(type);setFilter('');};
@@ -69,9 +71,11 @@ export default function SekolaLanding(){
  const toggleTheme=()=>{const next=!dark;setDark(next);try{localStorage.setItem('school-control-theme',next?'dark':'light');}catch{}};
  const goToChapter=(index:number)=>{
   const el=tour.current;if(!el)return;
-  if(reduced){el.querySelectorAll<HTMLElement>('.sp-book-copy')[index]?.scrollIntoView({behavior:'auto'});return;}
+  if(reduced){el.querySelectorAll<HTMLElement>('.sp-book-copy:not(.sp-book-outro)')[index]?.scrollIntoView({behavior:'auto'});return;}
   const top=el.getBoundingClientRect().top+window.scrollY;
-  window.scrollTo({top:top+(el.offsetHeight-window.innerHeight)*(index/4+.025),behavior:'smooth'});
+  const destination=top+(el.offsetHeight-window.innerHeight)*(index/4+.025);
+  if(smoothScroll.current)smoothScroll.current.scrollTo(destination,{duration:1.4});
+  else window.scrollTo({top:destination,behavior:'smooth'});
  };
 
  const matching=catalogue.filter(c=>(c.title+' '+c.roles+' '+c.items.join(' ')).toLowerCase().includes(filter.toLowerCase()));

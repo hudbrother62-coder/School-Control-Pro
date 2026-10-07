@@ -57,7 +57,7 @@
 .sp[data-theme=light]{--sp-bg:#eaf1fb;--sp-text:#142750;--sp-muted:#41577d;--sp-line:#49679c45;--sp-panel:#f7faffed;--sp-panel-soft:#4c6cc410;--sp-accent:#7138bb;--sp-blue:#237bcd}
 
 /* The sticky stage is one continuous book journey. The long document is the camera's travel. */
-.sp-book-story{position:relative;height:2020svh;outline:none}
+.sp-book-story{position:relative;height:1600svh;outline:none}
 .sp-book-stage{position:sticky;top:0;height:100svh;min-height:540px;overflow:hidden;background:var(--sp-bg)}
 .sp-book-canvas{position:absolute;left:31%;right:0;top:70px;bottom:42px;touch-action:pan-y}
 .sp-book-canvas canvas{display:block;width:100%;height:100%}
@@ -105,9 +105,9 @@
 @media(max-height:600px) and (min-width:761px){.sp-book-stage{min-height:0}.sp-header{height:64px}.sp-book-canvas{top:62px;bottom:50px}.sp-book-copy-area{top:21%;bottom:60px}.sp-book-label{font-size:8px;margin-bottom:10px}.sp-book-copy h1,.sp-book-copy h2{font-size:clamp(25px,2.7vw,36px)}.sp-book-copy p{font-size:12px;margin:12px 0 16px}.sp-book-copy .sp-button{min-height:44px;padding:11px 16px;font-size:13px}.sp-book-features{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:16px}.sp-book-features button{font-size:11px;min-height:32px;gap:5px}.sp-book-chapters{bottom:9px;gap:15px}}
 
 /* A focused spread owns the viewport; exterior copy returns with the retreat. */
-.sp:not([data-reduced=true]) .sp-book-canvas{left:calc(31% * (1 - var(--book-focus,1)));}
-@media(max-width:760px) and (min-height:501px){.sp:not([data-reduced=true]) .sp-book-canvas{left:0;height:calc(43svh + 43svh * var(--book-focus,1));}}
-@media(max-width:760px) and (max-height:500px){.sp:not([data-reduced=true]) .sp-book-canvas{left:calc(35% * (1 - var(--book-focus,1)));}}
+.sp:not([data-reduced=true]) .sp-book-canvas{left:0;}
+@media(max-width:760px) and (min-height:501px){.sp:not([data-reduced=true]) .sp-book-canvas{left:0;height:86svh;}}
+@media(max-width:760px) and (max-height:500px){.sp:not([data-reduced=true]) .sp-book-canvas{left:0;}}
 .sp:not([data-reduced=true]) .sp-book-intro{opacity:0;}
 
 .sp-demo{padding:100px max(6%,calc((100vw - 1120px)/2));background:radial-gradient(ellipse at 50% 42%,#6430b522,transparent 65%),var(--sp-bg);text-align:center;border-top:1px solid var(--sp-line)}
@@ -119,3 +119,9 @@
 .sp-demo-placeholder strong{font-size:clamp(18px,2.5vw,30px);letter-spacing:-.03em}.sp-demo-placeholder span{font-size:13px;color:#cbc9e8}
 .sp-demo-play{display:grid;place-items:center;width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#9515e9,#008cff);box-shadow:0 0 50px #773bef55}
 @media(max-width:760px){.sp-demo{padding:70px 6%}.sp-demo-player{border-radius:16px}.sp-demo-play{width:48px;height:48px}.sp-demo-placeholder{gap:8px}.sp-demo-heading p{font-size:14px}}
+
+/* A stable canvas avoids allocating a new bitmap on every scroll frame. */
+.sp-book-stage{background:radial-gradient(ellipse at 65% 50%,#7038b522,transparent 62%),radial-gradient(ellipse at 90% 85%,#168cff15,transparent 55%),var(--sp-bg)}
+.sp[data-theme=light] .sp-book-stage{background:radial-gradient(ellipse at 65% 50%,#d9c6ff88,transparent 65%),radial-gradient(ellipse at 85% 85%,#cbe5ff88,transparent 60%),#f3f4fa}
+.sp-book-copy>*,.sp-book-outro>*{will-change:opacity,transform}
+.sp[data-reduced=true] .sp-book-copy>*{opacity:1!important;transform:none!important;will-change:auto}
