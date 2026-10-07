@@ -103,3 +103,9 @@
 .sp[data-reduced=true] .sp-book-chapters{display:none}
 @media(prefers-reduced-motion:reduce){.sp *{animation:none!important;transition:none!important;scroll-behavior:auto!important}.sp-book-copy{will-change:auto}}
 @media(max-height:600px) and (min-width:761px){.sp-book-stage{min-height:0}.sp-header{height:64px}.sp-book-canvas{top:62px;bottom:50px}.sp-book-copy-area{top:21%;bottom:60px}.sp-book-label{font-size:8px;margin-bottom:10px}.sp-book-copy h1,.sp-book-copy h2{font-size:clamp(25px,2.7vw,36px)}.sp-book-copy p{font-size:12px;margin:12px 0 16px}.sp-book-copy .sp-button{min-height:44px;padding:11px 16px;font-size:13px}.sp-book-features{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:16px}.sp-book-features button{font-size:11px;min-height:32px;gap:5px}.sp-book-chapters{bottom:9px;gap:15px}}
+
+/* A focused spread owns the viewport; exterior copy returns with the retreat. */
+.sp:not([data-reduced=true]) .sp-book-canvas{left:calc(31% * (1 - var(--book-focus,1)));}
+@media(max-width:760px) and (min-height:501px){.sp:not([data-reduced=true]) .sp-book-canvas{left:0;height:calc(43svh + 43svh * var(--book-focus,1));}}
+@media(max-width:760px) and (max-height:500px){.sp:not([data-reduced=true]) .sp-book-canvas{left:calc(35% * (1 - var(--book-focus,1)));}}
+.sp:not([data-reduced=true]) .sp-book-intro{opacity:0;}

@@ -28,7 +28,7 @@ type Modal='features'|'pricing'|'faq'|null;
 export default function SekolaLanding(){
  const tour=useRef<HTMLDivElement>(null),dialog=useRef<HTMLDialogElement>(null),modalOpener=useRef<HTMLElement|null>(null),progressFill=useRef<HTMLSpanElement>(null);
  const bookProgress=useRef(0);
- const [chapter,setChapter]=useState(0),[ending,setEnding]=useState(false),[copyVisible,setCopyVisible]=useState(true);
+ const [chapter,setChapter]=useState(0),[ending,setEnding]=useState(false),[copyVisible,setCopyVisible]=useState(false);
  const [dark,setDark]=useState(true),[reduced,setReduced]=useState(false),[modal,setModal]=useState<Modal>(null),[filter,setFilter]=useState('');
  useEffect(()=>{try{const saved=localStorage.getItem('school-control-theme');if(saved)setDark(saved==='dark');}catch{}const query=matchMedia('(prefers-reduced-motion: reduce)');const change=()=>setReduced(query.matches);change();query.addEventListener('change',change);return()=>query.removeEventListener('change',change);},[]);
  useEffect(()=>{
@@ -41,6 +41,7 @@ export default function SekolaLanding(){
   const motion={value:0};
   const draw=()=>{
    bookProgress.current=motion.value;const frame=bookFrame(motion.value);
+   el.style.setProperty('--book-focus',String(frame.zoom));
    const isEnding=frame.outro>.08,isVisible=frame.copy>.08;
    if(wasVisible!==isVisible){wasVisible=isVisible;setCopyVisible(isVisible);}
    if(active!==frame.chapter){active=frame.chapter;setChapter(active);}

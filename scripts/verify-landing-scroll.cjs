@@ -5,7 +5,7 @@ new Function('module','exports',ts.transpileModule(fs.readFileSync('lib/landing-
 const {bookFrame}=scope.exports;
 assert.equal(typeof bookFrame,'function','Scroll must control reversible book camera and sheet motion');
 // Catch a page turn while the viewer is still zoomed into feature details.
-assert.equal(bookFrame(0).chapter,0);assert.equal(bookFrame(0).zoom,0);assert.equal(bookFrame(0).copy,1);
+assert.equal(bookFrame(0).chapter,0);assert.equal(bookFrame(0).zoom,1);assert.equal(bookFrame(0).copy,0);
 assert.ok(bookFrame(.1).zoom>.98,'Zoom into the first spread before browsing');
 assert.equal(bookFrame(.2).zoom,0,'Return to the full book before the sheet turns');
 assert.ok(bookFrame(.225).turn>0&&bookFrame(.225).turn<1,'Scroll controls intermediate paper curvature');
@@ -18,6 +18,7 @@ for(const boundary of [.25,.5,.75]){
  assert.ok(Math.abs(before.pan-after.pan)<.001,'No camera target jump at the new spread');
  assert.ok(before.lift<.001&&after.lift<.001,'A sheet settles before the next spread');
 }
+for(let i=0;i<=1000;i++){const frame=bookFrame(i/1000);if(frame.zoom>=.3)assert.equal(frame.copy,0,'Outside text must disappear while the book fills the view');}
 let previous=bookFrame(0);
 for(let i=1;i<=10000;i++){
  const p=i/10000,now=bookFrame(p);

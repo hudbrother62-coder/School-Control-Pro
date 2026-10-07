@@ -69,8 +69,18 @@ export default function SekolaBook({progress,dark,reduced}:{progress:MutableRefO
    const frame=bookFrame(p),next=Math.min(3,frame.chapter+1);
    camera.aspect=width/height;camera.updateProjectionMatrix();
    const fit=Math.max(H/2/Math.tan(Math.PI/10),W/camera.aspect/Math.tan(Math.PI/10))*1.12;
-   const distance=fit*(1-frame.zoom*.38),target=frame.pan*1.4;
-   camera.position.set(target+.2*frame.zoom,-distance*.43,distance*.9);camera.lookAt(target,frame.zoom*.1,.08);camera.updateMatrixWorld();rotation=-.045+.04*frame.zoom;
+   const portrait=width/height<.8;
+   const target=portrait?frame.pan*W/2:0;
+   let distance=fit*(portrait?1-.48*frame.zoom:1);
+   const halfWidth=W*(portrait?1-.5*frame.zoom:1)+.2;
+   rotation=-.045+.04*frame.zoom;
+   // Fit the projected cover, including perspective, rather than cropping feature edges.
+   for(let attempt=0;attempt<5;attempt++){
+    camera.position.set(target,-distance*.43,distance*.9);camera.lookAt(target,0,.08);camera.updateMatrixWorld();
+    const corners=[[target-halfWidth,-H/2-.2],[target+halfWidth,-H/2-.2],[target-halfWidth,H/2+.2],[target+halfWidth,H/2+.2]].map(([x,y])=>project({x,y,z:.2}));
+    const extent=Math.max(...corners.map(q=>Math.max(Math.abs(q.x-width/2)/(width*.46),Math.abs(q.y-height/2)/(height*.45))));
+    if(extent<=1.005)break;distance*=extent;
+   }
    ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,width,height);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
    const cover=[{x:-W-.14,y:H/2+.13,z:-.48},{x:W+.14,y:H/2+.13,z:-.48},{x:W+.14,y:-H/2-.13,z:-.48},{x:-W-.14,y:-H/2-.13,z:-.48}];
    ctx.save();ctx.shadowColor=theme.current?'#000000c0':'#233d6745';ctx.shadowBlur=34;ctx.shadowOffsetY=22;outline(cover,'#101831');ctx.restore();
