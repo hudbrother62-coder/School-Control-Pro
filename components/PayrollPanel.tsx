@@ -7,6 +7,9 @@ import {Download,Plus,Trash2} from "lucide-react";
 import DataEntryModal from "@/components/DataEntryModal";
 import {browserDb} from "@/lib/supabase";
 import {csvExport,saveCsv} from "@/lib/csv";
+import {type SheetRows} from "@/lib/excel";
+import BulkExcelImport,{type ExcelImportOption} from "@/components/BulkExcelImport";
+import {cell,norm,numeric,type ImportOutcome} from "@/lib/bulk-import";
 import {issueAndExport,loadReportIdentity,previewOfficialReport,type OfficialReportModel} from "@/lib/report-engine";
 import type {Role,Staff} from "@/lib/modules";
 
@@ -24,6 +27,36 @@ export default function PayrollPanel({schoolId,role,staff,selfOnly=false,focus}:
  const [staffId,setStaffId]=useState(""),[base,setBase]=useState(""),[allowance,setAllowance]=useState("0"),[deduct,setDeduct]=useState("0"),[period,setPeriod]=useState(periodNow()),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[compModal,setCompModal]=useState(false);
  const [selectedPayroll,setSelectedPayroll]=useState(""),[adjLabel,setAdjLabel]=useState(""),[adjKind,setAdjKind]=useState<"earning"|"deduction">("earning"),[adjAmount,setAdjAmount]=useState(""),[adjNote,setAdjNote]=useState("");
  useRealtimeRefresh(schoolId,()=>load());
+
+ const compensationBulkOptions:ExcelImportOption[]=[{value:"compensation",label:"Gaji Pokok Pegawai",example:[{Pegawai_ID:"",Nama_Pegawai:"Contoh Pegawai",Gaji_Pokok:3000000,Tunjangan:250000,Potongan:0}],guide:"Isi Pegawai_ID (dari data pegawai) atau Nama_Pegawai yang unik. Data gaji pegawai yang sudah ada akan diperbarui melalui proses resmi payroll."}];
+ async function importCompensation(kind:string,rows:SheetRows):Promise<ImportOutcome>{
+  if(!manage||!db||kind!=="compensation")throw Error("Hanya pengelola SDM yang bisa mengimpor gaji.");
+  const existing=new Set<string>(),issues:{row:number;reason:string}[]=[],valid:{row:number;staffId:string;base:number;allowance:number;deduct:number}[]=[];
+  for(const [index,r] of rows.entries()){
+   try{
+    const staffKey=cell(r,"Pegawai_ID"),name=cell(r,"Nama_Pegawai");
+    const matches=staff.filter(x=>staffKey?x.id===staffKey:norm(x.name)===norm(name));
+    if(matches.length!==1)throw Error("Pegawai tidak ditemukan atau namanya ganda; gunakan Pegawai_ID.");
+    const key=matches[0].id;
+    if(existing.has(key))throw Error("Pegawai muncul lebih dari sekali di file.");
+    existing.add(key);
+    const base=numeric(r,"Gaji_Pokok",0,0),allowance=numeric(r,"Tunjangan",0,0),deduct=numeric(r,"Potongan",0,0);
+    if(deduct>base+allowance)throw Error("Potongan tidak boleh lebih besar dari total penghasilan.");
+    valid.push({row:index+2,staffId:key,base,allowance,deduct});
+   }catch(e){issues.push({row:index+2,reason:errorMessage(e)});}
+  }
+  let imported=0;
+  for(const line of valid){
+   try{
+    const {error:e}=await db.rpc("sc_save_compensation",{p_school:schoolId,p_staff:line.staffId,p_base:line.base,p_allowance:line.allowance,p_deduction:line.deduct});
+    if(e)throw e;
+    imported++;
+   }catch(e){issues.push({row:line.row,reason:errorMessage(e)});}
+  }
+  await load();
+  return {imported,errors:issues.sort((a,b)=>a.row-b.row)};
+ }
+
  async function load(){if(!db)return;if(manage){const [{data:c},{data:p},{data:a}]=await Promise.all([
   db.from("sc_hr_compensation").select("staff_id,base_salary,allowance,deduction").eq("school_id",schoolId),
   db.from("sc_payroll_records").select("id,staff_id,period,gross,deductions,base_deductions,base_salary,allowances,status,staff_snapshot").eq("school_id",schoolId).order("period",{ascending:false}).limit(300),
@@ -47,6 +80,7 @@ export default function PayrollPanel({schoolId,role,staff,selfOnly=false,focus}:
  async function deleteAdjustment(id:string){if(!confirm("Hapus penyesuaian ini?"))return;await run(()=>rpc("sc_delete_payroll_adjustment",{p_school:schoolId,p_adjustment:id}))}
 
  return <>
+ {showComp&&<BulkExcelImport options={compensationBulkOptions} onImport={importCompensation} disabled={busy}/>}
  {showComp&&<section className="panel"><div className="sectionhead"><div><h2>Komponen Gaji Dasar</h2><p className="muted">Gaji pokok, tunjangan dasar dan potongan dasar. Komponen dinamis dari Gajian Pro ditambahkan lewat menu Komponen Dinamis dan ikut dihitung saat generate payroll.</p></div><button className="button" onClick={()=>{setStaffId("");setBase("0");setAllowance("0");setDeduct("0");setCompModal(true)}}><Plus size={15}/> Tambah Komponen</button></div>{comp.map(x=><div className="entry" key={x.staff_id}><div><strong>{staff.find(s=>s.id===x.staff_id)?.name||"Pegawai"}</strong><small>Pokok {money(x.base_salary)} · Tunjangan {money(x.allowance)} · Potongan {money(x.deduction)}</small></div><div className="flow"><button className="button secondary" onClick={()=>pick(x.staff_id)}>Edit</button><button className="button danger" onClick={()=>{if(confirm("Hapus konfigurasi gaji aktif? Riwayat payroll lama tetap disimpan."))void run(()=>rpc("sc_delete_compensation",{p_school:schoolId,p_staff:x.staff_id}))}}>Hapus</button></div></div>)}{!comp.length&&<div className="empty">Belum ada komponen gaji dasar.</div>}</section>}
  <DataEntryModal open={compModal} onClose={()=>setCompModal(false)} title={staffId?"Edit Komponen Gaji":"Tambah Komponen Gaji"} subtitle="Pilih pegawai lalu isi komponen dasar. Pendapatan/potongan fleksibel dikelola di Komponen Dinamis."><div className="fields"><label className="field full">Pegawai<SearchableSelect label="Pegawai" value={staffId} onChange={e=>pick(e.target.value,false)}><option value="">Pilih SDM</option>{eligible.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</SearchableSelect></label><label className="field">Gaji Pokok<input type="number" min={0} value={base} onChange={e=>setBase(e.target.value)}/></label><label className="field">Tunjangan dasar<input type="number" min={0} value={allowance} onChange={e=>setAllowance(e.target.value)}/></label><label className="field">Potongan dasar<input type="number" min={0} value={deduct} onChange={e=>setDeduct(e.target.value)}/></label></div><div className="modal-actions"><button className="button secondary" type="button" onClick={()=>setCompModal(false)}>Batal</button><button className="button" type="button" disabled={busy||!staffId||Number(base)<0||Number(allowance)<0||Number(deduct)<0||Number(deduct)>Number(base)+Number(allowance)} onClick={()=>void run(async()=>{await rpc("sc_save_compensation",{p_school:schoolId,p_staff:staffId,p_base:Number(base),p_allowance:Number(allowance),p_deduction:Number(deduct)});setCompModal(false)})}>{busy?"Menyimpan…":"Simpan Komponen"}</button></div></DataEntryModal>
  {showPayroll&&<section className="panel"><div className="sectionhead"><div><h2>Proses Payroll Bulanan</h2><p className="muted">Draft menggabungkan komponen dasar + komponen dinamis. Penyesuaian manual per pegawai hanya dapat dilakukan saat status masih draft.</p></div></div><div className="fields"><label className="field">Periode<input type="month" value={period} onChange={e=>{setPeriod(e.target.value);setSelectedPayroll("")}}/></label><div className="flow"><button className="button secondary" disabled={busy||!period||["review","approved","locked","paid"].includes(periodState)} onClick={()=>void run(()=>rpc("sc_generate_payroll",{p_school:schoolId,p_period:period}))}>Buat / Hitung Draft</button>{next[periodState]&&<button className="button" disabled={busy||!canAdvance} onClick={()=>void run(()=>rpc("sc_advance_payroll",{p_school:schoolId,p_period:period,p_next:next[periodState][0]}))}>{next[periodState][1]}</button>}</div></div><div className="banner">Status periode: <strong>{periodState}</strong> · {periodRows.length} pegawai · Bersih {money(sum)}</div>{periodRows.map(p=><div className="entry" key={p.id}><div><strong>{String(p.staff_snapshot?.name||staff.find(s=>s.id===p.staff_id)?.name||"Pegawai")}</strong><small>Pokok {money(p.base_salary)} · Tunjangan {money(p.allowances)} · Bruto {money(p.gross)} · Potongan {money(p.deductions)}</small></div><div className="flow"><strong>{money(Number(p.gross)-Number(p.deductions))}</strong><button className="button secondary" onClick={()=>{setSelectedPayroll(p.id);setAdjLabel("");setAdjAmount("");setAdjNote("")}}>Rincian</button></div></div>)}{periodRows.length>0&&<div className="flow"><button className="button secondary" disabled={busy} onClick={()=>void previewPayroll()}>Preview Draft</button><button className="button secondary" onClick={()=>saveCsv("payroll-"+period+".csv",csvExport(["Periode","Nama","Gaji Pokok","Tunjangan","Bruto","Potongan","Netto","Status"],periodRows.map(x=>[x.period,String(x.staff_snapshot?.name||""),x.base_salary,x.allowances,x.gross,x.deductions,Number(x.gross)-Number(x.deductions),x.status])))}><Download size={14}/> CSV</button><button className="button secondary" disabled={busy||!["locked","paid"].includes(periodState)} onClick={()=>void exportPayroll("xlsx")}>Excel Final</button><button className="button secondary" disabled={busy||!["locked","paid"].includes(periodState)} onClick={()=>void exportPayroll("docx")}>Word Final</button><button className="button" disabled={busy||!["locked","paid"].includes(periodState)} onClick={()=>void exportPayroll("pdf")}>PDF Final</button></div>}</section>}
