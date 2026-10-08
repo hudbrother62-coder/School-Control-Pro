@@ -153,6 +153,27 @@ async function maybeImage(url:string|null|undefined){
  try{const res=await fetch(url);if(!res.ok)throw Error();const data=new Uint8Array(await res.arrayBuffer());if(data.length>5*1024*1024)throw Error();const type=(res.headers.get("content-type")||"").includes("jpeg")?"jpg":"png";if(!(type==="png"&&data[0]===137&&data[1]===80||type==="jpg"&&data[0]===255&&data[1]===216))throw Error();return {data,type}}catch{throw Error("Gambar laporan tidak dapat dimuat. Periksa logo/tanda tangan/stempel atau unggah PNG/JPG melalui Template Laporan Sekolah.")}
 }
 
+function appendDefaultWordLetterhead(children:any[],d:any,identity:ReportIdentity,logo:any){
+ const {Table,TableRow,TableCell,WidthType,AlignmentType,Paragraph,TextRun,ImageRun}=d;
+ const border={style:"nil"};
+ const borders={top:border,bottom:border,left:border,right:border,insideHorizontal:border,insideVertical:border};
+ const details:any[]=[
+  new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:identity.name||"NAMA SEKOLAH",bold:true,size:30})]}),
+  new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:schoolAddress(identity)||"Alamat sekolah belum dilengkapi",size:18})]})
+ ];
+ const contact=schoolContact(identity);
+ if(contact)details.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:contact,size:17})]}));
+ children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},borders,rows:[
+  new TableRow({children:[
+   new TableCell({width:{size:19,type:WidthType.PERCENTAGE},borders,children:[
+    new Paragraph({alignment:AlignmentType.CENTER,children:logo?[new ImageRun({data:logo.data,transformation:{width:70,height:70},type:logo.type})]:[]})
+   ]}),
+   new TableCell({width:{size:81,type:WidthType.PERCENTAGE},borders,children:details})
+  ]})
+ ]}));
+ children.push(new Paragraph({border:{bottom:{style:"double",size:8,color:"111111"}},spacing:{after:240},children:[new TextRun(" ")]}));
+}
+
 export async function downloadOfficialDocx(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
  const d:any=await import("docx");
  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,AlignmentType,HeadingLevel,ImageRun,PageOrientation,Footer,PageNumber}=d;
@@ -161,11 +182,7 @@ export async function downloadOfficialDocx(identity:ReportIdentity,model:Officia
  const signature=settings.show_signature===false?null:await maybeImage(identity.signature_url);
  const stamp=settings.show_stamp===true?await maybeImage(identity.stamp_url):null;
  const children:any[]=[];
- const address=schoolAddress(identity),contact=schoolContact(identity);
- if(logo)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:logo.data,transformation:{width:65,height:65},type:logo.type})]}));
- children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:identity.name||"NAMA SEKOLAH",bold:true,size:30})]}));
- if(address)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:address,size:18})]}));
- if(contact)children.push(new Paragraph({alignment:AlignmentType.CENTER,border:{bottom:{style:"double",size:8,color:"111111"}},spacing:{after:260},children:[new TextRun({text:contact,size:17})]}));
+ appendDefaultWordLetterhead(children,d,identity,logo);
  children.push(new Paragraph({heading:HeadingLevel.HEADING_1,alignment:AlignmentType.CENTER,children:[new TextRun({text:model.title.toUpperCase(),bold:true})]}));
  if(model.subtitle)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(model.subtitle)]}));
  children.push(new Paragraph({spacing:{before:120,after:160},children:[new TextRun({text:"Nomor: "+(documentNumber||"DRAFT / BELUM DITERBITKAN"),bold:true}),new TextRun("   |   Tahun Pelajaran: "+(identity.academic_year||"—"))]}));
@@ -210,9 +227,7 @@ export function printNarrativeDocument(identity:ReportIdentity,doc:{title:string
 export async function downloadNarrativeDocx(identity:ReportIdentity,doc:{title:string;kind:string;content:string;status:string;revision:number}){
  const d:any=await import("docx");const {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,Footer,PageNumber,ImageRun}=d;
  const settings=identity.report_settings||{},logo=settings.show_logo===false?null:await maybeImage(identity.logo_url),signature=settings.show_signature===false?null:await maybeImage(identity.signature_url);const children:any[]=[];
- if(logo)children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:logo.data,transformation:{width:65,height:65},type:logo.type})]}));
- children.push(new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:identity.name||"NAMA SEKOLAH",bold:true,size:30})]}));
- children.push(new Paragraph({alignment:AlignmentType.CENTER,border:{bottom:{style:"double",size:8,color:"111111"}},spacing:{after:260},children:[new TextRun({text:[schoolAddress(identity),schoolContact(identity)].filter(Boolean).join(" · "),size:17})]}));
+ appendDefaultWordLetterhead(children,d,identity,logo);
  children.push(new Paragraph({heading:HeadingLevel.HEADING_1,alignment:AlignmentType.CENTER,children:[new TextRun({text:doc.title.toUpperCase(),bold:true})]}));
  children.push(new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:220},children:[new TextRun(doc.kind+" · Revisi "+doc.revision+" · "+doc.status)]}));
  const beginMarker=new Paragraph("SC_REPORT_BODY_START"),endMarker=new Paragraph("SC_REPORT_BODY_END");children.push(beginMarker);
