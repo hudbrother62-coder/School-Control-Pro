@@ -1,0 +1,6 @@
+{
+  "scope": "Synthetic QA browser fixtures and intercepted APIs, no production writes",
+  "checks": 4008,
+  "errors": [],
+  "failures": []
+}

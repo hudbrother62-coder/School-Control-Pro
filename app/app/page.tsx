@@ -236,6 +236,7 @@ const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendanc
   {module==="payslip"&&<PayrollPanel schoolId={schoolId} role={role} staff={staff} selfOnly focus={featureFocus}/>}
   {module==="bk"&&<BKPanel schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>} 
   {module==="library"&&<LibraryPanel schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}
+  {module==="sarpras"&&<SarprasPanel schoolId={schoolId} userId={user.id} role={role} staff={staff} focus={featureFocus} onRoute={(m,f)=>choose(m,f||"")}/>}
   </div></main>
   {openMenu&&<div className="mobiledrawer" onClick={e=>{if(e.target===e.currentTarget)setOpenMenu(false)}}><div className="drawer-panel" ref={drawerRef} role="dialog" aria-modal="true" aria-labelledby="drawer-title"><div className="drawer-head"><strong id="drawer-title">Menu sekolah</strong><button className="iconbutton" aria-label="Tutup menu" onClick={()=>setOpenMenu(false)}><X size={20}/></button></div><WorkspaceNavigation {...navProps}/></div></div>}
   <SupportChat key={schoolId} schoolId={schoolId} schoolName={access?.school.name||"Sekolah"} userId={user.id}/>
