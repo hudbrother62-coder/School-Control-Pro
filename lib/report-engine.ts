@@ -16,14 +16,18 @@ export type OfficialReportModel={
  moduleKey:string;documentType:string;prefix:string;title:string;subtitle?:string;periodLabel?:string;
  periodStart?:string|null;periodEnd?:string|null;metrics?:ReportMetric[];notes?:string[];sections:ReportSection[];
  signatures?:ReportSignature[];orientation?:"portrait"|"landscape";confidentiality?:"internal"|"restricted"|"confidential";
- status?:"draft"|"review"|"approved"|"issued";footer?:string
+ status?:"draft"|"review"|"approved"|"issued";footer?:string;issuedAt?:string|null
 };
 export type IssuedReport={id:string;document_number:string;issued_at:string};
 
 const esc=(v:unknown)=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]||c));
 const safe=(v:string)=>v.replace(/[^a-zA-Z0-9 _.-]/g,"_").slice(0,100);
 const dateId=(v?:string|null)=>v?new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date(v+"T12:00:00")):"";
-const currentDate=()=>new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric"}).format(new Date());
+const currentDate=(issuedAt?:string|null)=>new Intl.DateTimeFormat("id-ID",{day:"2-digit",month:"long",year:"numeric",timeZone:"Asia/Jakarta"}).format(issuedAt&&Number.isFinite(Date.parse(issuedAt))?new Date(issuedAt):new Date());
+function schoolLetterDate(i:ReportIdentity,issuedAt?:string|null){
+ const location=String(i.report_settings?.letter_city||i.city||"................").trim()||"................";
+ return location+", "+currentDate(issuedAt);
+}
 
 export async function loadReportIdentity(db:any,schoolId:string):Promise<ReportIdentity>{
  const {data,error}=await db.from("sc_schools").select("name,npsn,address,academic_year,education_level,motto,semester,principal_name,principal_nip,phone,email,website,province,city,postal_code,logo_url,signature_url,stamp_url,report_settings").eq("id",schoolId).single();
@@ -63,11 +67,11 @@ function schoolContact(i:ReportIdentity){
 function schoolAddress(i:ReportIdentity){
  return [i.address,i.city,i.province,i.postal_code].filter(Boolean).join(", ");
 }
-function signaturesHtml(identity:ReportIdentity,items:ReportSignature[]){
+function signaturesHtml(identity:ReportIdentity,items:ReportSignature[],issuedAt?:string|null){
  const settings=identity.report_settings||{};
  const showSignature=settings.show_signature!==false;
  const showStamp=settings.show_stamp===true;
- return `<div class="signatures">${items.map((s,idx)=>`<div class="signature"><span>${esc(s.role)}</span><b>${idx===items.length-1&&items.length>1?esc(identity.city||"................")+", "+esc(currentDate()):"&nbsp;"}</b><div class="sign-assets">${idx===items.length-1&&showStamp&&identity.stamp_url?`<img class="stamp" src="${esc(identity.stamp_url)}" alt="">`:""}${idx===items.length-1&&showSignature&&identity.signature_url?`<img src="${esc(identity.signature_url)}" alt="">`:""}</div><strong>${esc(s.name||"........................")}</strong>${s.identifier?`<small>${esc(s.identifier)}</small>`:""}</div>`).join("")}</div>`;
+ return `<div class="signatures">${items.map((s,idx)=>`<div class="signature"><b>${idx===items.length-1?esc(schoolLetterDate(identity,issuedAt)):"&nbsp;"}</b><span>${esc(s.role)}</span><div class="sign-assets">${idx===items.length-1&&showStamp&&identity.stamp_url?`<img class="stamp" src="${esc(identity.stamp_url)}" alt="">`:""}${idx===items.length-1&&showSignature&&identity.signature_url?`<img src="${esc(identity.signature_url)}" alt="">`:""}</div><strong>${esc(s.name||"........................")}</strong>${s.identifier?`<small>${esc(s.identifier)}</small>`:""}</div>`).join("")}</div>`;
 }
 
 export function officialReportHtml(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
@@ -95,8 +99,8 @@ export function officialReportHtml(identity:ReportIdentity,model:OfficialReportM
  <header class="kop"><div>${(identity.report_settings||{}).show_logo!==false&&identity.logo_url?`<img src="${esc(identity.logo_url)}" alt="Logo sekolah">`:""}</div><div><h1>${esc(identity.name||"NAMA SEKOLAH")}</h1><p>${esc(schoolAddress(identity)||"Alamat sekolah belum dilengkapi")}</p><small>${esc(schoolContact(identity))}</small></div><div></div></header>
  <div class="meta"><h2>${esc(model.title)}</h2>${model.subtitle?`<p>${esc(model.subtitle)}</p>`:""}<div class="meta-grid"><span><b>Nomor:</b> ${esc(documentNumber||"DRAFT / BELUM DITERBITKAN")}</span><span><b>Klasifikasi:</b> ${esc(confidentiality)}${(identity.report_settings||{}).classification_code?" · "+esc((identity.report_settings||{}).classification_code):""}</span>${model.periodLabel?`<span><b>Periode:</b> ${esc(model.periodLabel)}</span>`:""}<span><b>Tahun Pelajaran:</b> ${esc(identity.academic_year||"—")}</span></div></div>
  ${metrics?`<div class="metrics">${metrics}</div>`:""}${notes.length?`<div class="notes"><h3>Catatan / Keterangan</h3><ul>${notes.map(n=>`<li>${esc(n)}</li>`).join("")}</ul></div>`:""}${sections}
- ${signaturesHtml(identity,signatures)}
- <footer class="footer"><span>${esc(model.footer||"SekolaPro · Dokumen sekolah")}</span><span class="classification">${esc(confidentiality)}</span></footer>
+ ${signaturesHtml(identity,signatures,model.issuedAt)}
+ <footer class="footer"><span>${esc(model.footer||(identity.name+" · Dokumen administrasi sekolah"))}</span><span class="classification">${esc(confidentiality)}</span></footer>
  </body></html>`;
 }
 
@@ -158,6 +162,7 @@ export async function downloadOfficialDocx(identity:ReportIdentity,model:Officia
  children.push(endMarker);
  const signs=model.signatures?.length?model.signatures:defaultSignatures(identity);
  children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[new TableRow({children:signs.map((s,idx)=>new TableCell({borders:{top:{style:"nil"},bottom:{style:"nil"},left:{style:"nil"},right:{style:"nil"},insideHorizontal:{style:"nil"},insideVertical:{style:"nil"}},children:[
+  new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(idx===signs.length-1?schoolLetterDate(identity,model.issuedAt):"")]}),
   new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(s.role)]}),
   new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:80},children:idx===signs.length-1&&signature?[new ImageRun({data:signature.data,transformation:{width:90,height:55},type:signature.type})]:[new TextRun("\n\n")]}),
   ...(idx===signs.length-1&&stamp?[new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:stamp.data,type:stamp.type,transformation:{width:55,height:55}})]})]:[]),
@@ -167,7 +172,7 @@ export async function downloadOfficialDocx(identity:ReportIdentity,model:Officia
  const footer=new Footer({children:[new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun(model.title.slice(0,70)+" · Halaman "),new TextRun({children:[PageNumber.CURRENT]})]})]});
  const configuredTemplate=(settings.templates as any)?.[model.documentType]||(settings.templates as any)?.[model.moduleKey]||(settings.templates as any)?.default;
  if(!configuredTemplate){children.splice(children.indexOf(beginMarker),1);children.splice(children.indexOf(endMarker),1);}
- if(configuredTemplate)for(const [key,url] of [["LOGO",identity.logo_url],["SIGNATURE",settings.show_signature===false?null:identity.signature_url],["STAMP",settings.show_stamp===true?identity.stamp_url:null]]){const img=await maybeImage(url as string|null);if(img)children.push(new Paragraph({children:[new TextRun("SC_ASSET_"+key),new ImageRun({data:img.data,type:img.type,transformation:{width:65,height:65}})]}));}
+ if(configuredTemplate)for(const [key,url] of [["LOGO",settings.show_logo===false?null:identity.logo_url],["SIGNATURE",settings.show_signature===false?null:identity.signature_url],["STAMP",settings.show_stamp===true?identity.stamp_url:null]]){const img=await maybeImage(url as string|null);if(img)children.push(new Paragraph({children:[new TextRun("SC_ASSET_"+key),new ImageRun({data:img.data,type:img.type,transformation:{width:65,height:65}})]}));}
  const doc=new Document({creator:"SekolaPro",title:model.title,styles:{default:{document:{run:{font:String(settings.body_font||"Times New Roman"),size:Number(settings.body_font_size||11)*2}}}},sections:[{properties:{page:{size:{orientation:model.orientation==="landscape"?PageOrientation.LANDSCAPE:PageOrientation.PORTRAIT},margin:{top:850,right:800,bottom:850,left:800}}},footers:{default:footer},children}]});
  const blob=await templateBlob(await Packer.toBlob(doc),identity,{title:model.title,subtitle:model.subtitle,documentType:model.documentType,moduleKey:model.moduleKey,period:model.periodLabel,number:documentNumber,status:model.status,confidentiality:model.confidentiality});
  const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=safe(model.title+(documentNumber?" "+documentNumber.replaceAll("/","-"):""))+".docx";a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
@@ -175,7 +180,8 @@ export async function downloadOfficialDocx(identity:ReportIdentity,model:Officia
 
 export function narrativeDocumentHtml(identity:ReportIdentity,doc:{title:string;kind:string;content:string;status:string;revision:number}){
  const safeContent=esc(doc.content).replace(/\n/g,"<br>");
- return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc(doc.title)}</title><style>@page{size:A4 portrait;margin:18mm}body{font:12pt Arial;line-height:1.6;color:#111827;margin:0}.kop{text-align:center;border-bottom:4px double #111;padding-bottom:10px;margin-bottom:22px}.kop img{max-height:70px}.kop h1{font-size:17pt;margin:2px}.kop p{font-size:9pt;margin:2px}.title{text-align:center;margin:22px 0}.title h2{font-size:15pt;text-transform:uppercase}.meta{font-size:9pt;color:#475569}.body{white-space:normal;text-align:justify}.sign{margin-left:auto;width:260px;text-align:center;margin-top:45px}.sign img{max-width:95px;max-height:60px}.footer{margin-top:35px;border-top:1px solid #cbd5e1;padding-top:6px;font-size:8pt;color:#64748b}</style></head><body><header class="kop">${identity.logo_url?`<img src="${esc(identity.logo_url)}" alt="">`:""}<h1>${esc(identity.name)}</h1><p>${esc(schoolAddress(identity))}</p><p>${esc(schoolContact(identity))}</p></header><div class="title"><h2>${esc(doc.title)}</h2><div class="meta">${esc(doc.kind)} · Revisi ${doc.revision} · ${esc(doc.status)}</div></div><main class="body">${safeContent}</main><div class="sign"><p>${esc(identity.city||"................")}, ${esc(currentDate())}</p><p>Kepala Sekolah</p>${identity.signature_url?`<img src="${esc(identity.signature_url)}" alt="">`:"<br><br><br>"}<strong>${esc(identity.principal_name||"........................")}</strong>${identity.principal_nip?`<div>NIP. ${esc(identity.principal_nip)}</div>`:""}</div><footer class="footer">SekolaPro · Dokumen sekolah</footer></body></html>`;
+ const settings=identity.report_settings||{};
+ return `<!doctype html><html lang="id"><head><meta charset="utf-8"><title>${esc(doc.title)}</title><style>@page{size:A4 portrait;margin:18mm}body{font:12pt Arial;line-height:1.6;color:#111827;margin:0}.kop{text-align:center;border-bottom:4px double #111;padding-bottom:10px;margin-bottom:22px}.kop img{max-height:70px}.kop h1{font-size:17pt;margin:2px}.kop p{font-size:9pt;margin:2px}.title{text-align:center;margin:22px 0}.title h2{font-size:15pt;text-transform:uppercase}.meta{font-size:9pt;color:#475569}.body{white-space:normal;text-align:justify}.sign{margin-left:auto;width:260px;text-align:center;margin-top:45px}.sign img{max-width:95px;max-height:60px}.footer{margin-top:35px;border-top:1px solid #cbd5e1;padding-top:6px;font-size:8pt;color:#64748b}</style></head><body><header class="kop">${settings.show_logo!==false&&identity.logo_url?`<img src="${esc(identity.logo_url)}" alt="Logo sekolah">`:""}<h1>${esc(identity.name)}</h1><p>${esc(schoolAddress(identity))}</p><p>${esc(schoolContact(identity))}</p></header><div class="title"><h2>${esc(doc.title)}</h2><div class="meta">${esc(doc.kind)} · Revisi ${doc.revision} · ${esc(doc.status)}</div></div><main class="body">${safeContent}</main><div class="sign"><p>${esc(schoolLetterDate(identity))}</p><p>${esc(settings.signer_title||"Kepala Sekolah")}</p>${settings.show_signature!==false&&identity.signature_url?`<img src="${esc(identity.signature_url)}" alt="Tanda tangan">`:"<br><br><br>"}${settings.show_stamp===true&&identity.stamp_url?`<img src="${esc(identity.stamp_url)}" alt="Stempel sekolah">`:""}<strong>${esc(identity.principal_name||"........................")}</strong>${identity.principal_nip?`<div>NIP. ${esc(identity.principal_nip)}</div>`:""}</div><footer class="footer">${esc(identity.name)} · Dokumen administrasi sekolah</footer></body></html>`;
 }
 
 export function printNarrativeDocument(identity:ReportIdentity,doc:{title:string;kind:string;content:string;status:string;revision:number}){
@@ -194,8 +200,8 @@ export async function downloadNarrativeDocx(identity:ReportIdentity,doc:{title:s
  const beginMarker=new Paragraph("SC_REPORT_BODY_START"),endMarker=new Paragraph("SC_REPORT_BODY_END");children.push(beginMarker);
  for(const block of doc.content.split(/\n{2,}/)){const text=block.trim();if(!text)continue;const isHeading=/^(BAB|BAGIAN|LAMPIRAN|[A-Z][A-Z\s/&-]{5,})/.test(text)&&text.length<120;children.push(new Paragraph({heading:isHeading?HeadingLevel.HEADING_2:undefined,alignment:isHeading?AlignmentType.LEFT:AlignmentType.JUSTIFIED,spacing:{after:120},children:[new TextRun({text,bold:isHeading})]}))}
  children.push(endMarker);
- children.push(new Paragraph({alignment:AlignmentType.RIGHT,spacing:{before:300},children:[new TextRun((identity.city||"................")+", "+currentDate())]}));
- children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:"Kepala Sekolah",bold:true})]}));
+ children.push(new Paragraph({alignment:AlignmentType.RIGHT,spacing:{before:300},children:[new TextRun(schoolLetterDate(identity))]}));
+ children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:String(settings.signer_title||"Kepala Sekolah"),bold:true})]}));
  if(signature)children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new ImageRun({data:signature.data,transformation:{width:90,height:55},type:signature.type})]})); else children.push(new Paragraph("\n\n"));
  const stamp=settings.show_stamp===true?await maybeImage(identity.stamp_url):null;if(stamp)children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new ImageRun({data:stamp.data,type:stamp.type,transformation:{width:55,height:55}})]}));
  children.push(new Paragraph({alignment:AlignmentType.RIGHT,children:[new TextRun({text:identity.principal_name||"........................",bold:true,underline:{}})]}));
@@ -210,8 +216,8 @@ export async function downloadNarrativeDocx(identity:ReportIdentity,doc:{title:s
 
 export async function issueAndExport(db:any,schoolId:string,identity:ReportIdentity,model:OfficialReportModel,format:"pdf"|"docx"|"xlsx"){
  const issued=await issueReport(db,schoolId,model,identity);
- if(format==="pdf")printOfficialReport(identity,{...model,status:"issued"},issued.document_number);
- if(format==="docx")await downloadOfficialDocx(identity,{...model,status:"issued"},issued.document_number);
- if(format==="xlsx")await downloadOfficialExcel({...model,status:"issued"},issued.document_number);
+ if(format==="pdf")printOfficialReport(identity,{...model,status:"issued",issuedAt:issued.issued_at},issued.document_number);
+ if(format==="docx")await downloadOfficialDocx(identity,{...model,status:"issued",issuedAt:issued.issued_at},issued.document_number);
+ if(format==="xlsx")await downloadOfficialExcel({...model,status:"issued",issuedAt:issued.issued_at},issued.document_number);
  return issued;
 }
