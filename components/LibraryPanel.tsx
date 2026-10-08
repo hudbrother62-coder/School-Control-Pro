@@ -9,6 +9,7 @@ import SmartSelect from "@/components/SmartSelect";
 import SearchableSelect from "@/components/SearchableSelect";
 import RecordListTools,{useRecordList} from "@/components/RecordListTools";
 import {downloadExcel,type SheetRows} from "@/lib/excel";
+import {issueAndExport,loadReportIdentity,type OfficialReportModel} from "@/lib/report-engine";
 import BulkExcelImport,{type ExcelImportOption} from "@/components/BulkExcelImport";
 import {cell,day,importPreparedRows,norm,numeric,required,type ImportOutcome} from "@/lib/bulk-import";
 import {useRealtimeRefresh} from "@/lib/school-realtime";
@@ -170,13 +171,32 @@ export default function LibraryPanel({schoolId,userId,role,staff,focus,onRoute}:
  async function saveAcquisition(){if(!db||!acqTitle.trim())return;await run(async()=>{const existing=titles.find(x=>x.id===acqTitle||x.title.toLowerCase()===acqTitle.toLowerCase());const {error:e}=await db.from("sc_library_acquisitions").insert({school_id:schoolId,title_id:existing?.id||null,item_title:existing?.title||acqTitle.trim(),supplier:supplier.trim()||null,source_fund:sourceFund.trim()||null,quantity:Number(quantity||1),unit_price:Number(unitPrice||0),ordered_at:orderedAt||null,status:acqStatus,notes:notes.trim()||null,created_by:userId});if(e)throw e;setModal(null);setAcqTitle("");setSupplier("");setQuantity("1");setUnitPrice("0");resetCommon()})}
  async function receiveAcquisition(row:AcquisitionRow){if(!db)return;await run(async()=>{const {error:e}=await db.rpc("sc_library_receive_acquisition",{p_school:schoolId,p_acquisition:row.id});if(e)throw e;},"Pengadaan diterima: judul dan seluruh eksemplar otomatis tercatat.");}
   async function saveMaintenance(){if(!db||!copyId||!maintAction.trim())return;await run(async()=>{const {error:e}=await db.from("sc_library_maintenance").insert({school_id:schoolId,copy_id:copyId,action:maintAction.trim(),condition_before:conditionBefore.trim()||copyById(copyId)?.condition||null,condition_after:conditionAfter.trim()||null,cost:Number(maintCost||0),handled_at:handledAt,notes:notes.trim()||null,created_by:userId});if(e)throw e;if(conditionAfter.trim()){const u=await db.from("sc_library_copies").update({condition:conditionAfter.trim(),updated_at:new Date().toISOString()}).eq("id",copyId).eq("school_id",schoolId);if(u.error)throw u.error}setModal(null);setCopyId("");setMaintAction("Perbaikan ringan");setConditionBefore("");setConditionAfter("");setMaintCost("0");resetCommon()})}
- async function exportReport(){await downloadExcel("laporan-perpustakaan-sekolapro.xlsx",[
+ function reportSheets():{name:string;rows:SheetRows}[]{return [
   {name:"Koleksi",rows:titles.map(x=>({Judul:x.title,Penulis:x.author||"",Penerbit:x.publisher||"",Tahun:x.publication_year||"",ISBN:x.isbn||"",Klasifikasi:x.classification||"",Kategori:x.category||"",Rak:x.shelf_location||"",Sumber:x.source||"",Jumlah_Eksemplar:copies.filter(c=>c.title_id===x.id).length}))},
   {name:"Peminjaman",rows:loanRows.map(x=>({Peminjam:x.borrower_name,Buku:copyLabel(x.copy_id),Pinjam:x.borrowed_at,Jatuh_Tempo:x.due_at,Kembali:x.returned_at||"",Status:statusLabel(x.effective_status)}))},
   {name:"Kunjungan",rows:visits.map(x=>({Pengunjung:x.visitor_name,Jenis:x.visitor_type,Tujuan:x.purpose||"",Waktu:x.visited_at}))},
   {name:"Pengadaan",rows:acquisitions.map(x=>({Judul:x.item_title,Supplier:x.supplier||"",Sumber_Dana:x.source_fund||"",Jumlah:x.quantity,Harga_Satuan:x.unit_price,Status:statusLabel(x.status)}))},
   {name:"Perawatan",rows:maintenance.map(x=>({Buku:x.copy_id?copyLabel(x.copy_id):"",Tindakan:x.action,Kondisi_Sebelum:x.condition_before||"",Kondisi_Sesudah:x.condition_after||"",Biaya:x.cost,Tanggal:x.handled_at}))}
- ])}
+ ];}
+ async function exportReport(){await downloadExcel("laporan-perpustakaan-sekolapro.xlsx",reportSheets());}
+ function officialLibraryModel():OfficialReportModel{
+  const sections=reportSheets().map(sheet=>{
+   const columns=Object.keys(sheet.rows[0]||{Keterangan:"Belum ada data"});
+   return {title:sheet.name,columns,rows:sheet.rows.map(row=>columns.map(c=>String(row[c]??"")))};
+  });
+  return {moduleKey:"library",documentType:"laporan_perpustakaan",prefix:"PERP",title:"Laporan Pengelolaan Perpustakaan",
+   periodLabel:"Kondisi per "+today(),status:"draft",orientation:"landscape",confidentiality:"internal",
+   metrics:[{label:"Judul buku",value:String(titles.length)},{label:"Eksemplar",value:String(copies.length)},
+    {label:"Peminjaman",value:String(loans.length)},{label:"Kunjungan",value:String(visits.length)}],
+   notes:["Rekap berdasarkan data perpustakaan sekolah. Verifikasi inventaris, transaksi pengadaan, dan daftar pinjaman sebelum pengesahan."],sections};
+ }
+ async function exportOfficial(format:"pdf"|"docx"){
+  if(!db||!["owner","principal","vice_principal","staff"].includes(role))return;
+  await run(async()=>{
+   const identity=await loadReportIdentity(db,schoolId);
+   await issueAndExport(db,schoolId,identity,officialLibraryModel(),format);
+  },"Laporan resmi perpustakaan diterbitkan dan masuk arsip.");
+ }
 
  const overdue=loanRows.filter(x=>x.effective_status==="overdue"),activeLoans=loanRows.filter(x=>["active","overdue"].includes(x.effective_status));
  const header=(icon:ReactNode,title:string,desc:string,action?:ReactNode)=><div className="sectionhead"><div className="library-title"><span>{icon}</span><div><h2>{title}</h2><p className="muted">{desc}</p></div></div>{action}</div>;
@@ -239,7 +259,7 @@ export default function LibraryPanel({schoolId,userId,role,staff,focus,onRoute}:
 
  if(focus==="Program & Literasi")return withModals(<section className="panel library-page">{header(<ClipboardList/>,"Program & Literasi","Program perpustakaan tidak dibuat silo. Rencana, PIC, deadline, bukti dan laporan memakai Program & Tugas SekolaPro.")}<div className="library-program-card"><div><strong>Program kerja perpustakaan terhubung dengan manajemen sekolah</strong><p className="muted">Contoh: gerakan literasi, pekan membaca, penambahan koleksi, pameran buku dan evaluasi layanan. Gunakan Program & Tugas agar agenda, PIC, bukti dan laporan tetap satu sumber.</p></div><button className="button" onClick={()=>onRoute("command","Program Kerja")}>Buka Program & Tugas</button></div></section>);
 
- return withModals(<section className="panel library-page">{header(<BarChart3/>,"Laporan & Statistik","Ekspor koleksi, sirkulasi, kunjungan, pengadaan dan perawatan dalam satu workbook.",<button className="button" onClick={()=>void exportReport()}><Download size={15}/> Export Excel</button>)}<div className="grid"><div className="card"><label>Total koleksi</label><strong>{copies.length}</strong></div><div className="card"><label>Peminjaman bulan ini</label><strong>{loans.filter(x=>x.borrowed_at.startsWith(today().slice(0,7))).length}</strong></div><div className="card"><label>Kunjungan bulan ini</label><strong>{visits.filter(x=>x.visited_at.startsWith(today().slice(0,7))).length}</strong></div><div className="card"><label>Nilai pengadaan</label><strong className="library-money">{money(acquisitions.reduce((n,x)=>n+x.quantity*x.unit_price,0))}</strong></div></div><div className="library-report-summary"><strong>Kualitas data</strong><p className="muted">{titles.filter(x=>!x.author||!x.category||!x.classification).length} judul masih memiliki metadata yang belum lengkap · {copies.filter(x=>x.status==="lost").length} eksemplar hilang · {overdue.length} peminjaman terlambat.</p></div></section>);
+ return withModals(<section className="panel library-page">{header(<BarChart3/>,"Laporan & Statistik","Ekspor koleksi, sirkulasi, kunjungan, pengadaan dan perawatan dalam satu workbook.",<div className="flow"><button className="button secondary" disabled={busy} onClick={()=>void exportReport()}><Download size={15}/> Excel</button>{["owner","principal","vice_principal","staff"].includes(role)&&<><button className="button secondary" disabled={busy} onClick={()=>void exportOfficial("docx")}>Word</button><button className="button" disabled={busy} onClick={()=>void exportOfficial("pdf")}>PDF</button></>}</div>)}<div className="grid"><div className="card"><label>Total koleksi</label><strong>{copies.length}</strong></div><div className="card"><label>Peminjaman bulan ini</label><strong>{loans.filter(x=>x.borrowed_at.startsWith(today().slice(0,7))).length}</strong></div><div className="card"><label>Kunjungan bulan ini</label><strong>{visits.filter(x=>x.visited_at.startsWith(today().slice(0,7))).length}</strong></div><div className="card"><label>Nilai pengadaan</label><strong className="library-money">{money(acquisitions.reduce((n,x)=>n+x.quantity*x.unit_price,0))}</strong></div></div><div className="library-report-summary"><strong>Kualitas data</strong><p className="muted">{titles.filter(x=>!x.author||!x.category||!x.classification).length} judul masih memiliki metadata yang belum lengkap · {copies.filter(x=>x.status==="lost").length} eksemplar hilang · {overdue.length} peminjaman terlambat.</p></div></section>);
 
  return withModals(<section className="panel"><div className="empty">Menu perpustakaan belum tersedia.</div></section>);
 }
