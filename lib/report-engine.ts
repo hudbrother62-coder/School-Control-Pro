@@ -45,7 +45,7 @@ export function defaultSignatures(identity:ReportIdentity,preparedBy?:string):Re
 }
 
 export async function issueReport(db:any,schoolId:string,model:OfficialReportModel,identity?:ReportIdentity):Promise<IssuedReport>{
- const snapshot={model,identity:identity||null,generated_at:new Date().toISOString()};
+ const snapshot={model:{...model,status:"issued" as const},identity:identity||null,generated_at:new Date().toISOString()};
  const {data,error}=await db.rpc("sc_issue_report_document",{
   p_school:schoolId,p_module:model.moduleKey,p_type:model.documentType,p_title:model.title,p_snapshot:snapshot,
   p_prefix:model.prefix,p_period_start:model.periodStart||null,p_period_end:model.periodEnd||null
