@@ -34,8 +34,24 @@ export default function ReportTemplateManager({schoolId,role}:{schoolId:string;r
  }
  function download(blob:Blob,name:string){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);}
  const settings=identity?.report_settings||{},templates:Record<string,SchoolTemplate>=settings.templates||{};
+ const readiness=identity?[
+  {label:'Nama sekolah',ok:!!String(identity.name||'').trim()},
+  {label:'NPSN',ok:!!String(identity.npsn||'').trim()},
+  {label:'Alamat sekolah',ok:!!String(identity.address||'').trim()},
+  {label:'Tahun pelajaran',ok:!!String(identity.academic_year||'').trim()},
+  {label:'Nama kepala sekolah',ok:!!String(identity.principal_name||'').trim()},
+  {label:'Kota/kabupaten penandatangan',ok:!!String(settings.letter_city||identity.city||'').trim()},
+  {label:'Logo sekolah (jika ditampilkan)',ok:settings.show_logo===false||!!identity.logo_url},
+  {label:'Tanda tangan (jika diaktifkan)',ok:settings.show_signature===false||!!identity.signature_url},
+  {label:'Stempel (jika diaktifkan)',ok:settings.show_stamp!==true||!!identity.stamp_url}
+ ]:[];
+ const missing=readiness.filter(item=>!item.ok);
  return <section className="panel"><div className="sectionhead"><div><h2>Template Laporan Sekolah</h2><p className="muted">Atur format Word milik sekolah. Excel tetap berupa tabel terpisah untuk pengolahan data.</p></div><button className="button secondary" onClick={()=>void sample()}>Unduh contoh DOCX</button></div>
  <div className="banner"><strong>Mulai dengan 3 langkah</strong><p>Unduh contoh → sesuaikan kop, margin, font dan tata letak di Word → unggah lalu uji hasilnya. Pertahankan placeholder agar isi diganti otomatis. Template khusus jenis laporan diprioritaskan, lalu modul, lalu template semua laporan. Tanpa unggahan, format formal bawaan dipakai.</p><p>Format DOCX yang diunggah berlaku untuk ekspor Word. Preview/cetak PDF memakai layout formal aplikasi dengan identitas yang sama.</p></div>
+ <div className="banner" role="status"><strong>Pemeriksaan identitas dokumen: {readiness.length-missing.length}/{readiness.length} lengkap</strong>
+  <p>{missing.length?'Lengkapi unsur berikut sebelum menerbitkan dokumen resmi: '+missing.map(item=>item.label).join(', ')+'.':'Identitas dasar dan aset yang diaktifkan sudah tersedia. Periksa kembali kewenangan penandatangan, ketentuan dinas setempat, dan kebenaran isi sebelum disahkan.'}</p>
+  <p className="hint">Foto tanda tangan/stempel bukan tanda tangan elektronik tersertifikasi. NIP dicantumkan jika penandatangan memilikinya. Template Word kustom tidak otomatis menjadi tampilan PDF; gunakan ekspor Word dan konversi untuk hasil yang identik.</p>
+ </div>
  <div className="fields"><label className="field">Berlaku untuk<select value={scope} onChange={e=>setScope(e.target.value)}>{scopes.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label className="field">Atau kode jenis laporan/dokumen<input value={scope} onChange={e=>setScope(e.target.value)} placeholder="Misal: buku_kas_umum atau RKT"/><small className="hint">Gunakan kode jenis dari arsip laporan atau jenis dokumen AI. Kosongkan untuk memilih kembali dari daftar.</small></label>{admin&&<label className="field">Upload template DOCX (maks. 5 MB)<input type="file" accept=".docx" disabled={busy||!scope.trim()} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void upload(file);}}/></label>}</div>
  <div className="fields">{['logo','signature','stamp'].map((key,i)=><label className="field" key={key}>{['Logo','Tanda tangan','Stempel'][i]} (PNG/JPG, 2 MB){identity?.[key+'_url']&&<img src={identity[key+'_url']} alt={key} style={{maxWidth:110,maxHeight:80,objectFit:'contain'}}/>}{admin&&<input type="file" accept="image/png,image/jpeg" disabled={busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void upload(file,key);}}/>}</label>)}</div>
  {admin&&<div className="fields"><label className="field">Font isi laporan<input value={settings.body_font||'Times New Roman'} onChange={e=>setIdentity({...identity,report_settings:{...settings,body_font:e.target.value}})}/></label><label className="field">Ukuran font isi (pt)<input type="number" min="8" max="18" value={settings.body_font_size||11} onChange={e=>setIdentity({...identity,report_settings:{...settings,body_font_size:Number(e.target.value)}})}/></label><button className="button" disabled={busy||!identity} onClick={()=>void run(()=>save({body_font:settings.body_font||'Times New Roman',body_font_size:settings.body_font_size||11}))}>Simpan format isi</button></div>}
