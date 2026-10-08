@@ -2,15 +2,16 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const ts=require('typescript');
+const PizZip=require('pizzip');
 function load(file,deps){
  const output=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;
  const mod={exports:{}};
  new Function('require','module','exports',output)(name=>deps[name]||require(name),mod,mod.exports);
  return mod.exports;
 }
-let exported;
+let exported,generatedWord;
 const engine=load('lib/report-engine.ts',{
- '@/lib/report-template-client':{templateBlob:async blob=>blob,resolveReportAssets:async x=>x},
+ '@/lib/report-template-client':{templateBlob:async blob=>{generatedWord=blob;return blob;},resolveReportAssets:async x=>x},
  '@/lib/excel':{downloadExcel:async(name,sheets)=>{exported={name,sheets};}}
 });
 const identity={
@@ -48,5 +49,16 @@ assert.ok(!story.includes('https://example.sch.id/logo.png')&&!story.includes('h
  assert.equal(summary['Tanggal Terbit'],'08 Oktober 2026');
  assert.equal(summary['Nomor Dokumen'],'AKD/001/2026');
  assert.equal(exported.sheets[1].rows[0].Nama,'Anak & Rekan');
- console.log('PASS: date/authority, asset visibility, HTML escaping, official letter identity and Excel issue metadata.');
+ // Real DOCX ZIP roundtrip: verify formal kop/logo column and school-specific signature/date.
+ global.document={createElement:()=>({set href(v){},set download(v){},click(){}})};
+ await engine.downloadOfficialDocx(identity,model,'AKD/001/2026');
+ assert.ok(generatedWord,'DOCX generator should produce binary output');
+ const archive=new PizZip(await generatedWord.arrayBuffer());
+ const docXml=archive.file('word/document.xml').asText();
+ assert.ok(docXml.includes('<w:tbl>'),'default Word document should include a two-column school letterhead');
+ assert.match(docXml,/SD Negeri Contoh/);
+ assert.match(docXml,/Batu, 08 Oktober 2026/,'Word sign-off must preserve original issue date in WIB');
+ assert.match(docXml,/Kepala Satuan Pendidikan/);
+ assert.match(docXml,/w:val="double"/,'school letterhead must carry a formal double border');
+ console.log('PASS: date/authority, asset visibility, HTML escaping, official letter identity, Excel issue metadata and real DOCX ZIP roundtrip.');
 })().catch(err=>{console.error(err);process.exit(1);});
