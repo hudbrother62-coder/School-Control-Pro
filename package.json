@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "tsc --noEmit",
     "test:finance": "node scripts/verify-finance-unified.cjs",
-    "test": "node scripts/verify-isolation.cjs && node scripts/verify-errors.cjs && node scripts/verify-excel.cjs && node scripts/verify-bulk-import.cjs && node scripts/verify-hr-validation.cjs && node scripts/verify-midtrans.cjs && node scripts/verify-staff-import.cjs && node scripts/verify-url.cjs && node scripts/verify-registration.cjs && node scripts/verify-navigation.cjs && node scripts/verify-orchestrator-api.cjs && node scripts/verify-record-lists.cjs && node scripts/verify-report-templates.cjs && node scripts/verify-ai-output.cjs && node scripts/verify-subscription-timeline.cjs && node scripts/verify-journal-analytics.cjs && node scripts/verify-agenda.cjs && node scripts/verify-landing-scroll.cjs && node scripts/verify-support-layout.cjs"
+    "test": "node scripts/verify-isolation.cjs && node scripts/verify-errors.cjs && node scripts/verify-excel.cjs && node scripts/verify-bulk-import.cjs && node scripts/verify-hr-validation.cjs && node scripts/verify-midtrans.cjs && node scripts/verify-staff-import.cjs && node scripts/verify-url.cjs && node scripts/verify-registration.cjs && node scripts/verify-navigation.cjs && node scripts/verify-orchestrator-api.cjs && node scripts/verify-record-lists.cjs && node scripts/verify-report-templates.cjs && node scripts/verify-official-report-format.cjs && node scripts/verify-ai-output.cjs && node scripts/verify-subscription-timeline.cjs && node scripts/verify-journal-analytics.cjs && node scripts/verify-agenda.cjs && node scripts/verify-landing-scroll.cjs && node scripts/verify-support-layout.cjs"
   },
   "dependencies": {
     "@fontsource/plus-jakarta-sans": "^5.3.0",
