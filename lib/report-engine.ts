@@ -111,14 +111,32 @@ export function previewOfficialReport(identity:ReportIdentity,model:OfficialRepo
  return w;
 }
 
-export function printOfficialReport(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
- const w=previewOfficialReport(identity,model,documentNumber);
- setTimeout(()=>{w.focus();w.print()},250);
+async function printWhenAssetsReady(w:Window){
+ const images=Array.from(w.document.images);
+ await Promise.all(images.map(img=>new Promise<void>(resolve=>{
+  if(img.complete){resolve();return;}
+  let finished=false;
+  const done=()=>{if(finished)return;finished=true;img.removeEventListener("load",done);img.removeEventListener("error",done);resolve();};
+  img.addEventListener("load",done,{once:true});img.addEventListener("error",done,{once:true});setTimeout(done,5000);
+ })));
+ if(w.document.fonts)await w.document.fonts.ready;
+ if(!w.closed){w.focus();w.print();}
 }
 
-function toSheets(model:OfficialReportModel):{name:string;rows:SheetRows}[]{
+export function printOfficialReport(identity:ReportIdentity,model:OfficialReportModel,documentNumber?:string){
+ const w=previewOfficialReport(identity,model,documentNumber);
+ void printWhenAssetsReady(w);
+}
+
+function toSheets(model:OfficialReportModel,documentNumber?:string,identity?:ReportIdentity):{name:string;rows:SheetRows}[]{
  const summary:SheetRows=[
+  {Bagian:"Sekolah",Nilai:identity?.name||""},
+  {Bagian:"NPSN",Nilai:identity?.npsn||""},
+  {Bagian:"Tahun Pelajaran",Nilai:identity?.academic_year||""},
   {Bagian:"Judul",Nilai:model.title},
+  {Bagian:"Nomor Dokumen",Nilai:documentNumber||"DRAFT / BELUM DITERBITKAN"},
+  {Bagian:"Tanggal Terbit",Nilai:model.issuedAt?currentDate(model.issuedAt):""},
+  {Bagian:"Status",Nilai:model.status||"draft"},
   {Bagian:"Periode",Nilai:model.periodLabel||""},
   ...(model.metrics||[]).map(x=>({Bagian:x.label,Nilai:x.value})),
   ...(model.notes||[]).map((x,i)=>({Bagian:"Catatan "+(i+1),Nilai:x}))
@@ -126,8 +144,8 @@ function toSheets(model:OfficialReportModel):{name:string;rows:SheetRows}[]{
  return [{name:"Ringkasan",rows:summary},...model.sections.map(s=>({name:s.title.slice(0,31),rows:s.rows.map(row=>Object.fromEntries(s.columns.map((c,i)=>[c,row[i]??""])))}))];
 }
 
-export async function downloadOfficialExcel(model:OfficialReportModel,documentNumber?:string){
- await downloadExcel(safe(model.title+(documentNumber?" "+documentNumber.replaceAll("/","-"):""))+".xlsx",toSheets(model));
+export async function downloadOfficialExcel(model:OfficialReportModel,documentNumber?:string,identity?:ReportIdentity){
+ await downloadExcel(safe(model.title+(documentNumber?" "+documentNumber.replaceAll("/","-"):""))+".xlsx",toSheets(model,documentNumber,identity));
 }
 
 async function maybeImage(url:string|null|undefined){
@@ -186,7 +204,7 @@ export function narrativeDocumentHtml(identity:ReportIdentity,doc:{title:string;
 
 export function printNarrativeDocument(identity:ReportIdentity,doc:{title:string;kind:string;content:string;status:string;revision:number}){
  const w=window.open("","_blank","width=1000,height=800");if(!w)throw Error("Popup diblokir browser.");
- w.document.open();w.document.write(narrativeDocumentHtml(identity,doc));w.document.close();setTimeout(()=>{w.focus();w.print()},250);
+ w.document.open();w.document.write(narrativeDocumentHtml(identity,doc));w.document.close();void printWhenAssetsReady(w);
 }
 
 export async function downloadNarrativeDocx(identity:ReportIdentity,doc:{title:string;kind:string;content:string;status:string;revision:number}){
@@ -218,6 +236,6 @@ export async function issueAndExport(db:any,schoolId:string,identity:ReportIdent
  const issued=await issueReport(db,schoolId,model,identity);
  if(format==="pdf")printOfficialReport(identity,{...model,status:"issued",issuedAt:issued.issued_at},issued.document_number);
  if(format==="docx")await downloadOfficialDocx(identity,{...model,status:"issued",issuedAt:issued.issued_at},issued.document_number);
- if(format==="xlsx")await downloadOfficialExcel({...model,status:"issued",issuedAt:issued.issued_at},issued.document_number);
+ if(format==="xlsx")await downloadOfficialExcel({...model,status:"issued",issuedAt:issued.issued_at},issued.document_number,identity);
  return issued;
 }
