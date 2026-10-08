@@ -9,7 +9,9 @@ import RecordListTools,{useRecordList,RecordCheckbox,type RecordBatchAction} fro
 import DataEntryModal from "@/components/DataEntryModal";
 import {browserDb} from "@/lib/supabase";
 import {csvExport,saveCsv} from "@/lib/csv";
-import {downloadExcel,readExcel} from "@/lib/excel";
+import {downloadExcel,readExcel,type SheetRows} from "@/lib/excel";
+import BulkExcelImport,{type ExcelImportOption} from "@/components/BulkExcelImport";
+import {cell,day,importPreparedRows,norm,numeric,required,type ImportOutcome} from "@/lib/bulk-import";
 import {issueAndExport,loadReportIdentity,previewOfficialReport,type OfficialReportModel} from "@/lib/report-engine";
 type Account={id:string;name:string;kind:string;opening_balance:number};
 type Tx={id:string;occurred_at:string;kind:string;category:string;amount:number;account_id:string|null;description:string|null;number:string|null;activity_name:string|null;proof_path:string|null;status:string};
@@ -61,6 +63,34 @@ export default function FinancePanel({schoolId,userId,focus}:{schoolId:string;us
  async function editEntity(entity:string,id:string,patch:Record<string,unknown>){await run(()=>rpc("sc_update_operational",{p_school:schoolId,p_entity:entity,p_id:id,p_patch:patch}).then(()=>{}))}
  async function deleteEntity(entity:string,id:string){if(!confirm("Hapus data ini? Data bersejarah/terkait pembayaran akan ditolak."))return;await run(()=>rpc("sc_delete_operational",{p_school:schoolId,p_entity:entity,p_id:id}).then(()=>{}))}
  async function reverseTx(id:string){const reason=prompt("Alasan koreksi transaksi");if(!reason)return;await run(()=>rpc("sc_reverse_finance_transaction",{p_school:schoolId,p_tx:id,p_reason:reason}).then(()=>{}))}
+
+ const financeBulkOptions:ExcelImportOption[]=[
+  {value:"bills",label:"Tagihan Siswa",example:[{NIS:"1001",Nama_Tagihan:"SPP",Periode:"2026-10",Jatuh_Tempo:"2026-10-20",Nominal:150000}],guide:"NIS wajib sesuai Data Induk siswa aktif. Tagihan dengan siswa, periode dan judul yang sama tidak ditimpa."},
+  {value:"budget",label:"Anggaran",example:[{Tahun:2026,Sumber_Dana:"BOSP",Kegiatan:"Literasi Sekolah",Kategori:"Operasional",Pagu:1000000,Catatan:""}],guide:"Tahun, kategori, pagu wajib. Kegiatan dan sumber dana bisa disesuaikan dengan sekolah."}
+ ];
+ async function importFinanceBulk(kind:string,rows:SheetRows):Promise<ImportOutcome>{
+  if(!db)throw Error("Database belum terhubung.");
+  const known=kind==="bills"?bills.map(x=>"bill:"+x.student_id+"|"+(x.period||"")+"|"+norm(x.title)):budgets.map(x=>"budget:"+x.fiscal_year+"|"+norm(x.source_fund||"")+"|"+norm(x.activity_name||"")+"|"+norm(x.category));
+  const result=await importPreparedRows(rows,(r)=>{
+   if(kind==="bills"){
+    const nis=required(r,"NIS",40),matches=students.filter(x=>x.nis===nis);
+    if(matches.length!==1)throw Error("NIS siswa tidak ditemukan atau duplikat pada Data Induk.");
+    const title=required(r,"Nama_Tagihan",160),period=required(r,"Periode",7),due=day(r,"Jatuh_Tempo"),value=numeric(r,"Nominal",0,1);
+    if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(period))throw Error("Periode harus YYYY-MM.");
+    if(!due)throw Error("Jatuh_Tempo wajib diisi.");
+    return {key:"bill:"+matches[0].id+"|"+period+"|"+norm(title),payload:{school_id:schoolId,student_id:matches[0].id,title,amount_due:value,due_on:due,period,status:"unpaid",created_by:userId}};
+   }
+   if(kind==="budget"){
+    const year=numeric(r,"Tahun",0,2000,2200);
+    if(!Number.isInteger(year))throw Error("Tahun anggaran harus bulat.");
+    const category=required(r,"Kategori",160),source=cell(r,"Sumber_Dana"),activity=cell(r,"Kegiatan");
+    return {key:"budget:"+year+"|"+norm(source)+"|"+norm(activity)+"|"+norm(category),payload:{school_id:schoolId,fiscal_year:year,source_fund:source||null,activity_name:activity||null,category,amount:numeric(r,"Pagu",0,0),notes:cell(r,"Catatan")||null}};
+   }
+   throw Error("Jenis import tidak dikenali.");
+  },async items=>{const table=kind==="bills"?"sc_student_bills":"sc_budget_lines";const {error:e}=await db.from(table).insert(items);if(e)throw e;},known);
+  await load();return result;
+ }
+
  async function financeTemplate(){await downloadExcel("template-transaksi-keuangan-sekolapro.xlsx",[{name:"Transaksi",rows:[{Tanggal:"2026-09-30",Kas_Rekening:"Kas Tunai",Jenis:"income",Kategori:"Dana Kegiatan",Nominal:1000000,Uraian:"Contoh baris - hapus sebelum import"}]},{name:"Panduan",rows:[{Kolom:"Jenis",Keterangan:"Isi income untuk pemasukan atau expense untuk pengeluaran"},{Kolom:"Kas_Rekening",Keterangan:"Harus sama persis dengan nama kas/rekening yang sudah dibuat"}]}])}
  async function readFinance(file?:File){if(!file)return;try{const rows=await readExcel(file);if(rows.length>500)throw Error("Maksimal 500 transaksi");setFinancePreview(rows as Record<string,unknown>[]);setImportFile(file.name)}catch(e){setError(errorMessage(e))}}
  async function importFinance(){await run(async()=>{const rows=financePreview.map(x=>({occurred_at:String(x.Tanggal||""),account_name:String(x.Kas_Rekening||""),kind:String(x.Jenis||"").toLowerCase(),category:String(x.Kategori||""),amount:Number(x.Nominal||0),description:String(x.Uraian||"")}));await rpc("sc_import_finance_transactions",{p_school:schoolId,p_rows:rows});setFinancePreview([]);setImportFile("")})}
@@ -141,6 +171,7 @@ export default function FinancePanel({schoolId,userId,focus}:{schoolId:string;us
  function financeCheckbox(id:string,label:string){return tab==="dashboard"?null:<RecordCheckbox list={list} id={id} label={label} disabled={busy||(tab==="bill"&&billPaid(id)>0)||(tab==="transaction"&&(payments.some(p=>p.transaction_id===id)||tx.some(t=>t.id===id&&t.category==="student_bill")))}/>;}
  const excelToolbar=(tab==="transaction"||tab==="report")?<section className="panel excel-toolbar"><h2>Import & Template Transaksi</h2><div className="flow"><button className="button secondary" onClick={()=>void financeTemplate()}>Template Import Excel</button><label className="button secondary">Pilih Excel / CSV<input hidden type="file" accept=".xlsx,.xls,.csv,text/csv" onChange={e=>void readFinance(e.currentTarget.files?.[0])}/></label></div>{financePreview.length>0&&<div className="banner"><strong>{importFile} · {financePreview.length} baris</strong><p className="hint">Periksa nama kas/rekening dan nominal sebelum import. File dapat berisi pemasukan dan pengeluaran.</p><button className="button" onClick={()=>void importFinance()} disabled={busy}>Konfirmasi Import</button></div>}</section>:null;
  return <>
+  {(tab==="bill"||tab==="budget")&&<BulkExcelImport key={tab} options={financeBulkOptions.filter(x=>tab==="bill"?x.value==="bills":x.value==="budget")} onImport={importFinanceBulk} disabled={busy}/>}
   {excelToolbar}
   <div className="grid"><div className="card"><label>Pemasukan tercatat</label><strong style={{fontSize:21}}>{money(totals?.income||0)}</strong></div><div className="card"><label>Pengeluaran</label><strong style={{fontSize:21}}>{money(totals?.expense||0)}</strong></div><div className="card"><label>Saldo kas keseluruhan</label><strong style={{fontSize:21}}>{money((totals?.opening||0)+(totals?.income||0)-(totals?.expense||0))}</strong></div><div className="card"><label>Tagihan belum dibayar</label><strong style={{fontSize:21}}>{money((totals?.billed||0)-(totals?.paid||0))}</strong></div></div>
   {tab==="dashboard"&&<section className="panel"><h2>Ringkasan Keuangan</h2><p className="muted">Saldo tiap kas dan transaksi terbaru. Kelola rekening melalui Kas/Rekening; catat transaksi melalui Pemasukan atau Pengeluaran.</p><h3>Saldo per kas / rekening</h3>{balances.map(b=><div className="entry" key={b.account_id}><strong>{b.account_name}</strong><b>{money(b.balance)}</b></div>)}{!balances.length&&<div className="empty">Buat kas atau rekening terlebih dahulu.</div>}<h3 style={{marginTop:20}}>Transaksi terbaru</h3>{tx.slice(0,8).map(t=><div className="entry" key={t.id}>{financeCheckbox(t.id,t.category)}<div className="record-main"><strong>{t.category}</strong><small>{t.occurred_at} · {t.kind==="income"?"Pemasukan":"Pengeluaran"}</small></div><b>{money(t.amount)}</b></div>)}{!tx.length&&<div className="empty">Belum ada transaksi keuangan.</div>}</section>}

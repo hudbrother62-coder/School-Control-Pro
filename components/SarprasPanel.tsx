@@ -4,7 +4,9 @@ import {Boxes,Building2,ClipboardCheck,Download,MoveRight,PackagePlus,Plus,Rotat
 import {browserDb} from "@/lib/supabase";
 import {readAllRows} from "@/lib/read-all-rows";
 import {errorMessage} from "@/lib/error-message";
-import {downloadExcel} from "@/lib/excel";
+import {downloadExcel,type SheetRows} from "@/lib/excel";
+import BulkExcelImport,{type ExcelImportOption} from "@/components/BulkExcelImport";
+import {cell,day,importPreparedRows,norm,numeric,required,type ImportOutcome} from "@/lib/bulk-import";
 import {useRealtimeRefresh} from "@/lib/school-realtime";
 import DataEntryModal from "@/components/DataEntryModal";
 import SmartSelect from "@/components/SmartSelect";
@@ -52,6 +54,50 @@ export default function SarprasPanel({schoolId,userId,role,staff,focus,onRoute}:
  const [procType,setProcType]=useState<"asset"|"consumable">("asset"),[procName,setProcName]=useState(""),[procBrand,setProcBrand]=useState(""),[procModel,setProcModel]=useState(""),[procCategory,setProcCategory]=useState(""),[procVendor,setProcVendor]=useState(""),[procQty,setProcQty]=useState("1"),[procUnit,setProcUnit]=useState("unit"),[procPrice,setProcPrice]=useState("0"),[fundSource,setFundSource]=useState("Dana sekolah"),[orderedAt,setOrderedAt]=useState(today());
  const [stocktakeTitle,setStocktakeTitle]=useState(""),[stocktakeRoom,setStocktakeRoom]=useState(""),[countRow,setCountRow]=useState<StocktakeItem|null>(null),[countQty,setCountQty]=useState(""),[observedCondition,setObservedCondition]=useState(""),[countResult,setCountResult]=useState("matched");
  const [moveItemId,setMoveItemId]=useState(""),[moveRoomId,setMoveRoomId]=useState(""),[moveReason,setMoveReason]=useState("");
+
+
+ const sarprasImportOptions:ExcelImportOption[]=[
+  {value:"rooms",label:"Ruangan",example:[{Kode:"CONTOH-R01",Nama:"Contoh Ruang",Gedung:"A",Lantai:"1",Kapasitas:30,Kondisi:"Baik",Catatan:""}],guide:"Kode ruangan wajib unik. Impor ruangan sebelum barang agar kolom Ruangan dapat dikenali."},
+  {value:"items",label:"Inventaris / Stok",example:[{Jenis:"asset",Nama:"Contoh Laptop",Merek:"Lokal",Model:"",Kategori:"Komputer & TIK",Kode_Inventaris:"INV-001",Nomor_Seri:"",Ruangan:"CONTOH-R01",Jumlah:1,Satuan:"unit",Minimum_Stok:0,Kondisi:"Baik",Tanggal_Masuk:"2026-10-08",Sumber:"Pembelian Sekolah",Harga:0,Penanggung_Jawab:"",Catatan:""}],guide:"Jenis = asset / consumable. Ruangan memakai kode ruangan yang sudah ada. Kode inventaris aset boleh kosong, tetapi jika ada harus unik."},
+  {value:"procurements",label:"Pengadaan Sarpras",example:[{Jenis:"asset",Nama:"Contoh Meja",Merek:"Lokal",Model:"",Kategori:"Mebelair",Vendor:"",Jumlah:2,Satuan:"unit",Harga_Satuan:100000,Sumber_Dana:"Dana sekolah",Tanggal:"2026-10-08",Catatan:""}],guide:"Status pengadaan baru adalah requested. Penerimaan barang harus dilakukan melalui alur Terima & Inventaris."},
+  {value:"maintenance",label:"Work Order Perawatan",example:[{Kode_Inventaris:"INV-001",Nama_Barang:"",Masalah:"Contoh Kerusakan",Tindakan:"Pemeriksaan",Vendor:"",Biaya:0,Prioritas:"normal",Jatuh_Tempo:"2026-10-08",Catatan:""}],guide:"Isi Kode_Inventaris yang sudah ada; alternatif Nama_Barang jika namanya unik. Prioritas: low, normal, high, urgent."}
+ ];
+ async function importSarpras(kind:string,rows:SheetRows):Promise<ImportOutcome>{
+  if(!db||(!canManage&&!(kind==="procurements"&&canProcure)))throw Error("Akses import Sarpras ditolak.");
+  const kindOf=(r:Record<string,unknown>)=>{const value=norm(cell(r,"Jenis"));if(value==="asset"||value==="aset")return "asset";if(value==="consumable"||value==="habis pakai")return "consumable";throw Error("Jenis harus asset atau consumable.");};
+  const known=kind==="rooms"?rooms.map(x=>"room:"+norm(x.code)):kind==="items"?items.filter(x=>x.inventory_code).map(x=>"item:"+norm(x.inventory_code||"")):[];
+  const result=await importPreparedRows(rows,(r,line)=>{
+   if(kind==="rooms"){
+    const code=required(r,"Kode",50),name=required(r,"Nama",160),capacity=numeric(r,"Kapasitas",0,0,100000);
+    if(!Number.isInteger(capacity))throw Error("Kapasitas ruangan harus bilangan bulat.");
+    return {key:"room:"+code,payload:{school_id:schoolId,code,name,building:cell(r,"Gedung")||null,floor:cell(r,"Lantai")||null,capacity:capacity||null,condition:cell(r,"Kondisi")||"Baik",status:"active",notes:cell(r,"Catatan")||null}};
+   }
+   if(kind==="items"){
+    const type=kindOf(r),name=required(r,"Nama",200),brand=required(r,"Merek",160),code=cell(r,"Kode_Inventaris"),serial=cell(r,"Nomor_Seri"),location=cell(r,"Ruangan"),custodian=cell(r,"Penanggung_Jawab");
+    const matchRoom=location?rooms.filter(x=>norm(x.code)===norm(location)||norm(x.name)===norm(location)):[];
+    if(location&&matchRoom.length!==1)throw Error("Ruangan tidak ditemukan atau ambigu: "+location);
+    const matchStaff=custodian?staff.filter(x=>norm(x.name)===norm(custodian)||x.id===custodian):[];
+    if(custodian&&matchStaff.length!==1)throw Error("Penanggung jawab tidak ditemukan atau ganda.");
+    const qty=numeric(r,"Jumlah",1,0,1000000),minStock=numeric(r,"Minimum_Stok",0,0,1000000);
+    if(!Number.isInteger(qty)||!Number.isInteger(minStock))throw Error("Jumlah dan minimum stok harus bilangan bulat.");
+    return {key:code?"item:"+code:"item-row:"+line,payload:{school_id:schoolId,item_type:type,name,brand,model:cell(r,"Model")||null,category:cell(r,"Kategori")||null,inventory_code:type==="asset"?code||null:null,serial_number:type==="asset"?serial||null:null,room_id:matchRoom[0]?.id||null,unit:cell(r,"Satuan")||"unit",quantity:qty,min_stock:type==="consumable"?minStock:0,condition:cell(r,"Kondisi")||"Baik",status:type==="asset"?"available":"active",acquired_at:day(r,"Tanggal_Masuk"),acquisition_source:cell(r,"Sumber")||null,acquisition_price:numeric(r,"Harga"),custodian_staff_id:matchStaff[0]?.id||null,notes:cell(r,"Catatan")||null}};
+   }
+   if(kind==="procurements"){
+    const type=kindOf(r),name=required(r,"Nama",200),brand=required(r,"Merek",160),qty=numeric(r,"Jumlah",1,1,1000000);
+    if(!Number.isInteger(qty))throw Error("Jumlah pengadaan harus bilangan bulat.");
+    return {key:"procurement:"+line,payload:{school_id:schoolId,item_type:type,item_name:name,brand,model:cell(r,"Model")||null,category:cell(r,"Kategori")||null,vendor:cell(r,"Vendor")||null,quantity:qty,unit:cell(r,"Satuan")||"unit",unit_price:numeric(r,"Harga_Satuan"),fund_source:cell(r,"Sumber_Dana")||null,status:"requested",ordered_at:day(r,"Tanggal"),notes:cell(r,"Catatan")||null,created_by:userId}};
+   }
+   if(kind==="maintenance"){
+    const code=cell(r,"Kode_Inventaris"),name=cell(r,"Nama_Barang"),matches=items.filter(x=>(code&&norm(x.inventory_code||"")===norm(code))||(!code&&name&&norm(x.name)===norm(name)));
+    if(matches.length!==1)throw Error("Barang perawatan tidak ditemukan atau ambigu.");
+    const priority=norm(cell(r,"Prioritas")||"normal");
+    if(!["low","normal","high","urgent"].includes(priority))throw Error("Prioritas tidak dikenal.");
+    return {key:"maintenance:"+line,payload:{school_id:schoolId,item_id:matches[0].id,issue:required(r,"Masalah",500),action:cell(r,"Tindakan")||null,vendor:cell(r,"Vendor")||null,cost:numeric(r,"Biaya"),priority,status:"open",due_at:day(r,"Jatuh_Tempo"),notes:cell(r,"Catatan")||null,created_by:userId}};
+   }
+   throw Error("Jenis impor tidak didukung.");
+  },async payload=>{const table=kind==="rooms"?"sc_sarpras_rooms":kind==="items"?"sc_sarpras_items":kind==="procurements"?"sc_sarpras_procurements":"sc_sarpras_maintenance";const {error:e}=await db.from(table).insert(payload);if(e)throw e;},known);
+  await load();return result;
+ }
 
  async function load(){
   if(!db)return;
@@ -235,5 +281,5 @@ export default function SarprasPanel({schoolId,userId,role,staff,focus,onRoute}:
   body=<section className="panel sarpras-page">{header(<ClipboardCheck/>,"Opname & Laporan","Opname memakai snapshot inventaris. Selisih menjadi temuan review dan tidak mengubah data utama otomatis.",<div className="flow"><button className="button secondary" onClick={()=>void exportAll()}><Download size={15}/> Export Excel</button><button className="button" disabled={!canManage} onClick={()=>{setStocktakeTitle("");setStocktakeRoom("");clearMessages();setModal("stocktake")}}><Plus size={15}/> Mulai Opname</button></div>)}<RecordListTools list={stocktakeList} label="sesi opname"/>{stocktakeList.visible.map(x=><button type="button" className={"sarpras-stocktake "+(activeStocktake?.id===x.id?"active":"")} key={x.id} onClick={()=>setSelectedStocktake(x.id)}><span><strong>{x.title}</strong><small>{roomNameOf(x.room_id)} · {label(x.status)} · {stocktakeItems.filter(i=>i.stocktake_id===x.id&&i.result!=="unchecked").length}/{stocktakeItems.filter(i=>i.stocktake_id===x.id).length} diperiksa</small></span>{canManage&&x.status==="active"&&stocktakeItems.filter(i=>i.stocktake_id===x.id&&i.result==="unchecked").length===0&&<span className="pill" onClick={e=>{e.stopPropagation();void completeStocktake(x)}}>Selesaikan</span>}</button>)}{activeStocktake&&<div className="sarpras-opname-detail"><div className="sectionhead"><div><h3>{activeStocktake.title}</h3><p className="muted">Pilih “Cocok” untuk konfirmasi cepat atau catat temuan bila ada selisih.</p></div></div><RecordListTools list={stocktakeRowList} label="item opname"/>{stocktakeRowList.visible.map(x=><div className="entry" key={x.id}><div><strong>{itemLabel(x.item_id)}</strong><small>Sistem: {x.expected_quantity} · {x.expected_condition||"—"} | Fisik: {x.counted_quantity??"belum"} · {x.observed_condition||"belum"}</small></div><div className="flow"><span className="pill">{label(x.result)}</span>{canManage&&activeStocktake.status==="active"&&x.result==="unchecked"&&<><button className="button secondary" onClick={()=>void markMatched(x)}>Cocok</button><button className="button" onClick={()=>{setCountRow(x);setCountQty(String(x.expected_quantity));setObservedCondition(x.expected_condition||"Baik");setCountResult("matched");setNotes("");setModal("count")}}>Catat</button></>}</div></div>)}</div>}</section>;
  }
 
- return <>{body}{modals}{error&&<div className="banner error" role="alert">{error}</div>}{ok&&<div className="banner success" role="status">{ok}</div>}</>;
+ return <>{((focus==="Inventaris"&&canManage)||(focus==="Perawatan & Pengadaan"&&(canManage||canProcure)))&&<BulkExcelImport options={sarprasImportOptions.filter(x=>canManage||x.value==="procurements")} onImport={importSarpras} disabled={busy}/>} {body}{modals}{error&&<div className="banner error" role="alert">{error}</div>}{ok&&<div className="banner success" role="status">{ok}</div>}</>;
 }

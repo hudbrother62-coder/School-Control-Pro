@@ -8,7 +8,9 @@ import DataEntryModal from "@/components/DataEntryModal";
 import SmartSelect from "@/components/SmartSelect";
 import SearchableSelect from "@/components/SearchableSelect";
 import RecordListTools,{useRecordList} from "@/components/RecordListTools";
-import {downloadExcel} from "@/lib/excel";
+import {downloadExcel,type SheetRows} from "@/lib/excel";
+import BulkExcelImport,{type ExcelImportOption} from "@/components/BulkExcelImport";
+import {cell,day,importPreparedRows,norm,numeric,required,type ImportOutcome} from "@/lib/bulk-import";
 import {useRealtimeRefresh} from "@/lib/school-realtime";
 import type {ModuleKey,Role,Staff} from "@/lib/modules";
 
@@ -41,6 +43,49 @@ export default function LibraryPanel({schoolId,userId,role,staff,focus,onRoute}:
  const [purpose,setPurpose]=useState("Membaca"),[visitedAt,setVisitedAt]=useState(()=>new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,16));
  const [acqTitle,setAcqTitle]=useState(""),[supplier,setSupplier]=useState(""),[sourceFund,setSourceFund]=useState("Dana sekolah"),[quantity,setQuantity]=useState("1"),[unitPrice,setUnitPrice]=useState("0"),[orderedAt,setOrderedAt]=useState(today()),[acqStatus,setAcqStatus]=useState("requested");
  const [maintAction,setMaintAction]=useState("Perbaikan ringan"),[conditionBefore,setConditionBefore]=useState(""),[conditionAfter,setConditionAfter]=useState(""),[maintCost,setMaintCost]=useState("0"),[handledAt,setHandledAt]=useState(today());
+
+
+ const libraryImportOptions:ExcelImportOption[]=[
+  {value:"titles",label:"Judul / Katalog Buku",example:[{Judul:"Contoh Judul Buku",Penulis:"Penulis",Penerbit:"Penerbit",Tahun:2025,ISBN:"",Klasifikasi:"",Kategori:"Buku Pelajaran",Rak:"A-01",Sumber:"Pembelian Sekolah",Harga:0,Catatan:""}],guide:"Judul wajib. ISBN tidak boleh sama dengan koleksi yang sudah ada."},
+  {value:"copies",label:"Eksemplar Buku",example:[{Judul:"Contoh Judul Buku",Kode_Inventaris:"PERP-001",Barcode:"",Kondisi:"Baik",Tanggal_Masuk:"2026-10-08",Catatan:""}],guide:"Judul harus sudah ada di katalog. Kode inventaris wajib unik. Impor judul dahulu jika masih kosong."},
+  {value:"visits",label:"Kunjungan Perpustakaan",example:[{Nama_Pengunjung:"Contoh Pengunjung",Jenis:"other",NIS:"",Tujuan:"Membaca",Tanggal:"2026-10-08",Catatan:""}],guide:"Jenis: student, staff, atau other. Untuk student, NIS wajib cocok dengan Data Induk."},
+  {value:"acquisitions",label:"Pengadaan Buku",example:[{Judul:"Contoh Judul Buku",Supplier:"",Sumber_Dana:"Dana sekolah",Jumlah:1,Harga_Satuan:0,Tanggal:"2026-10-08",Catatan:""}],guide:"Impor sebagai pengadaan baru (requested). Penerimaan fisik menggunakan tombol Terima agar stok tercatat."}
+ ];
+ async function importLibrary(kind:string,rows:SheetRows):Promise<ImportOutcome>{
+  if(!db||!["owner","principal","vice_principal","staff"].includes(role))throw Error("Tidak diizinkan mengimpor data perpustakaan.");
+  const findTitle=(name:string)=>{const matches=titles.filter(x=>norm(x.title)===norm(name));if(matches.length!==1)throw Error("Judul buku harus sudah ada dan unik di katalog: "+name);return matches[0];};
+  const existing=kind==="titles"?titles.map(x=>"title:"+norm(x.title)+"|"+norm(x.author||"")):kind==="copies"?copies.map(x=>"copy:"+norm(x.inventory_code)):kind==="acquisitions"?[]:[];
+  const result=await importPreparedRows(rows,(r,line)=>{
+   if(kind==="titles"){
+    const name=required(r,"Judul",240),author=cell(r,"Penulis"),isbn=cell(r,"ISBN");
+    if(isbn&&titles.some(x=>norm(x.isbn||"")===norm(isbn)))throw Error("ISBN sudah ada pada katalog.");
+    const year=numeric(r,"Tahun",0,0,2200),price=numeric(r,"Harga");
+    if(year!==0&&year<1000)throw Error("Tahun terbit tidak valid.");
+    return {key:"title:"+norm(name)+"|"+norm(author),payload:{school_id:schoolId,title:name,author:author||null,publisher:cell(r,"Penerbit")||null,publication_year:year||null,isbn:isbn||null,classification:cell(r,"Klasifikasi")||null,category:cell(r,"Kategori")||null,shelf_location:cell(r,"Rak")||null,source:cell(r,"Sumber")||null,purchase_price:price,notes:cell(r,"Catatan")||null}};
+   }
+   if(kind==="copies"){
+    const title=findTitle(required(r,"Judul",240)),code=required(r,"Kode_Inventaris",80),barcode=cell(r,"Barcode");
+    if(barcode&&copies.some(x=>norm(x.barcode||"")===norm(barcode)))throw Error("Barcode sudah terdaftar.");
+    return {key:"copy:"+code,payload:{school_id:schoolId,title_id:title.id,inventory_code:code,barcode:barcode||null,condition:cell(r,"Kondisi")||"Baik",status:"available",acquired_at:day(r,"Tanggal_Masuk"),notes:cell(r,"Catatan")||null}};
+   }
+   if(kind==="visits"){
+    const name=required(r,"Nama_Pengunjung",180),type=cell(r,"Jenis").toLowerCase()||"other",date=day(r,"Tanggal");
+    if(!["student","staff","other"].includes(type))throw Error("Jenis harus student, staff, atau other.");
+    let memberId:string|null=null;
+    if(type==="student"){const nis=required(r,"NIS",50),matches=students.filter(s=>s.nis===nis&&s.status==="active");if(matches.length!==1)throw Error("NIS siswa tidak ditemukan / tidak aktif.");memberId=matches[0].id;}
+    if(type==="staff"){const matches=staff.filter(x=>norm(x.name)===norm(name));if(matches.length!==1)throw Error("Nama staf tidak ditemukan atau ganda.");memberId=matches[0].id;}
+    return {key:"visit:"+line,payload:{school_id:schoolId,visitor_type:type,visitor_id:memberId,visitor_name:name,purpose:cell(r,"Tujuan")||null,visited_at:date?new Date(date+"T12:00:00+07:00").toISOString():new Date().toISOString(),notes:cell(r,"Catatan")||null,created_by:userId}};
+   }
+   if(kind==="acquisitions"){
+    const name=required(r,"Judul",240),qty=numeric(r,"Jumlah",1,1,100000);
+    if(!Number.isInteger(qty))throw Error("Jumlah harus bilangan bulat.");
+    const found=titles.find(x=>norm(x.title)===norm(name));
+    return {key:"acquisition:"+line,payload:{school_id:schoolId,title_id:found?.id||null,item_title:name,supplier:cell(r,"Supplier")||null,source_fund:cell(r,"Sumber_Dana")||null,quantity:qty,unit_price:numeric(r,"Harga_Satuan"),ordered_at:day(r,"Tanggal"),status:"requested",notes:cell(r,"Catatan")||null,created_by:userId}};
+   }
+   throw Error("Jenis import tidak didukung.");
+  },async payload=>{const table=kind==="titles"?"sc_library_titles":kind==="copies"?"sc_library_copies":kind==="visits"?"sc_library_visits":"sc_library_acquisitions";const {error:e}=await db.from(table).insert(payload);if(e)throw e;},existing);
+  await load();return result;
+ }
 
  async function load(){
   if(!db)return;
@@ -172,7 +217,7 @@ export default function LibraryPanel({schoolId,userId,role,staff,focus,onRoute}:
    <div className="modal-actions"><button className="button secondary" onClick={()=>setModal(null)}>Batal</button><button className="button" disabled={busy||!copyId||maintAction.trim().length<2} onClick={()=>void saveMaintenance()}>Simpan Perawatan</button></div>
   </DataEntryModal>
  </>;
- const withModals=(content:ReactNode)=><>{content}{modalForms}{error&&<div className="banner error" role="alert">{error}</div>}{ok&&<div className="banner success" role="status">{ok}</div>}</>;
+ const withModals=(content:ReactNode)=><>{["Koleksi Buku","Eksemplar & Inventaris","Kunjungan","Pengadaan"].includes(focus)&&["owner","principal","vice_principal","staff"].includes(role)&&<BulkExcelImport options={libraryImportOptions} onImport={importLibrary} disabled={busy}/>} {content}{modalForms}{error&&<div className="banner error" role="alert">{error}</div>}{ok&&<div className="banner success" role="status">{ok}</div>}</>;
 
  if(focus==="Dashboard Perpustakaan")return withModals(<section className="panel library-page">{header(<BarChart3/>,"Dashboard Perpustakaan","Ringkasan koleksi, sirkulasi, keterlambatan dan kunjungan dari data aktual.")}<div className="flow" style={{margin:"12px 0 20px",flexWrap:"wrap"}}><button className="button" onClick={()=>{setEditingTitle(null);resetCommon();setModal("title")}}><Plus size={15}/> Tambah Judul Buku</button><button className="button secondary" onClick={()=>{resetCommon();setTitleId(titles.find(x=>x.active)?.id||"");setInventoryCode(inventoryNumber());setModal(titles.length?"copy":"title")}}><Warehouse size={15}/> Tambah Eksemplar</button><button className="button secondary" onClick={()=>{setBorrower("");setPurpose("Membaca");resetCommon();setModal("visit")}}><Users size={15}/> Catat Kunjungan</button><button className="button secondary" onClick={()=>onRoute("library","Koleksi Buku")}>Kelola Katalog</button></div>{!titles.length&&<div className="library-program-card"><div><strong>Mulai dari katalog buku</strong><p className="muted">1. Tambahkan judul buku. 2. Catat eksemplar (nomor inventaris otomatis). 3. Gunakan peminjaman, pengembalian, kunjungan, pengadaan, dan laporan.</p></div><button className="button" onClick={()=>{resetCommon();setModal("title")}}>Tambah Buku Pertama</button></div>}<div className="grid"><div className="card"><label>Judul</label><strong>{titles.filter(x=>x.active).length}</strong><small>{copies.length} eksemplar</small></div><div className="card"><label>Sedang dipinjam</label><strong>{activeLoans.length}</strong><small>{overdue.length} terlambat</small></div><div className="card"><label>Tersedia</label><strong>{copies.filter(x=>x.status==="available").length}</strong><small>{copies.filter(x=>x.status==="maintenance").length} dirawat</small></div><div className="card"><label>Kunjungan bulan ini</label><strong>{visits.filter(x=>x.visited_at.startsWith(today().slice(0,7))).length}</strong></div></div>{overdue.length>0&&<div className="library-alert"><strong>Perlu perhatian · {overdue.length} peminjaman melewati jatuh tempo</strong>{overdue.slice(0,8).map(x=><div className="entry" key={x.id}><div><strong>{x.borrower_name}</strong><small>{copyLabel(x.copy_id)} · jatuh tempo {x.due_at}</small></div><span className="pill">Terlambat</span></div>)}</div>}</section>);
 
