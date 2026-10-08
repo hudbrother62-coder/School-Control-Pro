@@ -13,8 +13,8 @@ export default function ReportCenter({role,focus,onRoute}:{schoolId:string;role:
   {title:"Laporan BK",caption:"Layanan, program, kasus dan tindak lanjut BK.",module:"bk",feature:"Laporan BK",icon:HeartHandshake,formats:"PDF · DOCX"},
   {title:"Laporan Program Kerja",caption:"Program, PIC, progres, bukti, kendala dan rapat.",module:"command",feature:"Laporan Program",icon:ListChecks,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan Keuangan",caption:"BKU, kas, anggaran, realisasi, tagihan dan transaksi.",module:"sikas",feature:"Laporan",icon:Coins,formats:"PDF · DOCX · XLSX"},
-  {title:"Laporan Perpustakaan",caption:"Koleksi, peminjaman, kunjungan, pengadaan dan perawatan.",module:"library",feature:"Laporan & Statistik",icon:BookOpen,formats:"XLSX"},
-  {title:"Laporan Sarana & Prasarana",caption:"Inventaris, merek, ruang, peminjaman, perawatan, pengadaan dan opname.",module:"sarpras",feature:"Opname & Laporan",icon:Warehouse,formats:"XLSX"},
+  {title:"Laporan Perpustakaan",caption:"Koleksi, peminjaman, kunjungan, pengadaan dan perawatan.",module:"library",feature:"Laporan & Statistik",icon:BookOpen,formats:"PDF · DOCX · XLSX"},
+  {title:"Laporan Sarana & Prasarana",caption:"Inventaris, merek, ruang, peminjaman, perawatan, pengadaan dan opname.",module:"sarpras",feature:"Opname & Laporan",icon:Warehouse,formats:"PDF · DOCX · XLSX"},
   {title:"Laporan Supervisi",caption:"Instrumen, hasil supervisi dan tindak lanjut guru.",module:"kepsek_ai",feature:"Supervisi guru",icon:BriefcaseBusiness,formats:"PDF · DOCX"}
  ];
  const reportRoutes=reportCatalog.filter(x=>{const m=modules.find(m=>m.key===x.module);return !!m&&canAccess(m,role)});
