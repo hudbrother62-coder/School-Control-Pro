@@ -1,5 +1,5 @@
 "use client";
-import {BookOpen,BriefcaseBusiness,ClipboardCheck,Coins,FileBarChart,GraduationCap,HeartHandshake,ListChecks,ShieldAlert,ArrowRight,Warehouse} from "lucide-react";
+import {BookOpen,BriefcaseBusiness,ClipboardCheck,Coins,FileBarChart,GraduationCap,HeartHandshake,ListChecks,ShieldAlert,ArrowRight,Warehouse,Eye} from "lucide-react";
 import {canAccess,modules,type ModuleKey,type Role} from "@/lib/modules";
 
 type ReportRoute={title:string;caption:string;module:ModuleKey;feature:string;icon:typeof FileBarChart;formats:string};
@@ -22,7 +22,7 @@ export default function ReportCenter({role,focus,onRoute}:{schoolId:string;role:
  const standardItems=["Kop & identitas sekolah","NPSN dan tahun pelajaran","Nomor dokumen bila diterbitkan","Periode laporan","Pejabat penandatangan yang berwenang","Status draft / terbit","Arsip dan riwayat","Format cetak A4"];
 
  return <div className="report-center">
-  <button className="button secondary" style={{marginBottom:16}} onClick={()=>onRoute("reports","Template Laporan Sekolah")}>Template & Format Laporan Sekolah</button>
+  <button className="button secondary" style={{marginBottom:16}} onClick={()=>onRoute("reports","Template Laporan Sekolah")}><Eye size={15}/> Template, Preview & Ekspor Laporan</button>
   <section className="report-center-hero">
    <div><span className="eyebrow">PUSAT LAPORAN</span><h2>Laporan resmi sekolah dalam satu tempat</h2><p>Pilih jenis laporan. Data tetap diambil dari modul sumber agar tidak ada input ganda.</p></div>
    <div className="report-standard-card"><BookOpen size={20}/><div><strong>Standar dokumen sekolah Indonesia</strong><small>Kop, identitas, periode, nomor dokumen, pengesahan, status dan arsip; disesuaikan dengan jenis laporan dan aturan dinas.</small></div></div>
