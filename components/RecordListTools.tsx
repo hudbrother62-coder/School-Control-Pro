@@ -2,16 +2,27 @@
 import {useEffect,useState} from "react";
 import DataEntryModal from "@/components/DataEntryModal";
 import SearchableSelect from "@/components/SearchableSelect";
-import {filterRecords,processRecordBatch,type RecordFilter} from "@/lib/record-list";
-export function useRecordList<T extends {id:string}>(rows:T[],text:(row:T)=>string,filters:RecordFilter<T>[]=[]){
+import {filterRecords,processRecordBatch,recordDateKey,isInDateRange,type RecordFilter} from "@/lib/record-list";
+const dateFields=["date","event_date","occurred_at","happened_at","held_at","borrowed_at","visited_at","paid_at","from_date","start_at","due_on","due_date","due_at","deadline","ordered_at","acquired_at","handled_at","scheduled_at","started_at","effective_from","created_at"] as const;
+function recordDate<T>(row:T,selector?:((item:T)=>string|null|undefined)):string|null|undefined {
+ if(selector)return selector(row);
+ const fields=row as Record<string,unknown>;
+ for(const field of dateFields){const val=fields?.[field];if(typeof val==="string"&&recordDateKey(val))return val}
+ return null;
+}
+export function useRecordList<T extends {id:string}>(rows:T[],text:(row:T)=>string,filters:RecordFilter<T>[]=[],dateSelector?:((row:T)=>string|null|undefined)){
  const [query,setQuery]=useState(""),[values,setValues]=useState<Record<string,string>>({}),[page,setPage]=useState(1),[size,setSize]=useState(50),[selected,setSelected]=useState<string[]>([]);
- const filtered=filterRecords(rows,query,text,filters,values),pages=Math.max(1,Math.ceil(filtered.length/size)),current=Math.min(page,pages),visible=filtered.slice((current-1)*size,current*size);
+ const [dateFrom,setDateFrom]=useState(""),[dateTo,setDateTo]=useState("");
+ const hasDate=dateSelector!==undefined||rows.some(row=>Boolean(recordDateKey(recordDate(row))));
+ function changeDateFrom(next:string){setDateFrom(next);if(next&&dateTo&&next>dateTo)setDateTo("");setPage(1);setSelected([])}
+ function changeDateTo(next:string){setDateTo(next);if(next&&dateFrom&&next<dateFrom)setDateFrom("");setPage(1);setSelected([])}
+ const filtered=filterRecords(rows,query,text,filters,values).filter(row=>isInDateRange(recordDate(row,dateSelector),dateFrom,dateTo)),pages=Math.max(1,Math.ceil(filtered.length/size)),current=Math.min(page,pages),visible=filtered.slice((current-1)*size,current*size);
  const identity=rows.map(x=>x.id).join('|');useEffect(()=>{const ids=new Set(rows.map(x=>x.id));setSelected(old=>old.filter(id=>ids.has(id)))},[identity]);
  function toggle(id:string){setSelected(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id])}
  function changeQuery(q:string){setQuery(q);setPage(1);setSelected([])}
  function changeFilter(key:string,value:string){setValues(old=>({...old,[key]:value}));setPage(1);setSelected([])}
  function togglePage(ids:string[]){setSelected(old=>ids.every(id=>old.includes(id))?old.filter(id=>!ids.includes(id)):[...new Set([...old,...ids])])}
- return {query,setQuery:changeQuery,filters,values,setFilter:changeFilter,page:current,pages,setPage,size,setSize:(n:number)=>{setSize(n);setPage(1)},selected,setSelected,toggle,togglePage,filtered,visible,total:rows.length};
+ return {query,setQuery:changeQuery,filters,values,setFilter:changeFilter,page:current,pages,setPage,size,setSize:(n:number)=>{setSize(n);setPage(1)},selected,setSelected,toggle,togglePage,filtered,visible,total:rows.length,dateFilter:hasDate?{from:dateFrom,to:dateTo,setFrom:changeDateFrom,setTo:changeDateTo,clear:()=>{changeDateFrom("");changeDateTo("")}}:null};
 }
 export type RecordListState=Omit<ReturnType<typeof useRecordList<{id:string}>>, 'filters'> & {filters:{key:string;label:string;options:{value:string;label:string}[]}[]};
 export type RecordBatchAction={key:string;label:string;description:string;run:(id:string,reason?:string)=>Promise<void>;reasonRequired?:boolean;eligible?:(id:string)=>boolean;danger?:boolean};
@@ -21,7 +32,7 @@ export default function RecordListTools({list,label="data",actions=[],onRefresh,
  const ids=list.visible.map(x=>x.id).filter(id=>!selectable||selectable(id)),all=ids.length>0&&ids.every(id=>list.selected.includes(id));
  async function confirm(){if(!pending||processing)return;setProcessing(true);setReport("");setFailures([]);const chosen=[...list.selected];try{const result=await processRecordBatch(chosen,async id=>{if(pending.eligible&&!pending.eligible(id))throw Error('Data ini dilindungi atau belum memenuhi syarat tindakan.');await pending.run(id,reason)});list.setSelected(result.failed.map(x=>x.id));setFailures(result.failed);setReport(`${result.succeeded.length} berhasil, ${result.failed.length} gagal. Data yang gagal tetap dipilih.`);setPending(null);await onRefresh?.()}catch(e){setReport('Daftar belum dapat dimuat ulang: '+String(e))}finally{setProcessing(false)}}
  return <div className="record-tools">
-  <div className="record-filters">{showSearch&&<label className="field record-search">Cari {label}<input type="search" value={list.query} onChange={e=>list.setQuery(e.target.value)} placeholder="Ketik nama, kode atau keterangan…"/></label>}{list.filters.map(f=><div className="field" key={f.key}><span>{f.label}</span><SearchableSelect label={f.label} value={list.values[f.key]||""} onChange={e=>list.setFilter(f.key,e.target.value)}><option value="">Semua</option>{f.options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</SearchableSelect></div>)}</div>
+  <div className="record-filters">{showSearch&&<label className="field record-search">Cari {label}<input type="search" value={list.query} onChange={e=>list.setQuery(e.target.value)} placeholder="Ketik nama, kode atau keterangan…"/></label>}{list.filters.map(f=><div className="field" key={f.key}><span>{f.label}</span><SearchableSelect label={f.label} value={list.values[f.key]||""} onChange={e=>list.setFilter(f.key,e.target.value)}><option value="">Semua</option>{f.options.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}</SearchableSelect></div>)}{list.dateFilter&&<><label className="field record-date">Dari tanggal<input aria-label="Dari tanggal" type="date" value={list.dateFilter.from} max={list.dateFilter.to||undefined} onChange={e=>list.dateFilter?.setFrom(e.target.value)}/></label><label className="field record-date">Sampai tanggal<input aria-label="Sampai tanggal" type="date" value={list.dateFilter.to} min={list.dateFilter.from||undefined} onChange={e=>list.dateFilter?.setTo(e.target.value)}/></label>{(list.dateFilter.from||list.dateFilter.to)&&<button type="button" className="button secondary record-date-reset" onClick={()=>list.dateFilter?.clear()}>Reset tanggal</button>}</>}</div>
   <div className="record-controls">{canSelect&&<label className="record-select-page"><input className="record-check" type="checkbox" aria-label="Pilih semua di halaman ini" checked={all} disabled={!ids.length||busy||processing} onChange={()=>list.togglePage(ids)}/>Pilih halaman ini</label>}<span className="hint" role="status">{list.filtered.length} dari {list.total} {label}{list.selected.length?' · '+list.selected.length+' dipilih':''}</span><label className="record-size">Per halaman<select aria-label="Jumlah data per halaman" value={list.size} onChange={e=>list.setSize(Number(e.target.value))}>{[25,50,100].map(n=><option key={n}>{n}</option>)}</select></label></div>
   {canSelect&&list.selected.length>0&&<div className="record-batch">{actions.map(action=><button key={action.key} className={'button '+(action.danger?'danger':'secondary')} disabled={busy||processing||Boolean(action.eligible&&list.selected.some(id=>!action.eligible!(id)))} onClick={()=>{setPending(action);setReason("");setReport("")}}>{action.label} ({list.selected.length})</button>)}<button className="button secondary" disabled={processing} onClick={()=>list.setSelected([])}>Batal memilih</button></div>}
   {!list.filtered.length&&list.total>0&&<div className="empty">Tidak ada data yang cocok dengan pencarian atau filter.</div>}

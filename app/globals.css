@@ -230,3 +230,9 @@ body[data-theme=dark]{--accent:#a879ff;--accent-soft:#2b2144;--sidebar:linear-gr
 .teacher-extra>summary{cursor:pointer;font-weight:650;line-height:1.5}.teacher-extra>summary small{display:block;font-weight:400;color:var(--muted);font-size:12px}.teacher-extra[open]>summary{margin-bottom:12px}
 
 .ai-document-preview{padding:18px 20px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);line-height:1.7;font-size:14px;overflow-wrap:anywhere}.ai-document-preview h3{font-size:17px;margin:18px 0 7px}.ai-document-preview h3:first-child{margin-top:0}.ai-document-preview h4{font-size:15px;margin:14px 0 6px}.ai-document-preview p{margin:8px 0}.ai-document-preview ul,.ai-document-preview ol{padding-left:24px}.ai-document-preview li{margin:3px 0}.ai-document-table{overflow-x:auto;margin:12px 0}.ai-document-table table{width:100%;min-width:460px;border-collapse:collapse}.ai-document-table th,.ai-document-table td{padding:8px;border:1px solid var(--border);text-align:left;vertical-align:top}.ai-document-table th{background:var(--accent-soft)}.ai-code-block,.ai-formula-block{background:var(--bg);border:1px solid var(--border);padding:12px;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,Consolas,monospace}.ai-inline-math{white-space:normal;overflow-wrap:anywhere}
+
+/* Filter tanggal bersama: hemat tempat pada desktop maupun layar HP. */
+.record-filters>.record-date{flex:1 1 152px;min-width:145px}
+.record-date input[type=date]{width:100%;min-height:44px;font-size:16px;min-width:0;color:var(--text);background:var(--surface)}
+.record-date-reset{align-self:flex-end;min-height:44px}
+@media(max-width:740px){.record-filters>.record-date{flex:1 1 calc(50% - 6px);min-width:0}.record-filters>.record-date input{max-width:100%}.record-date-reset{flex:1 1 100%}}
