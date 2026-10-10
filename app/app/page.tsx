@@ -79,7 +79,7 @@ export default function Home(){
  const [accessSuspended,setAccessSuspended]=useState(false);
  const [theme,setTheme]=useState("light"),[openMenu,setOpenMenu]=useState(false),[expandedNav,setExpandedNav]=useState<ModuleKey|null>(null),[featureFocus,setFeatureFocus]=useState("Ringkasan Operasional");
  const [staff,setStaff]=useState<Staff[]>([]),[attendance,setAttendance]=useState<Attendance[]>([]);
- const [summary,setSummary]=useState<Summary|null>(null),[performanceUser,setPerformanceUser]=useState("");const [ownAttendance,setOwnAttendance]=useState<Attendance|null>(null);
+ const [summary,setSummary]=useState<Summary|null>(null),[performanceUser,setPerformanceUser]=useState("");const [ownAttendance,setOwnAttendance]=useState<Attendance|null>(null);const [historyDate,setHistoryDate]=useState("");
  const [subscription,setSubscription]=useState<{status:string;trial_ends_at:string;current_period_end:string|null}|null>(null),[subscriptionSchoolId,setSubscriptionSchoolId]=useState("");
  const [entitlement,setEntitlement]=useState<boolean|null>(null),[entitlementSchool,setEntitlementSchool]=useState("");
  const revision=useSchoolRevision(user?"*":"");
@@ -104,25 +104,29 @@ export default function Home(){
  const found=memberships.flatMap(x=>{const sch=(s||[]).find(y=>y.id===x.school_id);return sch?[{school:sch as School,role:x.role}]:[];});
  if(active){setSchools(found);setSchoolId(prev=>found.some(x=>x.school.id===prev)?prev:(found[0]?.school.id||""));}
  })();return ()=>{active=false};},[db,user,revision]);
- useEffect(()=>{if(!db||!schoolId)return;let alive=true;(async()=>{
+ useEffect(()=>{if(!db||!schoolId||!user)return;let alive=true;(async()=>{
+ let personalQuery=db.from("sc_attendance").select("id,duty_date,check_in_at,check_out_at,status,source,user_id,notes").eq("school_id",schoolId).eq("user_id",user.id).order("duty_date",{ascending:false}).limit(120);
+ if(historyDate)personalQuery=personalQuery.eq("duty_date",historyDate);
  const [{data:a},{data:st},{data:sub}]=await Promise.all([
- db.from("sc_attendance").select("id,duty_date,check_in_at,check_out_at,status,source,user_id,notes").eq("school_id",schoolId).order("duty_date",{ascending:false}).limit(30),
+ personalQuery,
  db.from("sc_staff").select("id,school_id,user_id,name,position,shift_start,late_tolerance_minutes").eq("school_id",schoolId).order("name"),
  db.from("sc_subscriptions").select("status,trial_ends_at,current_period_end").eq("school_id",schoolId).maybeSingle()
  ]);if(alive){setAttendance((a||[]) as Attendance[]);setStaff((st||[]) as Staff[]);setSubscription(sub||null);setSubscriptionSchoolId(schoolId);}
- })();return ()=>{alive=false};},[db,schoolId,revision]);
+ })();return ()=>{alive=false};},[db,schoolId,user,historyDate,revision]);
  useEffect(()=>{if(!db||!schoolId||!user)return;let alive=true;(async()=>{const {data}=await db.from("sc_attendance").select("*").eq("school_id",schoolId).eq("user_id",user.id).eq("duty_date",schoolDay(access?.school.timezone||"Asia/Jakarta")).maybeSingle();if(alive)setOwnAttendance((data||null) as Attendance|null);})();return ()=>{alive=false}},[db,schoolId,user,access?.school.timezone,revision]);
  useEffect(()=>{if(!db||!schoolId)return;let alive=true;(async()=>{
  if(module==="performance"){const {data,error:e}=await db.rpc("sc_performance_summary",{p_school:schoolId,p_user:performanceUser||user?.id});if(alive){setSummary((data||null) as Summary|null);if(e)setError(e.message);}}
  })();return ()=>{alive=false};},[db,schoolId,module,user,performanceUser,revision]);
- async function refresh(){if(!db||!schoolId)return;const [{data:a},{data:s}]=await Promise.all([db.from("sc_attendance").select("*").eq("school_id",schoolId).order("duty_date",{ascending:false}).limit(30),db.from("sc_staff").select("id,school_id,user_id,name,position,shift_start,late_tolerance_minutes").eq("school_id",schoolId).order("name")]);setAttendance((a||[]) as Attendance[]);setStaff((s||[]) as Staff[]);const day=schoolDay(access?.school.timezone||"Asia/Jakarta");const {data:own}=await db.from("sc_attendance").select("*").eq("school_id",schoolId).eq("user_id",user!.id).eq("duty_date",day).maybeSingle();setOwnAttendance((own||null) as Attendance|null);if(module==="performance"){const {data}=await db.rpc("sc_performance_summary",{p_school:schoolId,p_user:performanceUser||user!.id});setSummary((data||null) as Summary|null)}}
+ async function refresh(){if(!db||!schoolId||!user)return;let personalQuery=db.from("sc_attendance").select("*").eq("school_id",schoolId).eq("user_id",user.id).order("duty_date",{ascending:false}).limit(120);if(historyDate)personalQuery=personalQuery.eq("duty_date",historyDate);const [{data:a},{data:s}]=await Promise.all([personalQuery,db.from("sc_staff").select("id,school_id,user_id,name,position,shift_start,late_tolerance_minutes").eq("school_id",schoolId).order("name")]);setAttendance((a||[]) as Attendance[]);setStaff((s||[]) as Staff[]);const day=schoolDay(access?.school.timezone||"Asia/Jakarta");const {data:own}=await db.from("sc_attendance").select("*").eq("school_id",schoolId).eq("user_id",user!.id).eq("duty_date",day).maybeSingle();setOwnAttendance((own||null) as Attendance|null);if(module==="performance"){const {data}=await db.rpc("sc_performance_summary",{p_school:schoolId,p_user:performanceUser||user!.id});setSummary((data||null) as Summary|null)}}
  async function refreshWorkspace(){
   if(!db||!schoolId||!user||refreshing)return;
   setRefreshing(true);setError("");setMessage("");
   try{
    const day=schoolDay(access?.school.timezone||"Asia/Jakarta");
-   const [attendanceResult,staffResult,ownResult,subscriptionResult,membersResult]=await Promise.all([
-    db.from("sc_attendance").select("id,duty_date,check_in_at,check_out_at,status,source,user_id,notes").eq("school_id",schoolId).order("duty_date",{ascending:false}).limit(30),
+   let personalQuery=db.from("sc_attendance").select("id,duty_date,check_in_at,check_out_at,status,source,user_id,notes").eq("school_id",schoolId).eq("user_id",user.id).order("duty_date",{ascending:false}).limit(120);
+    if(historyDate)personalQuery=personalQuery.eq("duty_date",historyDate);
+    const [attendanceResult,staffResult,ownResult,subscriptionResult,membersResult]=await Promise.all([
+    personalQuery,
     db.from("sc_staff").select("id,school_id,user_id,name,position,shift_start,late_tolerance_minutes").eq("school_id",schoolId).order("name"),
     db.from("sc_attendance").select("*").eq("school_id",schoolId).eq("user_id",user.id).eq("duty_date",day).maybeSingle(),
     db.from("sc_subscriptions").select("status,trial_ends_at,current_period_end").eq("school_id",schoolId).maybeSingle(),
@@ -167,7 +171,8 @@ export default function Home(){
  if(!user)return <div className="authwrap"><div className="panel">Kembali ke beranda…</div></div>;
  if(!schoolId&&accessSuspended)return <div className="authwrap"><div className="authbox panel"><img width="45" src="/sekola-pro-mark.svg" alt="SekolaPro"/><h1>Akun sementara dinonaktifkan</h1><p>Akses sekolah sedang ditangguhkan oleh pengelola. Akun ini tidak dapat membuka modul maupun melakukan presensi sampai diaktifkan kembali.</p><p className="muted">Hubungi kepala sekolah atau Super Admin untuk informasi lebih lanjut.</p><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button></div></div>;
  if(!schoolId)return <div className="authwrap"><div className="authbox panel"><img width="46" src="/sekola-pro-mark.svg" alt=""/><h1>Akses sekolah belum tersedia</h1><p>Pengelola SekolaPro akan menghubungkan akun Anda ke sekolah. Akun dan langganan baru hanya dibuat oleh Super Admin.</p><button className="button secondary" onClick={()=>void db.auth.signOut()}>Keluar</button>{error&&<p className="banner error">{error}</p>}</div></div>;
-const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendance;const today=new Date().toLocaleDateString("id-ID",{timeZone:access?.school.timezone||"Asia/Jakarta"});
+const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendance;const today=new Date().toLocaleDateString("id-ID",{timeZone:access?.school.timezone||"Asia/Jakarta",day:"numeric",month:"long",year:"numeric"});
+ const myAttendanceLabel=myAttendance?.check_out_at?"Hari kerja selesai":myAttendance?.check_in_at?(myAttendance.status==="late"?"Hadir · terlambat":"Sudah hadir"):"Belum hadir";
  const navProps={items:visible,role,module,feature:featureFocus,expanded:expandedNav,icons,onChoose:choose,onExpand:setExpandedNav};
  if(subscriptionSchoolId!==schoolId||entitlementSchool!==schoolId)return <div className="authwrap"><div className="panel">Memeriksa izin dan masa aktif sekolah…</div></div>;
  const subscriptionOpen=entitlement===true&&!!subscription&&subscription.status==="active"&&!access?.school.is_paused&&!!subscription.current_period_end&&Date.parse(subscription.current_period_end)>Date.now();
@@ -184,8 +189,34 @@ const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendanc
   {module==="master"&&<MasterHubV2 schoolId={schoolId} role={role} focus={featureFocus}/>}
   {module==="calendar"&&<SchoolCalendar timezone={access?.school.timezone||"Asia/Jakarta"} schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
   {module==="attendance"&&<>
- {(!featureFocus||["Presensi Saya","Check-in/check-out"].includes(featureFocus))&&<section className="panel"><div className="flow" style={{justifyContent:"space-between"}}><div><h2>Presensi Saya</h2><strong className="live-clock"><LiveClock timezone={access?.school.timezone||"Asia/Jakarta"}/></strong></div><span className="pill">{myAttendance?.status||"Belum presensi"}</span></div>{!myStaff?<div className="banner"><span>Profil presensi belum aktif.</span> <button className="button secondary" disabled={loading} onClick={()=>void selfStaff()}>Aktifkan Presensi</button></div>:<div className="grid" style={{gridTemplateColumns:"repeat(2,minmax(0,1fr))",marginBottom:16}}><div className="card"><label>Jam masuk</label><strong style={{fontSize:23}}>{myAttendance?.check_in_at?formatDate(myAttendance.check_in_at):"—"}</strong></div><div className="card"><label>Jam pulang</label><strong style={{fontSize:23}}>{myAttendance?.check_out_at?formatDate(myAttendance.check_out_at):"—"}</strong></div></div>}<div className="flow"><button className="button" disabled={loading||!myStaff||!!myAttendance?.check_in_at} onClick={()=>void clock("sc_check_in_geo")}>Absen Masuk</button><button className="button secondary" disabled={loading||!myAttendance?.check_in_at||!!myAttendance?.check_out_at} onClick={()=>void clock("sc_check_out_geo")}>Absen Pulang</button></div></section>}
- {(!featureFocus||["Riwayat Kehadiran","Riwayat kehadiran"].includes(featureFocus))&&<section className="panel"><h2>Riwayat Kehadiran {isManager?"Sekolah":"Pribadi"}</h2><div className="tablewrap"><table className="data-table"><thead><tr><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th></tr></thead><tbody>{attendance.map(a=><tr key={a.id}><td>{a.duty_date}</td><td>{formatDate(a.check_in_at)}</td><td>{formatDate(a.check_out_at)}</td><td><span className="pill">{a.status}</span></td></tr>)}</tbody></table>{!attendance.length&&<div className="empty">Belum ada presensi tercatat.</div>}</div></section>}
+  {(!featureFocus||["Presensi Saya","Check-in/check-out"].includes(featureFocus))&&<section className="panel attendance-workspace">
+   <div className="attendance-heading">
+    <div><span className="attendance-eyebrow">KEHADIRAN PEGAWAI · BUKAN PRESENSI SISWA</span><h2>Presensi kerja hari ini</h2><p>Untuk tugas di <strong>{access?.school.name||"sekolah Anda"}</strong>. Kehadiran dicatat atas nama akun Anda sendiri.</p></div>
+    <span className="pill">{myAttendanceLabel}</span>
+   </div>
+   <div className="attendance-context-grid">
+    <div><small>Tanggal kehadiran</small><strong>{today}</strong></div>
+    <div><small>Nama & jabatan</small><strong>{myStaff?.name||"Profil SDM belum aktif"}</strong><span>{myStaff?.position||ROLE_LABELS[role]}</span></div>
+    <div><small>Jadwal mulai</small><strong>{myStaff?.shift_start?.slice(0,5)||"Belum diatur"}</strong><span>Waktu sekolah · <LiveClock timezone={access?.school.timezone||"Asia/Jakarta"}/></span></div>
+   </div>
+   {myStaff&&<div className="attendance-time-grid">
+    <div className="attendance-time-card"><small>Jam masuk tercatat</small><strong>{myAttendance?.check_in_at?formatDate(myAttendance.check_in_at):"—"}</strong></div>
+    <div className="attendance-time-card"><small>Jam pulang tercatat</small><strong>{myAttendance?.check_out_at?formatDate(myAttendance.check_out_at):"—"}</strong></div>
+   </div>}
+   {!myStaff?<div className="banner"><span>Hubungkan profil SDM sebelum mencatat kehadiran.</span> <button className="button secondary" disabled={loading} onClick={()=>void selfStaff()}>Aktifkan Profil SDM</button></div>:!myAttendance?.check_in_at?
+    <button type="button" className="button attendance-primary-action" disabled={loading} onClick={()=>void clock("sc_check_in_geo")}>{loading?"Memproses…":"Catat Kehadiran Hari Ini"}</button>
+    :!myAttendance.check_out_at?
+    <div className="attendance-followup"><p>Kehadiran hari ini <strong>sudah tercatat</strong>. Jika selesai bekerja, tambahkan jam pulang pada catatan yang sama.</p><button type="button" className="button secondary" disabled={loading} onClick={()=>void clock("sc_check_out_geo")}>{loading?"Memproses…":"Catat Jam Pulang"}</button></div>
+    :<p className="attendance-complete">Kehadiran dan jam pulang hari ini sudah tercatat.</p>}
+   <p className="attendance-note">Satu pegawai hanya memiliki satu catatan kehadiran per tanggal. Pencatatan pulang tidak membuat absensi kedua. Lokasi GPS mengikuti pengaturan sekolah bila diwajibkan.</p>
+  </section>
+  {(!featureFocus||["Presensi Saya","Check-in/check-out","Riwayat Kehadiran","Riwayat kehadiran"].includes(featureFocus))&&<section className="panel attendance-history">
+   <div className="attendance-history-heading"><div><h2>Riwayat kehadiran saya</h2><p>Hanya catatan akun Anda. Rekap pegawai lain ada di menu Kehadiran Tim.</p></div>
+    <div className="attendance-date-filter"><label htmlFor="personal-attendance-date">Cari tanggal</label><input id="personal-attendance-date" type="date" value={historyDate} onChange={e=>setHistoryDate(e.target.value)}/>{historyDate&&<button type="button" className="button secondary" onClick={()=>setHistoryDate("")}>Semua tanggal</button>}</div>
+   </div>
+   <div className="tablewrap"><table className="data-table"><thead><tr><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th></tr></thead><tbody>{attendance.filter(a=>a.user_id===user.id).map(a=><tr key={a.id}><td>{a.duty_date}</td><td>{formatDate(a.check_in_at)}</td><td>{formatDate(a.check_out_at)}</td><td><span className="pill">{a.status==="late"?"Terlambat":a.status==="present"?"Hadir":a.status}</span></td></tr>)}</tbody></table>{!attendance.length&&<div className="empty">Tidak ada catatan pada tanggal yang dipilih.</div>}</div>
+   {!historyDate&&<p className="attendance-note">Menampilkan hingga 120 catatan terbaru. Pilih tanggal untuk mencari arsip lebih lama.</p>}
+  </section>
  {(!featureFocus||["Jadwal & Shift","Jadwal/shift"].includes(featureFocus))&&(isManager?<HRLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus="Jadwal Kerja"/>:<StaffWorkflows focus="Jadwal & Shift" kind="staff" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>)}
  {(!featureFocus||["Koreksi Presensi","Koreksi beralasan"].includes(featureFocus))&&<StaffWorkflows focus="Koreksi Presensi" kind="attendance" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>}
  {featureFocus==="Lokasi Presensi"&&<HRLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus="Lokasi Presensi"/>}
@@ -244,6 +275,6 @@ const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendanc
   </div></main>
   {openMenu&&<div className="mobiledrawer" onClick={e=>{if(e.target===e.currentTarget)setOpenMenu(false)}}><div className="drawer-panel" ref={drawerRef} role="dialog" aria-modal="true" aria-labelledby="drawer-title"><div className="drawer-head"><strong id="drawer-title">Menu sekolah</strong><button className="iconbutton" aria-label="Tutup menu" onClick={()=>setOpenMenu(false)}><X size={20}/></button></div><WorkspaceNavigation {...navProps}/></div></div>}
   <SupportChat key={schoolId} schoolId={schoolId} schoolName={access?.school.name||"Sekolah"} userId={user.id}/>
-  <nav className="bottomnav" aria-label="Navigasi utama">{(["overview","calendar","attendance",visible.some(m=>m.key==="assistant")?"assistant":"help"] as ModuleKey[]).filter((k,i,a)=>visible.some(m=>m.key===k)&&a.indexOf(k)===i).map(k=>{const Icon=icons[k];return <button key={k} className={module===k?"active":""} onClick={()=>choose(k)}><Icon size={20}/>{k==="attendance"?"Check-in":k==="assistant"?"Asisten AI":modules.find(x=>x.key===k)?.label}</button>})}<button onClick={()=>setOpenMenu(true)}><Menu size={20}/>Menu</button></nav>
+  <nav className="bottomnav" aria-label="Navigasi utama">{(["overview","calendar","attendance",visible.some(m=>m.key==="assistant")?"assistant":"help"] as ModuleKey[]).filter((k,i,a)=>visible.some(m=>m.key===k)&&a.indexOf(k)===i).map(k=>{const Icon=icons[k];return <button key={k} className={module===k?"active":""} onClick={()=>choose(k)}><Icon size={20}/>{k==="attendance"?"Kehadiran":k==="assistant"?"Asisten AI":modules.find(x=>x.key===k)?.label}</button>})}<button onClick={()=>setOpenMenu(true)}><Menu size={20}/>Menu</button></nav>
  </div>;
 }
