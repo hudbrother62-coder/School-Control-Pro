@@ -6,6 +6,7 @@ import {useEffect,useMemo,useState} from "react";
 import {Eye,Save} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import {loadReportIdentity,previewOfficialReport,type OfficialReportModel,type ReportIdentity} from "@/lib/report-engine";
+import {isAdmin,type Role} from "@/lib/modules";
 
 type Form={
  title:string;subtitle:string;signerTitle:string;letterCity:string;footer:string;classificationCode:string;
@@ -14,7 +15,8 @@ type Form={
 };
 const blank:Form={title:"LAPORAN DISIPLIN & PRESTASI SISWA",subtitle:"Rekap kejadian, pembinaan, tindak lanjut dan prestasi",signerTitle:"Kepala Sekolah",letterCity:"",footer:"SekolaPro · Dokumen kesiswaan",classificationCode:"",showLogo:true,showNpsn:true,showPhone:true,showEmail:true,showWebsite:false,showSignature:true,showStamp:false,layout:"formal"};
 
-export default function DisciplineReportTemplate({schoolId}:{schoolId:string}){
+export default function DisciplineReportTemplate({schoolId,role}:{schoolId:string;role:Role}){
+ const admin=isAdmin(role);
  const db=useMemo(()=>browserDb(),[]);
  const [identity,setIdentity]=useState<ReportIdentity|null>(null),[form,setForm]=useState<Form>(blank),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
  const [uploading,setUploading]=useState<"logo"|"signature"|"stamp"|null>(null);
@@ -33,7 +35,7 @@ export default function DisciplineReportTemplate({schoolId}:{schoolId:string}){
   await load();setOk("Template dokumen tersimpan di database sekolah dan berlaku lintas perangkat.");
  }catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
  async function uploadAsset(file:File|undefined,key:"logo"|"signature"|"stamp"){
-  if(!file||!db)return;
+  if(!file||!db||!admin)return;
   setUploading(key);setError("");setOk("");
   try{
    if(!["image/png","image/jpeg"].includes(file.type)||file.size>2*1024*1024)throw Error("Gunakan file PNG/JPG maksimal 2 MB.");
@@ -68,17 +70,17 @@ export default function DisciplineReportTemplate({schoolId}:{schoolId:string}){
   ] as const).map(([key,label])=><div className="field" key={key}>
    <strong>{label}</strong>
    {identity?.[key+"_url" as "logo_url"|"signature_url"|"stamp_url"]?<img src={identity[key+"_url" as "logo_url"|"signature_url"|"stamp_url"]||""} alt={label} style={{display:"block",height:88,maxWidth:180,objectFit:"contain",background:"#fff",border:"1px solid #d5dbe5",borderRadius:10,padding:8,margin:"9px 0"}}/>:<small className="hint">Belum ada gambar. Unggah PNG/JPG untuk menampilkannya di dokumen.</small>}
-   <input type="file" accept="image/png,image/jpeg" aria-label={"Unggah "+label} disabled={busy||uploading!==null} onChange={e=>{const file=e.currentTarget.files?.[0];e.currentTarget.value="";void uploadAsset(file,key)}}/>
+   <input type="file" accept="image/png,image/jpeg" aria-label={"Unggah "+label} disabled={!admin||busy||uploading!==null} onChange={e=>{const file=e.currentTarget.files?.[0];e.currentTarget.value="";void uploadAsset(file,key)}}/>
    {uploading===key&&<small role="status">Mengunggah dan menyimpan…</small>}
   </div>)}
  </div>
  <div className="report-template-options">
   {([
    ["showLogo","Logo sekolah"],["showNpsn","NPSN"],["showPhone","Telepon"],["showEmail","Email"],["showWebsite","Website"],["showSignature","Scan tanda tangan"],["showStamp","Stempel sekolah"]
-  ] as const).map(([key,label])=><label className="field" key={key}><span>{label}</span><input type="checkbox" checked={form[key]} onChange={e=>set(key,e.target.checked)}/></label>)}
+  ] as const).map(([key,label])=><label className="field" key={key}><span>{label}</span><input type="checkbox" checked={form[key]} disabled={!admin} onChange={e=>set(key,e.target.checked)}/></label>)}
  </div>
  <div className="banner"><strong>Data penandatangan</strong><p className="hint">Nama kepala sekolah dan NIP berasal dari Pengaturan Sekolah → Profil / Branding. Lengkapi identitas tersebut agar pengesahan tidak menampilkan nama kosong. Tanda tangan berupa gambar tidak menggantikan tanda tangan elektronik tersertifikasi.</p></div>
- <div className="flow" style={{marginTop:14}}><button className="button secondary" disabled={!identity} onClick={preview}><Eye size={15}/> Preview A4 Draft</button><button className="button" disabled={busy||form.title.trim().length<3} onClick={()=>void save()}><Save size={15}/>{busy?"Menyimpan…":"Simpan Template"}</button></div>
+ <div className="flow" style={{marginTop:14}}><button className="button secondary" disabled={!identity} onClick={preview}><Eye size={15}/> Preview A4 Draft</button><button className="button" disabled={!admin||busy||form.title.trim().length<3} onClick={()=>void save()}><Save size={15}/>{busy?"Menyimpan…":"Simpan Template"}</button></div>
  {error&&<div className="banner error" role="alert">{error}</div>}{ok&&<div className="banner success" role="status">{ok}</div>}
  </section>;
 }
