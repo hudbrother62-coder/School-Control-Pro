@@ -3,7 +3,7 @@ import {useEffect,useState} from "react";
 import DataEntryModal from "@/components/DataEntryModal";
 import SearchableSelect from "@/components/SearchableSelect";
 import {filterRecords,processRecordBatch,recordDateKey,isInDateRange,type RecordFilter} from "@/lib/record-list";
-const dateFields=["date","event_date","occurred_at","happened_at","held_at","borrowed_at","visited_at","paid_at","from_date","start_at","due_on","due_date","due_at","deadline","ordered_at","acquired_at","handled_at","scheduled_at","started_at","effective_from","created_at"] as const;
+const dateFields=["date","event_date","occurred_at","happened_at","held_at","borrowed_at","visited_at","paid_at","from_date","start_at","due_on","due_date","due_at","deadline","ordered_at","acquired_at","handled_at","scheduled_at","started_at","effective_from","lesson_date","journal_date","attendance_date","assessment_date","requested_at","received_at","updated_at","created_at"] as const;
 function recordDate<T>(row:T,selector?:((item:T)=>string|null|undefined)):string|null|undefined {
  if(selector)return selector(row);
  const fields=row as Record<string,unknown>;

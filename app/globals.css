@@ -236,3 +236,8 @@ body[data-theme=dark]{--accent:#a879ff;--accent-soft:#2b2144;--sidebar:linear-gr
 .record-date input[type=date]{width:100%;min-height:44px;font-size:16px;min-width:0;color:var(--text);background:var(--surface)}
 .record-date-reset{align-self:flex-end;min-height:44px}
 @media(max-width:740px){.record-filters>.record-date{flex:1 1 calc(50% - 6px);min-width:0}.record-filters>.record-date input{max-width:100%}.record-date-reset{flex:1 1 100%}}
+
+.record-date-inline{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:12px 0}
+.record-date-inline>.record-date{flex:1 1 165px;min-width:155px}
+.record-date-inline>.record-date-reset{flex:0 0 auto}
+@media(max-width:740px){.record-date-inline>.record-date{flex:1 1 calc(50% - 6px);min-width:0}.record-date-inline>.record-date-reset{flex:1 1 100%}}

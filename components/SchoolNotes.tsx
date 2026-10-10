@@ -5,6 +5,8 @@ import {Archive,BookOpenText,Filter,Pin,PinOff,Plus,RefreshCw,RotateCcw,Search,S
 import {browserDb} from "@/lib/supabase";
 import {errorMessage} from "@/lib/error-message";
 import {readAllRows} from "@/lib/read-all-rows";
+import DateRangeFields from "@/components/DateRangeFields";
+import {isInDateRange} from "@/lib/record-list";
 import {useSchoolRevision} from "@/lib/school-realtime";
 import {ROLE_LABELS,type Role} from "@/lib/modules";
 import DataEntryModal from "./DataEntryModal";
@@ -35,6 +37,7 @@ export default function SchoolNotes({schoolId,userId,role,focus}:{schoolId:strin
  const [roleFilter,setRoleFilter]=useState("");
  const [authorFilter,setAuthorFilter]=useState("");
  const [archiveFilter,setArchiveFilter]=useState(false);
+ const [dateFrom,setDateFrom]=useState(""),[dateTo,setDateTo]=useState("");
  const [editing,setEditing]=useState<Note|null>(null);
  const [draft,setDraft]=useState<Draft>(newDraft("personal",role));
  const [modal,setModal]=useState(false);
@@ -75,6 +78,7 @@ export default function SchoolNotes({schoolId,userId,role,focus}:{schoolId:strin
   if(!!n.archived_at!==archiveFilter)return false;
   if(roleFilter&&n.target_role!==roleFilter)return false;
   if(authorFilter&&n.author_id!==authorFilter)return false;
+  if(!isInDateRange(n.updated_at,dateFrom,dateTo))return false;
   const query=search.toLocaleLowerCase("id-ID").trim();
   return !query||[n.title,n.body,authorName(n.author_id),n.target_role?ROLE_LABELS[n.target_role]:""].join(" ").toLocaleLowerCase("id-ID").includes(query);
  }).sort((a,b)=>Number(b.is_pinned)-Number(a.is_pinned)||Date.parse(b.updated_at)-Date.parse(a.updated_at));
@@ -153,6 +157,7 @@ export default function SchoolNotes({schoolId,userId,role,focus}:{schoolId:strin
     {manager&&!personalView&&<select aria-label="Filter penulis" value={authorFilter} onChange={e=>setAuthorFilter(e.target.value)}><option value="">Semua penulis</option>{[...new Set(notes.map(n=>n.author_id))].map(id=><option key={id} value={id}>{authorName(id)}</option>)}</select>}
     <label className="notes-archive-toggle"><input type="checkbox" checked={archiveFilter} onChange={e=>setArchiveFilter(e.target.checked)}/> Lihat arsip</label>
    </div>
+   <DateRangeFields from={dateFrom} to={dateTo} onFrom={setDateFrom} onTo={setDateTo}/>
    {error&&<div className="banner error" role="alert">{error}</div>}
    {success&&<div className="banner success" role="status">{success}</div>}
    <div className="notes-count">{loading?"Memuat catatan…":visible.length+" catatan ditemukan"}</div>
