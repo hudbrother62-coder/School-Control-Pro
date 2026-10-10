@@ -635,3 +635,28 @@ input,select,textarea,
 .principal-related button.active{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
 @media(max-width:740px){.principal-feature-grid{grid-template-columns:1fr}.principal-feature-card{min-height:82px;padding:14px}.principal-heading h2{font-size:19px}.principal-related button{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.principal-feature-card{transition:none}.principal-feature-card:hover{transform:none}}
+
+/* Presensi kerja: satu entri harian dan satu tombol aksi sesuai status. */
+.attendance-workspace,.attendance-history{display:grid;gap:18px}
+.attendance-heading,.attendance-history-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.attendance-heading>div,.attendance-history-heading>div{min-width:0}
+.attendance-heading h2,.attendance-history-heading h2{margin:4px 0 6px;font-size:20px;line-height:1.3}
+.attendance-heading p,.attendance-history-heading p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+.attendance-eyebrow{font-size:11px;letter-spacing:.07em;font-weight:700;color:var(--accent)}
+.attendance-context-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.attendance-context-grid>div,.attendance-time-card{display:flex;flex-direction:column;gap:6px;min-width:0;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.attendance-context-grid small,.attendance-time-card small,.attendance-context-grid span{font-size:12px;line-height:1.5;color:var(--muted)}
+.attendance-context-grid strong,.attendance-time-card strong{color:var(--text);font-size:15px;line-height:1.4;overflow-wrap:anywhere}
+.attendance-time-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.attendance-time-card strong{font-size:18px}
+.attendance-primary-action{justify-self:start;min-height:46px;padding:11px 20px}
+.attendance-followup{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.attendance-followup p{margin:0;color:var(--text);font-size:13px;line-height:1.6;flex:1 1 230px}
+.attendance-complete{font-size:13px;font-weight:650;color:var(--accent)}
+.attendance-note{margin:0;color:var(--muted);font-size:12px;line-height:1.65}
+.attendance-date-filter{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.attendance-date-filter label{font-size:12px;font-weight:650;color:var(--muted)}
+.attendance-date-filter input{min-height:38px;padding:7px 10px;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);color-scheme:normal}
+body[data-theme=dark] .attendance-date-filter input{color-scheme:dark}
+.attendance-date-filter .button{font-size:12px;padding:7px 10px}
+@media(max-width:740px){.attendance-context-grid{grid-template-columns:1fr}.attendance-heading h2{font-size:19px}.attendance-workspace,.attendance-history{gap:14px}.attendance-time-grid{gap:8px}.attendance-context-grid>div,.attendance-time-card{padding:12px}.attendance-time-card strong{font-size:15px}.attendance-primary-action,.attendance-followup .button{width:100%}.attendance-date-filter{width:100%}.attendance-date-filter input{flex:1 1 160px;min-width:0}}
