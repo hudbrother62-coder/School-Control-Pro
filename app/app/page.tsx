@@ -218,7 +218,7 @@ const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendanc
    {!historyDate&&<p className="attendance-note">Menampilkan hingga 120 catatan terbaru. Pilih tanggal untuk mencari arsip lebih lama.</p>}
   </section>}
  {(!featureFocus||["Jadwal & Shift","Jadwal/shift"].includes(featureFocus))&&(isManager?<HRLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus="Jadwal Kerja"/>:<StaffWorkflows focus="Jadwal & Shift" kind="staff" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>)}
- {(!featureFocus||["Koreksi Presensi","Koreksi beralasan"].includes(featureFocus))&&<StaffWorkflows focus="Koreksi Presensi" kind="attendance" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>}
+ {(!featureFocus||["Koreksi Presensi","Koreksi beralasan"].includes(featureFocus))&&<StaffWorkflows focus="Koreksi Presensi" kind="attendance" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh} timezone={access?.school.timezone||"Asia/Jakarta"}/>}
  {featureFocus==="Lokasi Presensi"&&<HRLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus="Lokasi Presensi"/>}
  {featureFocus==="Kehadiran Tim"&&<SupervisorLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus="Kehadiran Tim"/>}
  {(!featureFocus||["Izin & Cuti","Izin","Cuti"].includes(featureFocus))&&<StaffWorkflows focus={featureFocus==="Izin"||featureFocus==="Cuti"?featureFocus:"Izin & Cuti"} kind="leave" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>}
