@@ -607,3 +607,31 @@ input,select,textarea,
 @media(max-width:980px){.uao-workbench{grid-template-columns:minmax(0,1fr)}.uao-coach,.uao-compose{min-height:0}.uao-hero{grid-template-columns:minmax(0,1fr)}.uao-hero-flow{grid-template-columns:repeat(3,minmax(0,1fr))}.uao-hero-flow>span{min-height:58px}}
 @media(max-width:620px){.uao-shell{gap:14px}.uao-hero{padding:19px;border-radius:16px}.uao-hero h2{font-size:26px}.uao-hero p{font-size:13px}.uao-hero-flow{grid-template-columns:1fr;gap:7px}.uao-hero-flow>span{min-height:36px}.uao-compose,.uao-coach,.uao-examples,.uao-plan{padding:16px;border-radius:15px}.uao-examples-grid{grid-template-columns:minmax(0,1fr)}.uao-example{padding:15px}.uao-example h4{min-height:0}.uao-compose-foot{flex-direction:column;align-items:stretch;gap:10px}.uao-mode{display:flex;width:100%}.uao-mode button{flex:1;justify-content:center}.uao-primary{width:100%}.uao-chat-form .button{width:100%;justify-content:center}.uao-coach-result button{width:100%}.uao-goal,.uao-footer{flex-direction:column;align-items:stretch}.uao-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.uao-step{min-width:0}.uao-step-actions{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.uao-example>button{transition:none}}
+
+/* Four grouped kepala sekolah entrypoints */
+.side .navchildren .principal-nav-item,.mobiledrawer .navchildren .principal-nav-item{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px;line-height:1.35;text-align:left}
+.navchildren .principal-nav-item>span{font-size:12px;font-weight:640}
+.navchildren .principal-nav-item>small{font-size:10px;line-height:1.5;opacity:.77;white-space:normal;font-weight:420}
+.principal-workspace{display:grid;gap:16px;margin:0 0 20px}
+.principal-heading{display:flex;align-items:flex-start;gap:13px}
+.principal-heading-icon{flex-shrink:0;display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--accent-soft);color:var(--accent)}
+.principal-kicker{font-size:10px;letter-spacing:.09em;font-weight:700;color:var(--muted)}
+.principal-heading h2{font-size:21px;line-height:1.25;letter-spacing:-.02em;margin:5px 0}
+.principal-heading p,.principal-current p{font-size:13px;line-height:1.6;color:var(--muted);margin:0}
+.principal-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.principal-feature-card{display:flex;align-items:center;justify-content:space-between;gap:14px;min-width:0;min-height:104px;padding:18px;text-align:left;border:1px solid var(--border);border-radius:13px;background:var(--surface);color:var(--text);font:inherit;cursor:pointer;transition:border-color .18s,transform .18s,background .18s}
+.principal-feature-card>span{display:grid;gap:7px;min-width:0}
+.principal-feature-card strong{font-size:14px;font-weight:680}
+.principal-feature-card small{color:var(--muted);font-size:12px;line-height:1.5}
+.principal-feature-card svg{flex-shrink:0;color:var(--accent)}
+.principal-feature-card:hover{border-color:var(--accent);transform:translateY(-1px);background:var(--accent-soft)}
+.principal-feature-card:focus-visible,.principal-related button:focus-visible,.principal-back:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.principal-footnote{color:var(--muted);font-size:11px;margin:0}
+.principal-back{display:inline-flex;align-items:center;gap:7px;justify-self:start;cursor:pointer;background:transparent;border:0;color:var(--accent);font:inherit;font-size:12px;font-weight:650;padding:3px 0}
+.principal-current{border-left:3px solid var(--accent);padding:4px 0 4px 12px}
+.principal-current p{margin-top:5px}
+.principal-related{display:flex;gap:7px;flex-wrap:wrap}
+.principal-related button{border:1px solid var(--border);color:var(--text);background:var(--surface);padding:7px 11px;font-size:12px;border-radius:9px;cursor:pointer;font-weight:550}
+.principal-related button.active{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+@media(max-width:740px){.principal-feature-grid{grid-template-columns:1fr}.principal-feature-card{min-height:82px;padding:14px}.principal-heading h2{font-size:19px}.principal-related button{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.principal-feature-card{transition:none}.principal-feature-card:hover{transform:none}}

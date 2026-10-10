@@ -9,6 +9,7 @@ import type {User} from "@supabase/supabase-js";
 import {LayoutDashboard,Users,Clock3,Activity,Sparkles,MessageSquare,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,X,ChevronRight,Plus,RefreshCw,ReceiptText,CalendarDays,KeyRound,CircleHelp,Warehouse,StickyNote} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import WorkspaceNavigation from "@/components/WorkspaceNavigation";
+import PrincipalWorkspaceHub from "@/components/PrincipalWorkspaceHub";
 import {taskHelp} from "@/lib/workspace-help";
 import {resolveWorkspaceRoute,readRouteHash,routeHash,guideFor} from "@/lib/workspace-navigation";
 import LiveClock from "@/components/LiveClock";
@@ -214,6 +215,7 @@ const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendanc
  {featureFocus==="Dokumen Pembelajaran"&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} teacherOnly focus={featureFocus}/>}
  </>}
   {module==="kepsek_ai"&&<>
+  <PrincipalWorkspaceHub focus={featureFocus} onChoose={f=>choose("kepsek_ai",f)}/>
  {(!featureFocus||["PBD/EDS","KSP/KOSP","RKJM","RKT","RKAS","SOP"].includes(featureFocus))&&<AIWorkbench module="kepsek_ai" schoolId={schoolId} focus={featureFocus}/>}
  {(!featureFocus||["Pusat dokumen","Persetujuan dokumen"].includes(featureFocus))&&<DocumentCenter schoolId={schoolId} userId={user.id} role={role} focus={featureFocus}/>}
  {featureFocus==="Asisten Kepsek"&&<AIProjectManager schoolId={schoolId} module="kepsek_ai" mode="chat"/>}

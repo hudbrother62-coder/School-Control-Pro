@@ -1,6 +1,7 @@
 const assert=require('node:assert/strict');const fs=require('node:fs');const ts=require('typescript');
 function load(file,deps={}){const module={exports:{}};const js=ts.transpileModule(fs.readFileSync('lib/'+file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;new Function('require','module','exports',js)(name=>deps[name]||require(name),module,module.exports);return module.exports}
 const catalog=load('modules.ts');const nav=load('workspace-navigation.ts',{'./modules':catalog});const help=load('workspace-help.ts');
+const principal=load('principal-workspace.ts');
 let routes=0;
 for(const role of Object.keys(catalog.ROLE_LABELS))for(const module of catalog.modules){for(const feature of catalog.navigationFeatures(module,role)){
  const target=nav.resolveWorkspaceRoute(module.key,feature,role);assert.deepEqual(target,{module:module.key,feature});assert.deepEqual(nav.readRouteHash(nav.routeHash(target),role),target);
@@ -38,6 +39,23 @@ assert.equal(nav.resolveWorkspaceRoute('calendar','Kalender Sekolah','viewer'),n
 assert.deepEqual(nav.resolveWorkspaceRoute('library','Koleksi Buku','teacher'),{module:'library',feature:'Koleksi Buku'});
 assert.deepEqual(nav.resolveWorkspaceRoute('sarpras','Inventaris','teacher'),{module:'sarpras',feature:'Inventaris'});
 assert.equal(catalog.navigationFeatures(catalog.modules.find(m=>m.key==='sarpras'),'owner').length,5);
+const kp=catalog.modules.find(m=>m.key==='kepsek_ai');
+assert.deepEqual(catalog.navigationFeatures(kp,'owner'),principal.principalGroups.map(g=>g.name));
+assert.equal(catalog.navigationFeatures(kp,'teacher').length,0);
+assert.equal(principal.principalGroups.reduce((n,g)=>n+g.items.length,0),13);
+const oldFeatures=principal.principalGroups.flatMap(g=>g.items.map(i=>i.feature));
+assert.equal(new Set(oldFeatures).size,oldFeatures.length);
+for(const g of principal.principalGroups){
+ assert.ok(g.description.length>20);
+ assert.deepEqual(nav.resolveWorkspaceRoute('kepsek_ai',g.name,'owner'),{module:'kepsek_ai',feature:g.name});
+ for(const item of g.items){
+  assert.ok(item.description.length>15);
+  assert.equal(principal.principalGroupForFeature(item.feature)?.name,g.name);
+  assert.ok(principal.principalSearchText(g.name).includes(item.feature));
+  assert.deepEqual(nav.resolveWorkspaceRoute('kepsek_ai',item.feature,'principal'),{module:'kepsek_ai',feature:item.feature});
+  assert.ok(!catalog.navigationFeatures(kp,'owner').includes(item.feature));
+ }
+}
 assert.equal(nav.resolveWorkspaceRoute('library','Koleksi Buku','viewer'),null);
 assert.equal(nav.resolveWorkspaceRoute('sikas','Pembayaran','teacher'),null);
 assert.equal(nav.resolveWorkspaceRoute('invalid','bad','owner'),null);
