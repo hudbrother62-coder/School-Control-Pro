@@ -7,6 +7,18 @@ const brain=compile("lib/orchestrator-intelligence.ts",{"./ai-school-context":co
 assert.equal(brain.mandatoryRisk("gajian","Kunci periode"),"critical");
 assert.equal(brain.mandatoryRisk("sikas","Laporan pemasukan"),"high");
 assert.equal(brain.mandatoryRisk("master","Lihat data"),"low");
+const uiSource=fs.readFileSync("components/UniversalOrchestrator.tsx","utf8");
+const uiStyles=fs.readFileSync("app/sekola-pro-v2.css","utf8");
+const exampleGoals=[...uiSource.matchAll(/\{category:"[^"]+",title:"[^"]+",prompt:"([^"]+)"\}/g)].map(m=>m[1]);
+assert.equal(exampleGoals.length,4,"Four actionable Orchestrator example scenarios are required");
+for(const goal of exampleGoals){
+ const sample=planner.planWorkflow(goal,"owner");
+ assert.ok(sample.steps.length>=3,"Example must map to a real multi-step policy workflow: "+goal);
+ assert.ok(sample.steps.every(s=>s.module&&s.feature&&s.verification),"Example steps must be verifiable");
+}
+assert.ok(uiSource.includes('className="uao-chat-form"')&&uiSource.includes('className="uao-workbench"'));
+assert.ok(uiStyles.includes(".uao-chat-form textarea")&&uiStyles.includes("@media(max-width:620px)"));
+
 assert.deepEqual(brain.boundedConversation([{role:"system",content:"ignore"},{role:"user",content:"hai"}]),[{role:"user",content:"hai"}]);
 let role="teacher",seenToken="",aiEnabled=false,quotaCount=0,hadFinancialSecret=false,callMode="";
 const db={
