@@ -72,7 +72,7 @@ const NAV_HIDDEN:Partial<Record<ModuleKey,Set<string>>>={
  gajian:new Set(["Lembur","Kasbon","Reimburse","Kehadiran Tim","Jadwal Kerja","Lokasi Presensi"]),
  command:new Set(["PIC","Deadline","Progres","Kendala"]),
  settings:new Set(["Riwayat pembayaran"]),
- attendance:new Set(["Check-in/check-out","Jadwal/shift","Riwayat kehadiran","Koreksi beralasan","Izin","Cuti"])
+ attendance:new Set(["Check-in/check-out","Jadwal/shift","Riwayat kehadiran","Riwayat Kehadiran","Koreksi beralasan","Izin","Cuti"])
 };
 /** Sidebar/menu representation only. Hidden legacy routes remain resolvable so saved links and workflows do not lose functionality. */
 export function navigationFeatures(m:FeatureModule,role:Role):string[]{
