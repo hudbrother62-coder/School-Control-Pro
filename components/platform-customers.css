@@ -9,3 +9,23 @@
 .platform-customer-form button:disabled,.platform-customer-buttons button:disabled{opacity:.5;cursor:not-allowed}
 .platform-table-wrap td small{display:block;margin-top:5px}
 @media(max-width:650px){.platform-customer-form{grid-template-columns:1fr}.platform-customer-buttons{min-width:0}}
+
+.platform-school-contact{font-size:11px;line-height:1.5;overflow-wrap:anywhere;color:var(--admin-muted,#64748b)}
+.platform-school-name{font-size:13px;font-weight:650;line-height:1.5}
+.platform-school-name.unassigned{color:var(--admin-muted,#64748b);font-weight:500}
+.platform-account-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:260px}
+.platform-account-actions button,.platform-delete-dialog-actions button{border:1px solid var(--admin-border,#d5dce8);border-radius:10px;padding:10px 12px;font:inherit;font-size:12px;font-weight:650;background:transparent;color:inherit;cursor:pointer}
+.platform-account-actions .platform-delete-trigger{color:#b42332;border-color:#e8bcc3;background:transparent}
+.platform-account-actions .platform-delete-trigger:hover{background:#fff1f2}
+.platform-account-actions button:disabled,.platform-delete-dialog-actions button:disabled{opacity:.5;cursor:not-allowed}
+.platform-delete-dialog{display:grid;gap:16px;color:var(--admin-text,#26334d)}
+.platform-delete-dialog p{font-size:13px;line-height:1.7;margin:0}
+.platform-delete-summary{display:grid;gap:5px;border:1px solid var(--admin-border,#e2e8f0);background:var(--admin-surface,#fff);border-radius:12px;padding:14px;overflow-wrap:anywhere}
+.platform-delete-summary strong{font-size:15px}
+.platform-delete-summary span{font-size:12px;color:var(--admin-muted,#64748b)}
+.platform-delete-dialog label{display:grid;gap:7px;font-size:13px;font-weight:650}
+.platform-delete-dialog input{width:100%;min-width:0;border:1px solid var(--admin-border,#cbd5e1);border-radius:10px;padding:12px;background:var(--admin-surface,#fff);color:inherit;font:inherit}
+.platform-delete-dialog input:focus-visible{outline:2px solid #2563eb;outline-offset:1px}
+.platform-delete-dialog-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.platform-delete-dialog-actions .platform-delete-confirm{background:#b42332;color:#fff;border-color:#b42332}
+@media(max-width:650px){.platform-account-actions{min-width:0}.platform-delete-dialog-actions button{flex:1}}

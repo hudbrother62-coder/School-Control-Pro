@@ -1,9 +1,10 @@
 "use client";
 import {useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
+import DataEntryModal from "@/components/DataEntryModal";
 
 type School={id:string;name:string;is_paused?:boolean;subscription_status:string;current_period_end:string|null;updated_at?:string|null};
-type Account={user_id:string;school_id:string;account_name:string;email:string;role:string;banned_until:string|null};
+type Account={user_id:string;school_id:string|null;school_name?:string|null;account_name:string;email:string;role:string;banned_until:string|null};
 const roles=[["principal","Kepala Sekolah"],["vice_principal","Wakil Kepala Sekolah"],["teacher","Guru"],["counselor","Guru BK"],["hr","SDM"],["treasurer","Bendahara"],["staff","Staf"],["viewer","Viewer"]] as const;
 const fmt=(value:string|null)=>value?new Date(value).toLocaleDateString("id-ID",{dateStyle:"long",timeZone:"Asia/Jakarta"}):"—";
 const hold=(a:Account)=>!!a.banned_until&&Date.parse(a.banned_until)>Date.now();
@@ -12,7 +13,7 @@ export default function PlatformCustomerControls({schools,accounts,onRefresh}:{s
  const db=useMemo(()=>browserDb(),[]);
  const [email,setEmail]=useState(""),[password,setPassword]=useState(""),[name,setName]=useState(""),[schoolName,setSchoolName]=useState("");
  const [schoolId,setSchoolId]=useState(""),[role,setRole]=useState("staff"),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
- const [search,setSearch]=useState("");
+ const [search,setSearch]=useState(""),[deleteTarget,setDeleteTarget]=useState<Account|null>(null),[verifyEmail,setVerifyEmail]=useState(""),[verifyPhrase,setVerifyPhrase]=useState("");
  async function send(body:Record<string,unknown>){
   const {data:{session}}=await db.auth.getSession();
   if(!session?.access_token)throw Error("Sesi habis, silakan masuk kembali.");
@@ -51,7 +52,15 @@ export default function PlatformCustomerControls({schools,accounts,onRefresh}:{s
   if(!window.confirm("Saya sudah memverifikasi pembayaran untuk "+s.name+". Tambahkan satu bulan masa aktif?"))return;
   await act({action:"renew",school_id:s.id,confirmation_ref:reference.trim(),note},"Perpanjangan berhasil dikonfirmasi.");
  }
- const filtered=accounts.filter(a=>(a.email+" "+a.account_name).toLowerCase().includes(search.toLowerCase()));
+
+ async function deleteAccount(){
+  if(!deleteTarget||verifyEmail.trim().toLowerCase()!==deleteTarget.email.toLowerCase()||verifyPhrase.trim()!=="HAPUS")return;
+  const result=await act({action:"delete_account",user_id:deleteTarget.user_id,confirm_email:verifyEmail.trim(),confirm_phrase:verifyPhrase.trim()},"Akun berhasil dihapus. Histori sekolah tetap tersimpan.");
+  if(result){setDeleteTarget(null);setVerifyEmail("");setVerifyPhrase("");}
+ }
+ function prepareDelete(a:Account){setError("");setNotice("");setDeleteTarget(a);setVerifyEmail("");setVerifyPhrase("");}
+ const deleteValidated=!!deleteTarget&&verifyEmail.trim().toLowerCase()===deleteTarget.email.toLowerCase()&&verifyPhrase.trim()==="HAPUS";
+ const filtered=accounts.filter(a=>(a.email+" "+a.account_name+" "+(a.school_name||"")).toLowerCase().includes(search.toLowerCase()));
  return <div className="platform-customer-control">
   {error&&<div role="alert" className="platform-error">{error}</div>}
   {notice&&<div role="status" className="banner success">{notice}</div>}
@@ -70,13 +79,22 @@ export default function PlatformCustomerControls({schools,accounts,onRefresh}:{s
     const ms=s.current_period_end?Date.parse(s.current_period_end)-Date.now():0;
     const days=Math.max(0,Math.ceil(ms/86400000));
     const expired=ms<=0;
-    return <tr key={s.id}><td><b>{s.name}</b></td><td>{fmt(s.current_period_end)}<small>{expired?"Lewat tenggat":days<=7?"Tagih sekarang · "+days+" hari lagi":days+" hari tersisa"}</small></td><td>{fmt(s.updated_at||null)}<small>Tersinkron ke menu Langganan sekolah</small></td>
+    return <tr key={s.id}><td><b>{s.name}</b><small className="platform-school-contact">{accounts.filter(a=>a.school_id===s.id&&a.role==="owner").map(a=>a.email).filter((email,index,all)=>all.indexOf(email)===index).join(", ")||"Email pemilik belum tersedia"}</small></td><td>{fmt(s.current_period_end)}<small>{expired?"Lewat tenggat":days<=7?"Tagih sekarang · "+days+" hari lagi":days+" hari tersisa"}</small></td><td>{fmt(s.updated_at||null)}<small>Tersinkron ke menu Langganan sekolah</small></td>
       <td><span className={"platform-status "+(s.is_paused?"inactive":expired?"inactive":"active")}>{s.is_paused?"Dijeda manual":expired?"Nonaktif otomatis":"Aktif"}</span></td>
       <td><div className="platform-customer-buttons"><button type="button" disabled={busy} onClick={()=>void renew(s)}>Konfirmasi Bayar +1 Bulan</button><button type="button" disabled={busy} onClick={()=>void toggleSchool(s)}>{s.is_paused?"Buka Sekolah":"Jeda Sekolah"}</button></div></td>
      </tr>})}</tbody></table>{schools.length===0&&<div className="platform-empty">Belum ada sekolah.</div>}</div>
   </section>
-  <section className="platform-panel"><div className="platform-panel-header"><div><h2>Aktifkan / Nonaktifkan Akun</h2><p>Pemblokiran berlaku per pengguna; data dan histori tidak dihapus.</p></div><div className="platform-search"><input aria-label="Cari akun" placeholder="Cari nama atau email" value={search} onChange={e=>setSearch(e.target.value)}/></div></div>
-   <div className="platform-table-wrap"><table><thead><tr><th>Akun</th><th>Peran</th><th>Status</th><th>Aksi</th></tr></thead><tbody>{filtered.filter(a=>a.school_id).map(a=><tr key={a.school_id+":"+a.user_id}><td><b>{a.account_name}</b><small>{a.email}</small></td><td>{a.role}</td><td><span className={"platform-status "+(hold(a)?"inactive":"active")}>{hold(a)?"Dinonaktifkan":"Login diizinkan"}</span></td><td><button disabled={busy} onClick={()=>void toggleAccount(a)}>{hold(a)?"Aktifkan Akun":"Nonaktifkan Sementara"}</button></td></tr>)}</tbody></table>{filtered.length===0&&<div className="platform-empty">Tidak ada akun cocok.</div>}</div>
+  <section className="platform-panel"><div className="platform-panel-header"><div><h2>Kelola Status & Hapus Akun</h2><p>Periksa asal sekolah sebelum mengubah akses. Penghapusan memerlukan verifikasi dan tidak menghapus histori sekolah.</p></div><div className="platform-search"><input aria-label="Cari akun atau sekolah" placeholder="Cari nama, email, atau sekolah" value={search} onChange={e=>setSearch(e.target.value)}/></div></div>
+   <div className="platform-table-wrap"><table><thead><tr><th>Akun / Email</th><th>Asal Sekolah</th><th>Peran</th><th>Status</th><th>Aksi</th></tr></thead><tbody>{filtered.map(a=><tr key={(a.school_id||"unassigned")+":"+a.user_id}><td><b>{a.account_name||a.email}</b><small>{a.email}</small></td><td><span className={"platform-school-name "+(!a.school_id?"unassigned":"")}>{a.school_name||(a.school_id?schools.find(s=>s.id===a.school_id)?.name:"Belum terhubung ke sekolah")||"Sekolah tidak ditemukan"}</span></td><td>{roles.find(([value])=>value===a.role)?.[1]||(a.role==="owner"?"Pemilik sekolah":a.role==="belum_bergabung"?"Belum bergabung":a.role)}</td><td><span className={"platform-status "+(hold(a)?"inactive":"active")}>{hold(a)?"Dinonaktifkan":"Login diizinkan"}</span></td><td><div className="platform-account-actions"><button type="button" disabled={busy} onClick={()=>void toggleAccount(a)}>{hold(a)?"Aktifkan Akun":"Nonaktifkan Sementara"}</button><button type="button" className="platform-delete-trigger" disabled={busy} onClick={()=>prepareDelete(a)}>Hapus Akun</button></div></td></tr>)}</tbody></table>{filtered.length===0&&<div className="platform-empty">Tidak ada akun cocok.</div>}</div>
   </section>
+  <DataEntryModal open={!!deleteTarget} title="Verifikasi Hapus Akun" subtitle="Aksi permanen. Periksa identitas akun sebelum melanjutkan." onClose={()=>{if(!busy)setDeleteTarget(null);}}>
+   {deleteTarget&&<div className="platform-delete-dialog">
+    <div className="platform-delete-summary"><strong>{deleteTarget.account_name||deleteTarget.email}</strong><span>{deleteTarget.email}</span><span>Sekolah: {deleteTarget.school_name||(deleteTarget.school_id?schools.find(s=>s.id===deleteTarget.school_id)?.name:"Belum terhubung")||"Tidak ditemukan"}</span></div>
+    <p>Akun ini akan kehilangan akses login secara permanen. Catatan, dokumen, dan histori sekolah tetap tersimpan. Akun Super Admin dan pemilik terakhir sekolah tidak dapat dihapus.</p>
+    <label>Tulis email akun untuk verifikasi<input type="email" autoComplete="off" value={verifyEmail} onChange={e=>setVerifyEmail(e.target.value)} placeholder={deleteTarget.email} disabled={busy}/></label>
+    <label>Ketik <strong>HAPUS</strong> untuk konfirmasi<input type="text" autoComplete="off" value={verifyPhrase} onChange={e=>setVerifyPhrase(e.target.value)} placeholder="HAPUS" disabled={busy}/></label>
+    <div className="platform-delete-dialog-actions"><button type="button" disabled={busy} onClick={()=>setDeleteTarget(null)}>Batal</button><button type="button" className="platform-delete-confirm" disabled={busy||!deleteValidated} onClick={()=>void deleteAccount()}>{busy?"Menghapus…":"Hapus Akun Permanen"}</button></div>
+   </div>}
+  </DataEntryModal>
  </div>;
 }

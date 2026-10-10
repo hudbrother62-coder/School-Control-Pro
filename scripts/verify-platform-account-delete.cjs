@@ -1,0 +1,14 @@
+const assert=require("node:assert/strict");
+const fs=require("node:fs");
+const ui=fs.readFileSync("components/PlatformCustomerControls.tsx","utf8");
+const backend=fs.readFileSync("supabase/functions/manage-school-customers/index.ts","utf8");
+assert(ui.includes("Asal Sekolah"),"Account table must show school");
+assert(ui.includes("a.school_name"),"Account table must use linked school name");
+assert(ui.includes('accounts.filter(a=>a.school_id===s.id&&a.role==="owner")'),"Show school owner email");
+assert(ui.includes("deleteValidated")&&ui.includes("verifyEmail")&&ui.includes("verifyPhrase"),"Require typed verification");
+assert(ui.includes('confirm_phrase:verifyPhrase.trim()'),"Confirm deletion on backend");
+assert(backend.includes('typedPhrase!=="HAPUS"')&&backend.includes("typedEmail"),"Verify phrase and email on backend");
+assert(backend.includes('if(id===user.id)')&&backend.includes('if(protectedAdmin)'),"Protect super admin");
+assert(backend.includes('membership.role!=="owner"')&&backend.includes('if(!count)'),"Protect last owner");
+assert(backend.includes("admin.auth.admin.deleteUser(id,true)"),"Preserve linked history through soft-delete");
+console.log("PASS: school association, typed verification, protected soft deletion.");
