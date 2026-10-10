@@ -209,14 +209,14 @@ const myStaff=staff.find(s=>s.user_id===user.id);const myAttendance=ownAttendanc
     <div className="attendance-followup"><p>Kehadiran hari ini <strong>sudah tercatat</strong>. Jika selesai bekerja, tambahkan jam pulang pada catatan yang sama.</p><button type="button" className="button secondary" disabled={loading} onClick={()=>void clock("sc_check_out_geo")}>{loading?"Memproses…":"Catat Jam Pulang"}</button></div>
     :<p className="attendance-complete">Kehadiran dan jam pulang hari ini sudah tercatat.</p>}
    <p className="attendance-note">Satu pegawai hanya memiliki satu catatan kehadiran per tanggal. Pencatatan pulang tidak membuat absensi kedua. Lokasi GPS mengikuti pengaturan sekolah bila diwajibkan.</p>
-  </section>
+  </section>}
   {(!featureFocus||["Presensi Saya","Check-in/check-out","Riwayat Kehadiran","Riwayat kehadiran"].includes(featureFocus))&&<section className="panel attendance-history">
    <div className="attendance-history-heading"><div><h2>Riwayat kehadiran saya</h2><p>Hanya catatan akun Anda. Rekap pegawai lain ada di menu Kehadiran Tim.</p></div>
     <div className="attendance-date-filter"><label htmlFor="personal-attendance-date">Cari tanggal</label><input id="personal-attendance-date" type="date" value={historyDate} onChange={e=>setHistoryDate(e.target.value)}/>{historyDate&&<button type="button" className="button secondary" onClick={()=>setHistoryDate("")}>Semua tanggal</button>}</div>
    </div>
    <div className="tablewrap"><table className="data-table"><thead><tr><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status</th></tr></thead><tbody>{attendance.filter(a=>a.user_id===user.id).map(a=><tr key={a.id}><td>{a.duty_date}</td><td>{formatDate(a.check_in_at)}</td><td>{formatDate(a.check_out_at)}</td><td><span className="pill">{a.status==="late"?"Terlambat":a.status==="present"?"Hadir":a.status}</span></td></tr>)}</tbody></table>{!attendance.length&&<div className="empty">Tidak ada catatan pada tanggal yang dipilih.</div>}</div>
    {!historyDate&&<p className="attendance-note">Menampilkan hingga 120 catatan terbaru. Pilih tanggal untuk mencari arsip lebih lama.</p>}
-  </section>
+  </section>}
  {(!featureFocus||["Jadwal & Shift","Jadwal/shift"].includes(featureFocus))&&(isManager?<HRLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus="Jadwal Kerja"/>:<StaffWorkflows focus="Jadwal & Shift" kind="staff" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>)}
  {(!featureFocus||["Koreksi Presensi","Koreksi beralasan"].includes(featureFocus))&&<StaffWorkflows focus="Koreksi Presensi" kind="attendance" schoolId={schoolId} userId={user.id} role={role} staff={staff} onChanged={refresh}/>}
  {featureFocus==="Lokasi Presensi"&&<HRLegacyParity schoolId={schoolId} userId={user.id} role={role} staff={staff} focus="Lokasi Presensi"/>}
