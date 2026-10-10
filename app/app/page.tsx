@@ -9,7 +9,7 @@ import type {User} from "@supabase/supabase-js";
 import {LayoutDashboard,Users,Clock3,Activity,Sparkles,MessageSquare,BookOpen,ShieldAlert,HeartHandshake,School as SchoolIcon,ListChecks,Wallet,CreditCard,Settings,Moon,Sun,LogOut,Menu,X,ChevronRight,Plus,RefreshCw,ReceiptText,CalendarDays,KeyRound,CircleHelp,Warehouse,StickyNote} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import WorkspaceNavigation from "@/components/WorkspaceNavigation";
-import PrincipalWorkspaceHub from "@/components/PrincipalWorkspaceHub";
+
 import {taskHelp} from "@/lib/workspace-help";
 import {resolveWorkspaceRoute,readRouteHash,routeHash,guideFor} from "@/lib/workspace-navigation";
 import LiveClock from "@/components/LiveClock";
@@ -17,6 +17,7 @@ import {modules,canAccess,visibleFeatures,navigationFeatures,isAdmin,ROLE_LABELS
 
 const SupportChat=dynamic(()=>import("@/components/SupportChat"),{ssr:false});
 const PanelLoading=()=> <div className="panel" role="status" aria-live="polite">Memuat fitur…</div>;
+const PrincipalWorkspaceHub=dynamic(()=>import("@/components/PrincipalWorkspaceHub"),{loading:PanelLoading});
 const UniversalOrchestrator=dynamic(()=>import("@/components/UniversalOrchestrator"),{loading:PanelLoading});
 const StaffWorkflows=dynamic(()=>import("@/components/StaffWorkflows"),{loading:PanelLoading});
 const SchoolData=dynamic(()=>import("@/components/SchoolData"),{loading:PanelLoading});
