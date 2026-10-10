@@ -16,7 +16,7 @@ export function useRecordList<T extends {id:string}>(rows:T[],text:(row:T)=>stri
  const hasDate=dateSelector!==undefined||rows.some(row=>Boolean(recordDateKey(recordDate(row))));
  function changeDateFrom(next:string){setDateFrom(next);if(next&&dateTo&&next>dateTo)setDateTo("");setPage(1);setSelected([])}
  function changeDateTo(next:string){setDateTo(next);if(next&&dateFrom&&next<dateFrom)setDateFrom("");setPage(1);setSelected([])}
- const filtered=filterRecords(rows,query,text,filters,values).filter(row=>isInDateRange(recordDate(row,dateSelector),dateFrom,dateTo)),pages=Math.max(1,Math.ceil(filtered.length/size)),current=Math.min(page,pages),visible=filtered.slice((current-1)*size,current*size);
+ const filtered=filterRecords(rows,query,text,filters,values).filter(row=>!hasDate||isInDateRange(recordDate(row,dateSelector),dateFrom,dateTo)),pages=Math.max(1,Math.ceil(filtered.length/size)),current=Math.min(page,pages),visible=filtered.slice((current-1)*size,current*size);
  const identity=rows.map(x=>x.id).join('|');useEffect(()=>{const ids=new Set(rows.map(x=>x.id));setSelected(old=>old.filter(id=>ids.has(id)))},[identity]);
  function toggle(id:string){setSelected(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id])}
  function changeQuery(q:string){setQuery(q);setPage(1);setSelected([])}
