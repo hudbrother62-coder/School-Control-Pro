@@ -13,6 +13,8 @@ assert.deepEqual(nav.resolveWorkspaceRoute('assistant','Universal AI Orchestrato
 assert.deepEqual(nav.resolveWorkspaceRoute('command','Agenda','teacher'),{module:'calendar',feature:'Kalender Sekolah'});
 assert.deepEqual(nav.resolveWorkspaceRoute('attendance','Check-in/check-out','teacher'),{module:'attendance',feature:'Presensi Saya'});
 assert.deepEqual(nav.resolveWorkspaceRoute('attendance','Izin','teacher'),{module:'attendance',feature:'Izin & Cuti'});
+assert(!catalog.navigationFeatures(catalog.modules.find(m=>m.key==='attendance'),'teacher').includes('Riwayat Kehadiran'));
+assert.deepEqual(nav.resolveWorkspaceRoute('attendance','Riwayat Kehadiran','teacher'),{module:'attendance',feature:'Riwayat Kehadiran'});
 assert.deepEqual(nav.resolveWorkspaceRoute('performance','Kehadiran','teacher'),{module:'attendance',feature:'Riwayat Kehadiran'});
 assert.deepEqual(nav.resolveWorkspaceRoute('performance','Pelatihan','teacher'),{module:'performance',feature:'Bukti Kinerja & Pengembangan'});
 assert.deepEqual(nav.resolveWorkspaceRoute('gajian','Jadwal Kerja','owner'),{module:'attendance',feature:'Jadwal & Shift'});
