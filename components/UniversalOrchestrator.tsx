@@ -123,7 +123,7 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
  }
 
  const scenarios=[
-  {category:"Kesiswaan",title:"Presensi hingga tindak lanjut",prompt:"Audit ketidakhadiran siswa bulan ini. Bedakan data kosong dengan alpa, susun pembinaan yang sesuai, draf surat orang tua, agenda pertemuan, dan cara memverifikasi tindak lanjut."},
+  {category:"Kesiswaan",title:"Presensi hingga tindak lanjut",prompt:"Siswa sering tidak hadir bulan ini. Audit presensi dan bedakan data kosong dengan alpa, lakukan pembinaan yang sesuai, siapkan surat panggilan orang tua, jadwalkan pertemuan, dan verifikasi tindak lanjut."},
   {category:"Manajemen sekolah",title:"PBD menjadi program kerja",prompt:"Dari hasil PBD, susun RKT, turunkan ke program kerja sekolah, tentukan penanggung jawab, tenggat, bukti pelaksanaan, dan laporan evaluasi."},
   {category:"Keuangan",title:"Tagihan hingga laporan kas",prompt:"Tinjau tagihan siswa yang jatuh tempo, bedakan yang belum dibayar dari pembayaran terverifikasi, rencanakan pencatatan Buku Kas Umum dan laporan keuangan."},
   {category:"SDM",title:"Lembur hingga penggajian",prompt:"Tinjau pengajuan lembur staf, verifikasi jadwal dan persetujuan, rencanakan perhitungan payroll, pemeriksaan komponen gaji, dan penerbitan slip setelah otorisasi."}
