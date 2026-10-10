@@ -13,6 +13,8 @@ const api=load('app/api/ai/route.ts',{'next/server':{NextResponse:{json:(body,op
   if(!result.ok)return {response:null,model:null,configured:1,statuses:[result.status]};
   return {response:result,model:'gemini-fixture',configured:1,statuses:[]};
  }}});
+assert.ok(teacher.teacherQualityGuidance.includes('LaTeX'));
+assert.ok(quality.evaluateAiOutput('guru_ai','rpp',String.raw`## Pengantar\n\\[ rumus belum selesai`).issues.some(x=>x.includes('LaTeX')));
 const keys=['NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY','GEMINI_API_KEY'],old=Object.fromEntries(keys.map(k=>[k,process.env[k]])),originalFetch=global.fetch;
 (async()=>{try{
  process.env.NEXT_PUBLIC_SUPABASE_URL='https://fixture.test';process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='public-fixture';process.env.GEMINI_API_KEY='server-test-key';

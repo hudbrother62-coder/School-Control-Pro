@@ -5,6 +5,7 @@ import {errorMessage} from "@/lib/error-message";
 import {useEffect,useMemo,useState} from "react";
 import {BookOpenCheck,CheckCircle2,ClipboardList,Save,Sparkles} from "lucide-react";
 import SmartSelect,{type SmartOption} from "@/components/SmartSelect";
+import AiDocumentPreview from "@/components/AiDocumentPreview";
 import {browserDb} from "@/lib/supabase";
 import {aiTemplates,type AiModule} from "@/lib/education-templates";
 import {subjectDefaults,teacherSystemStandard,teacherToolConfig} from "@/lib/teacher-ai-config";
@@ -201,7 +202,7 @@ export default function AIWorkbench({module,schoolId,focus}:{module:AiModule;sch
    </>}
    <label className="field full" style={{marginTop:14}}>Instruksi tambahan (opsional)<textarea value={context} onChange={e=>setContext(e.target.value)} rows={2} placeholder={template==="chat"?"Ceritakan masalah kelas atau keputusan yang ingin dibahas…":"Tambahkan batasan, gaya, contoh lokal, atau kebutuhan khusus yang belum tercakup…"}/></label>
    <div className="flow" style={{marginTop:12}}><button className="button" disabled={busy||!template} onClick={()=>void generate()}><Sparkles size={15}/>{busy?"Memproses…":template==="chat"?"Kirim ke AI":"Generate Draf Lengkap"}</button></div>
-   {output&&<div className="panel editor-panel"><div className="sectionhead"><div><h3>Editor Hasil</h3><p className="muted">Periksa kesesuaian CP/TP, fakta sekolah, rumus, dan data sebelum digunakan.</p></div><ClipboardList size={18}/></div><label className="field">Judul<input value={title} onChange={e=>setTitle(e.target.value)}/></label><label className="field" style={{marginTop:12}}>Isi<textarea value={output} rows={24} onChange={e=>setOutput(e.target.value)}/></label><div className="flow" style={{marginTop:12}}><button className="button" disabled={busy||title.trim().length<2} onClick={()=>void store()}>Simpan Riwayat</button></div></div>}
+   {output&&<div className="panel editor-panel"><div className="sectionhead"><div><h3>Editor Hasil</h3><p className="muted">Periksa kesesuaian CP/TP, fakta sekolah, rumus, dan data sebelum digunakan.</p></div><ClipboardList size={18}/></div><label className="field">Judul<input value={title} onChange={e=>setTitle(e.target.value)}/></label><details className="teacher-extra" open><summary>Pratinjau dokumen terformat</summary><AiDocumentPreview content={output}/></details><details className="teacher-extra"><summary>Edit teks Markdown / rumus LaTeX</summary><label className="field" style={{marginTop:12}}>Isi<textarea value={output} rows={24} onChange={e=>setOutput(e.target.value)}/></label></details><div className="flow" style={{marginTop:12}}><button className="button" disabled={busy||title.trim().length<2} onClick={()=>void store()}>Simpan Riwayat</button></div></div>}
   </section>}
 
   {(historyOnly||!focus)&&<section className="panel"><h2>Riwayat Draf Saya</h2>{drafts.map(d=><div className="entry" key={d.id}><div><strong>{d.title}</strong><small>{new Date(d.created_at).toLocaleDateString("id-ID")} · {d.template_key||"umum"}</small></div><div className="flow"><button className="button secondary" onClick={()=>{setTitle(d.title);setOutput(d.content);setTemplate(d.template_key||"")}}>Buka</button><button className="button danger" onClick={()=>void removeDraft(d.id)}>Hapus</button></div></div>)}{!drafts.length&&<div className="empty">Belum ada draf.</div>}</section>}
