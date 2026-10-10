@@ -190,7 +190,7 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
      <button className="button secondary" type="submit" disabled={coachBusy||coachInput.trim().length<3||!schoolId}>{coachBusy?"AI sedang menjawab…":<>Tanyakan ke AI <ChevronRight size={16}/></>}</button>
      <small className="uao-note">{coachContext||"Jawaban AI berupa rekomendasi, bukan perubahan data."}</small>
     </form>
-    {coachResult?.refined_goal&&<div className="uao-coach-result"><strong>Tujuan yang direkomendasikan</strong><p>{coachResult.refined_goal}</p><button type="button" className="button uao-primary" disabled={planning} onClick={()=>{setRequest(coachResult.refined_goal);void analyze(coachResult.refined_goal)}}>Jadikan rencana kerja <ChevronRight size={16}/></button></div>}
+    {coachResult?.refined_goal&&<div className="uao-coach-result"><strong>Tujuan yang direkomendasikan</strong><p>{coachResult.refined_goal}</p><button type="button" className="button uao-primary" disabled={planning} onClick={()=>{const goal=coachResult?.refined_goal||"";setRequest(goal);void analyze(goal)}}>Jadikan rencana kerja <ChevronRight size={16}/></button></div>}
     {(coachResult?.missing_inputs?.length??0)>0&&<div className="uao-coach-questions"><b>Untuk hasil lebih akurat:</b><ul>{coachResult?.missing_inputs.map((item,i)=><li key={i}>{item}</li>)}</ul></div>}
     {coachError&&<div role="alert" className="banner error">{coachError}</div>}
    </section>
