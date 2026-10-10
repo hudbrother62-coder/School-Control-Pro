@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect,useMemo,useState} from "react";
-import {Download,Eye,FileSpreadsheet,FileText,Printer,RefreshCw} from "lucide-react";
+import {Eye,FileSpreadsheet,FileText,Printer,RefreshCw} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import {errorMessage} from "@/lib/error-message";
 import {
@@ -37,8 +37,8 @@ function exampleReport(scope:string):OfficialReportModel{
 }
 function extractModel(source:ArchivedSource|null,scope:string):OfficialReportModel{
  if(!source)return exampleReport(scope);
- const snapshot=source.content_snapshot as {model?:OfficialReportModel}|OfficialReportModel|null;
- const data=snapshot&&"model" in snapshot?snapshot.model:snapshot;
+ const snapshot=source.content_snapshot as Record<string,unknown>|null;
+ const data=(snapshot?.model||snapshot) as OfficialReportModel|null;
  if(!data||!Array.isArray(data.sections)||!data.title)return exampleReport(scope);
  // An archived document is immutable. Editing here produces a fresh, unnumbered draft only.
  return {...data,documentType:data.documentType||source.document_type,moduleKey:data.moduleKey||source.module_key,status:"draft",issuedAt:null};
