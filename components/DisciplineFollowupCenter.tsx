@@ -90,6 +90,13 @@ export default function DisciplineFollowupCenter({schoolId,userId,role,focus}:{s
   const monthly=reportKind==="recap",reminder=reportKind==="reminder";
   const title=monthly?"Laporan Kedisiplinan dan Prestasi Peserta Didik":reminder?"Laporan Pengingat Tindak Lanjut Disiplin":"Laporan Tindak Lanjut dan Pembinaan Peserta Didik";
   const sections:OfficialReportModel["sections"]=[];
+  if(monthly){
+   const perStudent=students.filter(s=>inClass(s.id)).map(s=>{
+    const rows=relevantEvents.filter(x=>x.student_id===s.id),bad=rows.filter(x=>x.event_type!=="achievement"),good=rows.filter(x=>x.event_type==="achievement");
+    return {s,bad,good,rows};
+   }).filter(x=>x.rows.length);
+   sections.push({title:"Rekapitulasi Per Siswa",columns:["NIS","Nama siswa","Kelas","Pelanggaran","Prestasi","Poin Pelanggaran","Poin Prestasi","Poin Bersih"],rows:perStudent.map(x=>[x.s.nis||"—",x.s.name,className(x.s.class_id),x.bad.length,x.good.length,x.bad.reduce((n,e)=>n+Number(e.points_snapshot||0),0),x.good.reduce((n,e)=>n+Number(e.points_snapshot||0),0),Math.max(0,x.bad.reduce((n,e)=>n+Number(e.points_snapshot||0),0)-x.good.reduce((n,e)=>n+Number(e.points_snapshot||0),0))])});
+  }
   if(monthly)sections.push({title:"Pelanggaran dan Prestasi",columns:["Tanggal","Nama siswa","NIS","Kelas","Jenis","Kejadian","Poin","Keterangan"],rows:relevantEvents.map(x=>[x.occurred_at,studentName(x.student_id),student(x.student_id)?.nis||"—",className(student(x.student_id)?.class_id),x.event_type==="achievement"?"Prestasi":"Pelanggaran",x.item_name_snapshot||x.title,x.points_snapshot,x.chronology||"—"])});
   sections.push({title:"Tindak Lanjut dan Sanksi",columns:["Siswa","NIS","Kelas","Tindakan","Target","Status","Tanggal selesai","Catatan"],rows:activeActions.map(x=>[studentName(x.student_id),student(x.student_id)?.nis||"—",className(student(x.student_id)?.class_id),x.sanction_name_snapshot,dateLabel(x.due_date),statusLabel(x.status),x.completed_at?.slice(0,10)||"—",x.notes||"—"])});
   sections.push({title:"Pembinaan dan Pemantauan",columns:["Siswa","Kelas","Pembinaan","Alasan","Hasil","Tanggal pembinaan","Target tinjau ulang","Status","Petugas"],rows:activeCoaching.map(x=>[studentName(x.student_id),className(student(x.student_id)?.class_id),x.form,x.reason,x.result||"Belum dicatat",x.happened_at.slice(0,10),dateLabel(x.follow_up_date),statusLabel(x.status),x.recorder_name||"—"])});
