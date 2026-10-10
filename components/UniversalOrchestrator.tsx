@@ -122,11 +122,11 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
   await loadRuns();
  }
 
- const shortcuts=[
-  "Siswa sering alpa, sudah dibina, buat surat panggilan dan agenda orang tua",
-  "Dari PBD buat RKT lalu program kerja sampai laporan",
-  "Tagihan siswa sampai pembayaran, kuitansi dan buku kas",
-  "Pengajuan lembur sampai payroll dan slip"
+ const scenarios=[
+  {category:"Kesiswaan",title:"Presensi hingga tindak lanjut",prompt:"Siswa sering tidak hadir bulan ini. Audit presensi dan bedakan data kosong dengan alpa, lakukan pembinaan yang sesuai, siapkan surat panggilan orang tua, jadwalkan pertemuan, dan verifikasi tindak lanjut."},
+  {category:"Manajemen sekolah",title:"PBD menjadi program kerja",prompt:"Dari hasil PBD, susun RKT, turunkan ke program kerja sekolah, tentukan penanggung jawab, tenggat, bukti pelaksanaan, dan laporan evaluasi."},
+  {category:"Keuangan",title:"Tagihan hingga laporan kas",prompt:"Tinjau tagihan siswa yang jatuh tempo, bedakan yang belum dibayar dari pembayaran terverifikasi, rencanakan pencatatan Buku Kas Umum dan laporan keuangan."},
+  {category:"SDM",title:"Lembur hingga penggajian",prompt:"Tinjau pengajuan lembur staf, verifikasi jadwal dan persetujuan, rencanakan perhitungan payroll, pemeriksaan komponen gaji, dan penerbitan slip setelah otorisasi."}
  ];
  const completed=plan?plan.steps.filter((_,i)=>done[i]).length:0,progress=plan?.steps.length?Math.round(completed/plan.steps.length*100):0;
  const preflight=plan?[
@@ -137,35 +137,84 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
  ]:[];
 
  return <section className="uao-shell">
-  <div className="uao-hero">
-   <div className="uao-hero-copy"><span className="uao-kicker"><Sparkles size={14}/> UNIVERSAL AI ORCHESTRATOR</span><h2>Dari tujuan menjadi workflow yang aman, terukur, dan bisa diaudit.</h2><p>Goal lock, policy, impact analysis, approval, checkpoint, verifikasi dan evidence berada dalam satu control plane. AI merencanakan; aksi tetap mengikuti fitur, role dan data SekolaPro.</p></div>
-   <div className="uao-hero-orbit"><span><ShieldCheck size={18}/> Policy</span><span><GitBranch size={18}/> Workflow</span><span><FileCheck2 size={18}/> QCL</span><span><Database size={18}/> Evidence</span></div>
+  <header className="uao-hero">
+   <div className="uao-hero-copy">
+    <span className="uao-kicker"><Sparkles size={15}/> SEKOLAPRO INTELLIGENCE</span>
+    <h2>Sampaikan tujuan. AI bantu susun langkahnya.</h2>
+    <p>Analisis masalah sekolah, hubungkan fitur yang tepat, lalu jalankan rencana bertahap dengan persetujuan dan pemeriksaan hasil.</p>
+   </div>
+   <div className="uao-hero-flow" aria-label="Cara kerja Orchestrator">
+    <span><b>01</b> Jelaskan kebutuhan</span>
+    <ChevronRight size={16} aria-hidden="true"/>
+    <span><b>02</b> Susun rencana AI</span>
+    <ChevronRight size={16} aria-hidden="true"/>
+    <span><b>03</b> Tinjau & verifikasi</span>
+   </div>
+  </header>
+
+  <div className="uao-workbench">
+   <section className="uao-compose" aria-labelledby="uao-work-heading">
+    <div className="uao-intro">
+     <span className="uao-overline">BUAT RENCANA KERJA</span>
+     <h3 id="uao-work-heading">Apa yang ingin diselesaikan?</h3>
+     <p>Gunakan bahasa sehari-hari. AI akan memilih modul yang relevan, menyusun urutan, risiko, persetujuan dan cara mengecek hasil.</p>
+    </div>
+    <form onSubmit={event=>{event.preventDefault();void analyze(request)}} className="uao-prompt">
+     <label htmlFor="uao-request">Perintah atau tujuan</label>
+     <textarea id="uao-request" value={request} maxLength={4000} onChange={event=>setRequest(event.target.value)} rows={5} placeholder="Contoh: Periksa siswa yang sering tidak hadir, siapkan tindak lanjut, surat panggilan orang tua, lalu jadwalkan pertemuan."/>
+     <details className="uao-source"><summary>+ Tambahkan data pendukung (opsional)</summary><p>Masukkan ringkasan sumber yang sudah Anda periksa. Catatan dianggap data, bukan instruksi untuk mengubah sistem.</p><textarea aria-label="Data pendukung untuk rencana" value={sources} onChange={event=>setSources(event.target.value)} rows={3} maxLength={3000} placeholder="Contoh: periode laporan, kendala, ringkasan data tervalidasi." /></details>
+     <div className="uao-compose-foot">
+      <div className="uao-mode" role="group" aria-label="Pilih mode rencana">
+       <button type="button" className={executionMode==="simulation"?"active":""} aria-pressed={executionMode==="simulation"} onClick={()=>setExecutionMode("simulation")}><Eye size={16}/> Simulasi</button>
+       <button type="button" className={executionMode==="guided"?"active":""} aria-pressed={executionMode==="guided"} onClick={()=>setExecutionMode("guided")}><Play size={16}/> Terarah</button>
+      </div>
+      <button type="submit" className="button uao-primary" disabled={request.trim().length<3||planning}>{planning?"Menyusun rencana…":<><Sparkles size={17}/> Generate rencana</>}</button>
+     </div>
+     <small className="uao-note"><ShieldCheck size={15}/> Tidak ada perubahan data otomatis. Persetujuan dan verifikasi tetap dilakukan pengguna sesuai hak akses.</small>
+    </form>
+   </section>
+   <section className="uao-coach" aria-labelledby="uao-coach-heading">
+    <div className="uao-intro">
+     <span className="uao-overline">DISKUSI DENGAN AI</span>
+     <h3 id="uao-coach-heading">Belum yakin harus mulai dari mana?</h3>
+     <p>Tanyakan masalahnya. Asisten membantu memperjelas tujuan sebelum dibuat menjadi rencana kerja.</p>
+    </div>
+    {coachMessages.length>0&&<div className="uao-chat-log" role="log" aria-label="Riwayat diskusi Orchestrator" aria-live="polite">
+     {coachMessages.map((item,index)=><div key={index} className={"uao-chat-bubble "+(item.role==="assistant"?"assistant":"user")}>
+      <strong>{item.role==="assistant"?"Asisten Sekolapro":"Anda"}</strong><p>{item.content}</p>
+     </div>)}
+    </div>}
+    <form className="uao-chat-form" onSubmit={event=>{event.preventDefault();void consult(coachInput)}}>
+     <label htmlFor="uao-coach-input">Pertanyaan untuk asisten</label>
+     <textarea id="uao-coach-input" aria-label="Diskusi dengan Asisten Orchestrator" rows={4} maxLength={4000} value={coachInput} onChange={event=>setCoachInput(event.target.value)} placeholder="Misalnya: Data absensi banyak yang kosong. Bagaimana membedakan kesalahan input dan siswa yang tidak hadir?"/>
+     <button className="button secondary" type="submit" disabled={coachBusy||coachInput.trim().length<3||!schoolId}>{coachBusy?"AI sedang menjawab…":<>Tanyakan ke AI <ChevronRight size={16}/></>}</button>
+     <small className="uao-note">{coachContext||"Jawaban AI berupa rekomendasi, bukan perubahan data."}</small>
+    </form>
+    {coachResult?.refined_goal&&<div className="uao-coach-result"><strong>Tujuan yang direkomendasikan</strong><p>{coachResult.refined_goal}</p><button type="button" className="button uao-primary" disabled={planning} onClick={()=>{const goal=coachResult?.refined_goal||"";setRequest(goal);void analyze(goal)}}>Jadikan rencana kerja <ChevronRight size={16}/></button></div>}
+    {(coachResult?.missing_inputs?.length??0)>0&&<div className="uao-coach-questions"><b>Untuk hasil lebih akurat:</b><ul>{coachResult?.missing_inputs.map((item,i)=><li key={i}>{item}</li>)}</ul></div>}
+    {coachError&&<div role="alert" className="banner error">{coachError}</div>}
+   </section>
   </div>
 
-  <section className="panel" style={{marginBlock:16}}>
-   <div className="sectionhead"><div><h3>Asisten AI Orchestrator</h3><p className="muted">Diskusikan masalah sekolah, minta analisis, lalu ubah hasil diskusi menjadi Control Plan yang terarah.</p></div><Sparkles size={23}/></div>
-   {coachMessages.length>0&&<div role="log" aria-label="Percakapan Asisten Orchestrator" aria-live="polite" style={{display:"grid",gap:10,maxHeight:380,overflowY:"auto",marginBlock:14}}>
-    {coachMessages.map((item,index)=><div key={index} style={{padding:12,borderRadius:12,border:"1px solid var(--border, #80808040)",background:item.role==="assistant"?"var(--surface, transparent)":"var(--surface-2, transparent)"}}>
-     <strong>{item.role==="assistant"?"Asisten SekolaPro":"Anda"}</strong><p style={{whiteSpace:"pre-wrap",marginBottom:0}}>{item.content}</p>
-    </div>)}
-   </div>}
-   <form onSubmit={event=>{event.preventDefault();void consult(coachInput)}} style={{display:"grid",gap:10}}>
-    <label>Diskusi dengan asisten<textarea aria-label="Diskusi dengan Asisten Orchestrator" rows={3} maxLength={4000} value={coachInput} onChange={e=>setCoachInput(e.target.value)} placeholder="Contoh: analisis absensi siswa bulan ini, apa penyebab datanya tidak lengkap dan apa langkah perbaikannya?"/></label>
-    <div className="flow" style={{alignItems:"center",gap:12,flexWrap:"wrap"}}><button className="button" type="submit" disabled={coachBusy||coachInput.trim().length<3||!schoolId}>{coachBusy?"Menganalisis…":"Tanya Asisten AI"}</button><small className="muted">{coachContext||"AI hanya menyarankan, tidak mengubah database otomatis."}</small></div>
-   </form>
-   {coachResult?.refined_goal&&<div style={{display:"grid",gap:8,marginTop:14}}><strong>Tujuan yang disarankan</strong><p style={{margin:0,whiteSpace:"pre-wrap"}}>{coachResult.refined_goal}</p><button type="button" className="button secondary" disabled={planning} onClick={()=>{setRequest(coachResult?.refined_goal||"");void analyze(coachResult?.refined_goal||"")}}>Jadikan Control Plan <ChevronRight size={15}/></button></div>}
-   {(coachResult?.missing_inputs?.length??0)>0&&<p className="muted">Untuk memperjelas rencana: {coachResult?.missing_inputs.join(" • ")}</p>}
-   {coachError&&<div role="alert" className="banner error">{coachError}</div>}
+  <section className="uao-examples" aria-labelledby="uao-examples-heading">
+   <div className="uao-examples-head"><div><span className="uao-overline">CONTOH NYATA</span><h3 id="uao-examples-heading">Coba kemampuan Orchestrator</h3><p>Pilih salah satu kebutuhan sekolah untuk melihat rencana yang bisa disusun. Pratinjau langkah di bawah berasal dari aturan lokal; hasil Gemini bisa lebih rinci.</p></div></div>
+   <div className="uao-examples-grid">
+    {scenarios.map((scenario,index)=>{
+     const demo=planWorkflow(scenario.prompt,role);
+     return <article className="uao-example" key={scenario.category}>
+      <span className="uao-example-category"><span className="uao-example-number">0{index+1}</span>{scenario.category}</span>
+      <h4>{scenario.title}</h4>
+      <div className="uao-example-output"><b>Contoh urutan hasil:</b>
+       <ol>{demo.steps.slice(0,3).map((step,i)=><li key={step.module+step.feature+i}>{step.title}</li>)}</ol>
+       {!demo.steps.length&&<p>Analisis kebutuhan, pemetaan fitur, rencana tindak lanjut dan verifikasi.</p>}
+       {demo.steps.length>3&&<small>+ {demo.steps.length-3} langkah lanjutan</small>}
+      </div>
+      <button type="button" disabled={planning} onClick={()=>{setRequest(scenario.prompt);void analyze(scenario.prompt)}}>Generate contoh ini <ChevronRight size={16}/></button>
+     </article>;
+    })}
+   </div>
   </section>
-
-  <div className="uao-compose">
-   <form onSubmit={event=>{event.preventDefault();void analyze(request)}} className="uao-prompt">
-    <label>Tujuan yang ingin diselesaikan<textarea value={request} onChange={event=>setRequest(event.target.value)} rows={4} placeholder="Contoh: siswa sering alpa, sudah dua kali dibina, buat surat panggilan orang tua dan jadwalkan pertemuan."/></label>
-    <details className="uao-source"><summary>Tambahkan sumber / konteks opsional</summary><p>Isi ini diperlakukan sebagai <b>data tidak tepercaya</b>, bukan instruksi eksekusi.</p><textarea value={sources} onChange={event=>setSources(event.target.value)} rows={3} maxLength={3000} placeholder="Contoh: nama dokumen, ringkasan data, atau konteks yang sudah diverifikasi."/></details>
-    <div className="uao-compose-foot"><div className="uao-mode" role="group" aria-label="Mode eksekusi"><button type="button" className={executionMode==="simulation"?"active":""} onClick={()=>setExecutionMode("simulation")}><Eye size={15}/> Simulasi</button><button type="button" className={executionMode==="guided"?"active":""} onClick={()=>setExecutionMode("guided")}><Play size={15}/> Terarah</button></div><button className="button uao-primary" disabled={request.trim().length<3||planning}>{planning?"Menyusun control plan…":"Susun Control Plan"}</button></div>
-   </form>
-   <div className="uao-shortcuts">{shortcuts.map(item=><button type="button" key={item} onClick={()=>{setRequest(item);void analyze(item)}}>{compact(item,62)}</button>)}</div>
-  </div>
+  {status&&!plan&&<div className="banner" role="status">{status}</div>}
 
   {savedRuns.length>0&&<div className="uao-runs"><div className="uao-section-title"><div><Clock3 size={18}/><strong>Run terbaru</strong></div><small>Resume dari checkpoint tanpa mengulang analisis.</small></div><div className="uao-run-grid">{savedRuns.map(run=><button type="button" key={run.id} disabled={busy} onClick={()=>void resume(run)}><span>{run.status==="completed"?"Selesai":"Aktif"}</span><strong>{compact(run.title,46)}</strong><small>{new Date(run.updated_at).toLocaleString("id-ID",{dateStyle:"medium",timeStyle:"short"})}</small></button>)}</div></div>}
 
@@ -173,20 +222,20 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
 
   {plan&&<div className="uao-plan">
    <div className="uao-goal">
-    <div><span className="uao-kicker">GOAL LOCK</span><h3>{plan.objective}</h3><p>{plan.reason}</p></div>
+    <div><span className="uao-kicker">TUJUAN RENCANA</span><h3>{plan.objective}</h3><p>{plan.reason}</p></div>
     <div className="uao-progress"><span>{progress}%</span><small>{completed}/{plan.steps.length} terverifikasi</small><div><i style={{width:progress+"%"}}/></div></div>
    </div>
 
    <div className="uao-metrics">
-    <div><small>Risk</small><strong className={riskClass[plan.riskLevel]}>{riskLabel[plan.riskLevel]}</strong></div>
-    <div><small>Autonomy</small><strong>{plan.autonomyLevel}</strong></div>
-    <div><small>Mode</small><strong>{plan.executionMode==="simulation"?"Simulasi":"Terarah"}</strong></div>
-    <div><small>Source</small><strong>{source||"Policy engine"}</strong></div>
+    <div><small>Risiko</small><strong className={riskClass[plan.riskLevel]}>{riskLabel[plan.riskLevel]}</strong></div>
+    <div><small>Level bantuan</small><strong>{plan.autonomyLevel}</strong></div>
+    <div><small>Mode kerja</small><strong>{plan.executionMode==="simulation"?"Simulasi":"Terarah"}</strong></div>
+    <div><small>Mesin penyusun</small><strong>{source||"Policy engine"}</strong></div>
    </div>
 
    <div className="uao-grid">
     <div className="uao-main">
-     <div className="uao-section-title"><div><GitBranch size={18}/><strong>Execution DAG</strong></div>{schoolId&&!activeRunId&&<button className="button secondary" disabled={busy||!plan.steps.length} onClick={()=>void persist()}>{busy?"Menyimpan…":"Simpan run"}</button>}</div>
+     <div className="uao-section-title"><div><GitBranch size={18}/><strong>Langkah kerja berurutan</strong></div>{schoolId&&!activeRunId&&<button className="button secondary" disabled={busy||!plan.steps.length} onClick={()=>void persist()}>{busy?"Menyimpan…":"Simpan run"}</button>}</div>
      <div className="uao-timeline">
       {plan.steps.map((step,index)=><article className={"uao-step "+(done[index]?"done ":"")+(step.permitted?"":"blocked")} key={stepRows[index]?.id||step.action+index}>
        <div className="uao-step-index">{done[index]?<Check size={17}/>:index+1}</div>
@@ -194,7 +243,7 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
         <div className="uao-step-head"><div><small>{step.action}</small><h4>{step.title}</h4></div><span className={riskClass[step.risk]}>{riskLabel[step.risk]}</span></div>
         <p>{step.instruction}</p>
         <div className="uao-step-meta"><span><LockKeyhole size={14}/>{step.requiresApproval?"Approval wajib":"Approval otomatis"}</span><span><RotateCcw size={14}/>{step.reversible?"Reversible":"Compensation only"}</span><span><Database size={14}/>{step.module} · {step.feature}</span></div>
-        <details><summary>Precondition, impact & verification</summary><p><b>Precondition:</b> {step.precondition}</p><p><b>Impact:</b> {step.impact}</p><p><b>Verification:</b> {step.verification}</p></details>
+        <details><summary>Prasyarat, dampak & cara verifikasi</summary><p><b>Prasyarat:</b> {step.precondition}</p><p><b>Dampak:</b> {step.impact}</p><p><b>Verifikasi:</b> {step.verification}</p></details>
         {!step.permitted&&<div className="uao-inline-warning"><AlertTriangle size={16}/> Diblokir oleh role/policy aktif.</div>}
         {step.requiresApproval&&stepRows[index]&&!approvals[index]&&<button className="button secondary" disabled={busy||!step.permitted} onClick={()=>void approveStep(index)}><ShieldCheck size={15}/> Approve langkah</button>}
        </div>
@@ -205,10 +254,10 @@ export default function UniversalOrchestrator({role,schoolId,onRoute}:{role:Role
     </div>
 
     <aside className="uao-rail">
-     <section><div className="uao-section-title"><div><ShieldCheck size={17}/><strong>Pre-flight</strong></div></div>{preflight.map(item=><div className="uao-check" key={item.label}><span className={item.ok?"ok":"warn"}>{item.ok?<Check size={14}/>:<AlertTriangle size={14}/>}</span><div><b>{item.label}</b><small>{item.detail}</small></div></div>)}</section>
-     <section><div className="uao-section-title"><div><Layers3 size={17}/><strong>Impact map</strong></div></div>{plan.impact.map(item=><p className="uao-listline" key={item}>{item}</p>)}</section>
-     <section><div className="uao-section-title"><div><FileCheck2 size={17}/><strong>Acceptance</strong></div></div>{plan.acceptanceCriteria.map((item,i)=><p className="uao-listline" key={i}>{item}</p>)}</section>
-     <section><div className="uao-section-title"><div><LockKeyhole size={17}/><strong>Safeguards</strong></div></div>{plan.safeguards.slice(0,5).map((item,i)=><p className="uao-listline" key={i}>{item}</p>)}</section>
+     <section><div className="uao-section-title"><div><ShieldCheck size={17}/><strong>Pemeriksaan sebelum mulai</strong></div></div>{preflight.map(item=><div className="uao-check" key={item.label}><span className={item.ok?"ok":"warn"}>{item.ok?<Check size={14}/>:<AlertTriangle size={14}/>}</span><div><b>{item.label}</b><small>{item.detail}</small></div></div>)}</section>
+     <section><div className="uao-section-title"><div><Layers3 size={17}/><strong>Dampak pekerjaan</strong></div></div>{plan.impact.map(item=><p className="uao-listline" key={item}>{item}</p>)}</section>
+     <section><div className="uao-section-title"><div><FileCheck2 size={17}/><strong>Kriteria keberhasilan</strong></div></div>{plan.acceptanceCriteria.map((item,i)=><p className="uao-listline" key={i}>{item}</p>)}</section>
+     <section><div className="uao-section-title"><div><LockKeyhole size={17}/><strong>Perlindungan & batasan</strong></div></div>{plan.safeguards.slice(0,5).map((item,i)=><p className="uao-listline" key={i}>{item}</p>)}</section>
     </aside>
    </div>
 
