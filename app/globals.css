@@ -224,3 +224,7 @@ body[data-theme=dark]{--accent:#a879ff;--accent-soft:#2b2144;--sidebar:linear-gr
 .button:not(.secondary):not(.danger){background:linear-gradient(135deg,#7b1fa8 0%,#4a238e 48%,#0a74cf 100%);box-shadow:0 8px 22px #51238c24}
 .navbtn.active,.navbtn:hover{background:linear-gradient(135deg,#6d2ca6aa,#1470b8aa)}
 .bottomnav .active{color:#6d28b8}
+
+/* Teacher AI: progressive disclosure keeps the essential form short. */
+.teacher-extra{margin-top:12px;border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:var(--surface)}
+.teacher-extra>summary{cursor:pointer;font-weight:650;line-height:1.5}.teacher-extra>summary small{display:block;font-weight:400;color:var(--muted);font-size:12px}.teacher-extra[open]>summary{margin-bottom:12px}
