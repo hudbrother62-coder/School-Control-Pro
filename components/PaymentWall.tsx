@@ -14,7 +14,6 @@ const formattedDate=(value:string)=>{
 
 export default function PaymentWall({schoolId,schoolName,trialEnd,status,owner,paused,busy,onRefresh}:Props){
  const demoExpired=!paused&&status==="trial";
- const unpaid=!paused&&status!=="trial";
  const headline=paused?"Akses Sekolah Sedang Dinonaktifkan":demoExpired?"Masa Demo Sekolapro Telah Berakhir":"Masa Berlangganan Telah Berakhir";
  const reason=paused
   ?"Akses sekolah sedang dinonaktifkan oleh Super Admin. Login tetap tersedia, tetapi modul dan perubahan data dibatasi sampai akun diaktifkan."
