@@ -94,7 +94,7 @@ export default function Home(){
  const selected=modules.find(m=>m.key===module)||modules[0]; const selectedFeatures=visibleFeatures(selected,role); const instructions=taskHelp(module,featureFocus); const visible=modules.filter(m=>canAccess(m,role)&&navigationFeatures(m,role).length>0);
  const isManager=isAdmin(role)||role==="hr";
  useEffect(()=>{setMounted(true);const saved=localStorage.getItem("sekolapro-theme")||localStorage.getItem("school-control-theme");const t=saved==="dark"?"dark":"light";setTheme(t);document.body.dataset.theme=t},[]);
- useEffect(()=>{if(!db)return;let active=true;void db.auth.getUser().then(({data})=>{if(!active)return;setUser(data.user);setAuthReady(true)}).catch(()=>{if(active)setAuthReady(true)}); const {data:{subscription:sub}}=db.auth.onAuthStateChange((_event,session)=>{if(!active)return;setUser(session?.user||null);setAuthReady(true)});return ()=>{active=false;sub.unsubscribe()};},[db]);
+ useEffect(()=>{if(!db)return;let active=true;let authVersion=0;void db.auth.getUser().then(({data})=>{if(!active||authVersion!==0)return;setUser(data.user);setAuthReady(true)}).catch(()=>{if(active&&authVersion===0)setAuthReady(true)}); const {data:{subscription:sub}}=db.auth.onAuthStateChange((event,session)=>{if(!active||event==="INITIAL_SESSION")return;authVersion++;setUser(session?.user||null);setAuthReady(true)});return ()=>{active=false;sub.unsubscribe()};},[db]);
  useEffect(()=>{if(mounted&&authReady&&db&&!user)window.location.replace("/masuk")},[mounted,authReady,db,user]);
  useEffect(()=>{if(!db||!user){setSchools([]);setSchoolId("");return;}let active=true;(async()=>{
  const {data:m,error:e}=await db.from("sc_members").select("school_id,role,is_active").eq("user_id",user.id);
