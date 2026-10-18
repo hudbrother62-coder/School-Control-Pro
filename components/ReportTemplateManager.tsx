@@ -8,6 +8,7 @@ import {errorMessage} from '@/lib/error-message';
 import {downloadOfficialDocx,type ReportIdentity} from '@/lib/report-engine';
 import {resolveReportAssets} from '@/lib/report-template-client';
 import ReportTemplatePreview from '@/components/ReportTemplatePreview';
+import {AlertCircle,ArrowUpRight,FileDown,FileText,School2,Save,SlidersHorizontal,UploadCloud,UserRound} from 'lucide-react';
 const scopes=[['default','Semua laporan / dokumen'],['journals','Jurnal harian & bulanan'],['library','Perpustakaan'],['sarpras','Sarana & prasarana'],['guru_ai','Perangkat ajar AI'],['buku_kerja','Akademik & kehadiran'],['disiplin','Disiplin & prestasi'],['bk','Bimbingan konseling'],['command','Program & tugas'],['sikas','Keuangan'],['gajian','SDM & payroll'],['kepsek_ai','Supervisi & perencanaan']];
 export default function ReportTemplateManager({schoolId,role}:{schoolId:string;role:Role}){
  const db=useMemo(()=>browserDb(),[]),admin=isAdmin(role);
@@ -47,19 +48,66 @@ export default function ReportTemplateManager({schoolId,role}:{schoolId:string;r
   {label:'Stempel (jika diaktifkan)',ok:settings.show_stamp!==true||!!identity.stamp_url}
  ]:[];
  const missing=readiness.filter(item=>!item.ok);
- return <section className="panel"><div className="sectionhead"><div><h2>Template Laporan Sekolah</h2><p className="muted">Atur format Word milik sekolah. Excel tetap berupa tabel terpisah untuk pengolahan data.</p></div><button className="button secondary" onClick={()=>void sample()}>Unduh contoh DOCX</button></div>
- <div className="banner"><strong>Mulai dengan 3 langkah</strong><p>Unduh contoh → sesuaikan kop, margin, font dan tata letak di Word → unggah lalu uji hasilnya. Pertahankan placeholder agar isi diganti otomatis. Template khusus jenis laporan diprioritaskan, lalu modul, lalu template semua laporan. Tanpa unggahan, format formal bawaan dipakai.</p><p>Format DOCX yang diunggah berlaku untuk ekspor Word. Preview/cetak PDF memakai layout formal aplikasi dengan identitas yang sama.</p></div>
- <div className="banner" role="status"><strong>Pemeriksaan identitas dokumen: {readiness.length-missing.length}/{readiness.length} lengkap</strong>
-  <p>{missing.length?'Lengkapi unsur berikut sebelum menerbitkan dokumen resmi: '+missing.map(item=>item.label).join(', ')+'.':'Identitas dasar dan aset yang diaktifkan sudah tersedia. Periksa kembali kewenangan penandatangan, ketentuan dinas setempat, dan kebenaran isi sebelum disahkan.'}</p>
-  <p className="hint">Foto tanda tangan/stempel bukan tanda tangan elektronik tersertifikasi. NIP dicantumkan jika penandatangan memilikinya. Template Word kustom tidak otomatis menjadi tampilan PDF; gunakan ekspor Word dan konversi untuk hasil yang identik.</p>
- </div>
- <div className="fields"><label className="field">Berlaku untuk<select value={scope} onChange={e=>setScope(e.target.value)}>{scopes.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label className="field">Atau kode jenis laporan/dokumen<input value={scope} onChange={e=>setScope(e.target.value)} placeholder="Misal: buku_kas_umum atau RKT"/><small className="hint">Gunakan kode jenis dari arsip laporan atau jenis dokumen AI. Kosongkan untuk memilih kembali dari daftar.</small></label>{admin&&<label className="field">Upload template DOCX (maks. 5 MB)<input type="file" accept=".docx" disabled={busy||!scope.trim()} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void upload(file);}}/></label>}</div>
- <div className="fields">{['logo','signature','stamp'].map((key,i)=><label className="field" key={key}>{['Logo','Tanda tangan','Stempel'][i]} (PNG/JPG, 2 MB){identity?.[key+'_url']&&<img src={identity[key+'_url']} alt={key} style={{maxWidth:110,maxHeight:80,objectFit:'contain'}}/>}{admin&&<input type="file" accept="image/png,image/jpeg" disabled={busy} onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void upload(file,key);}}/>}</label>)}</div>
- {admin&&<div className="fields"><label className="field">Font isi laporan<input value={settings.body_font||'Times New Roman'} onChange={e=>setIdentity({...identity,report_settings:{...settings,body_font:e.target.value}})}/></label><label className="field">Ukuran font isi (pt)<input type="number" min="8" max="18" value={settings.body_font_size||11} onChange={e=>setIdentity({...identity,report_settings:{...settings,body_font_size:Number(e.target.value)}})}/></label><button className="button" disabled={busy||!identity} onClick={()=>void run(()=>save({body_font:settings.body_font||'Times New Roman',body_font_size:settings.body_font_size||11}))}>Simpan format isi</button></div>}
- <h3>Template aktif</h3>{Object.entries(templates).map(([key,t])=><div className="entry" key={key}><div><strong>{scopes.find(x=>x[0]===key)?.[1]||key}</strong><small>{t.name} · {new Date(t.updated_at).toLocaleString('id-ID')}</small></div><div className="flow"><button className="button secondary" disabled={busy} onClick={()=>void run(async()=>{const {data,error}=await db.storage.from('sc-report-assets').download(t.path);if(error||!data)throw error;download(data,t.name);})}>Unduh</button>{admin&&<button className="button danger" disabled={busy} onClick={()=>{if(confirm('Lepas template ini? Ekspor berikutnya memakai fallback modul / format bawaan.'))void run(()=>save({templates:{[key]:null}}));}}>Lepas</button>}</div></div>)}{!Object.keys(templates).length&&<p className="muted">Belum ada template unggahan. Seluruh laporan memakai format formal bawaan.</p>}
- <button className="button" disabled={busy||!identity} onClick={()=>void run(async()=>{const selected=templates[scope]||templates.default;const test={...identity,report_settings:{...settings,templates:selected?{default:selected}:{}}} as ReportIdentity;await downloadOfficialDocx(test,{moduleKey:'reports',documentType:'template_test',prefix:'UJI',title:'Uji Format Laporan Sekolah',periodLabel:'Contoh periode',status:'draft',metrics:[{label:'Jumlah data contoh',value:'2'}],sections:[{title:'Data Uji',columns:['Nama','Kelas','Hasil'],rows:[['Peserta Didik A','VII A','Contoh data untuk pemeriksaan format'],['Peserta Didik B','VII B','Periksa kop, tabel, tanda tangan, dan stempel']]}]});})}>Uji hasil DOCX</button>
- <details style={{marginTop:16}}><summary>Daftar placeholder dan aturan format</summary><p>Placeholder teks: {templateFields.filter(x=>!['report_body','signatories','logo','signature','stamp'].includes(x)).map(x=>'{'+x+'}').join(', ')}.</p><p>Isi laporan wajib: {'{@report_body}'}. Penanggung jawab laporan: {'{@signatories}'} mempertahankan semua nama/peran dari modul. Gambar opsional: {'{@logo}, {@signature}, {@stamp}'}. Setiap placeholder dengan @ harus berada dalam paragraf tersendiri. Gambar tetap di Word juga dipertahankan. Tidak perlu menyertakan data pribadi contoh dalam template.</p><p>Standar operasional bawaan: identitas, judul, periode, nomor/status, data per jenis laporan dan penanggung jawab. Kepala sekolah menetapkan format final; jenis laporan pemerintah mengikuti ketentuan instansi terkait.</p></details>
- {error&&<div className="banner error" role="alert">{error}</div>}{message&&<div className="banner success" role="status">{message}</div>}
- <ReportTemplatePreview schoolId={schoolId} scope={scope} identity={identity as ReportIdentity|null}/>
- </section>;
+ return <div className="rt-page">
+  <header className="rt-page-head">
+   <div><span className="eyebrow">PUSAT LAPORAN • TEMPLATE SEKOLAH</span><h2>Template & Dokumen Sekolah</h2><p>Atur identitas dan format sekali, lalu gunakan pada laporan dari setiap modul. Pratinjau A4 diperbarui langsung.</p></div>
+   <button type="button" className="button secondary" onClick={()=>void sample()}><FileDown size={16}/> Unduh contoh Word</button>
+  </header>
+  <div className="rt-workspace">
+   <div className="rt-configuration">
+    <section className="rt-config-card">
+     <div className="rt-card-title"><span className="rt-card-icon"><School2 size={20}/></span><div><h3>Identitas & Kop Sekolah</h3><p>Identitas resmi otomatis diambil dari profil sekolah.</p></div></div>
+     <div className="rt-school-summary"><strong>{identity?.name||"Memuat nama sekolah…"}</strong><span>{[identity?.address,identity?.city,identity?.province].filter(Boolean).join(", ")||"Alamat sekolah belum dilengkapi"}</span></div>
+     <div className="rt-identity-grid">
+      <div><small>NPSN</small><strong>{identity?.npsn||"Belum diisi"}</strong></div><div><small>Tahun Pelajaran</small><strong>{identity?.academic_year||"Belum diisi"}</strong></div>
+      <div><small>Kepala Sekolah</small><strong>{identity?.principal_name||"Belum diisi"}</strong></div><div><small>Kontak Sekolah</small><strong>{identity?.phone||identity?.email||"Belum diisi"}</strong></div>
+     </div>
+     <a className="rt-inline-link" href="#menu=settings&fitur=Profil+sekolah">Lengkapi identitas di Profil Sekolah <ArrowUpRight size={15}/></a>
+     <div className="rt-asset-grid">
+      {(["logo","signature","stamp"] as const).map((key,i)=><label className="rt-upload" key={key}>
+       <span className="rt-upload-icon">{identity?.[key+"_url"]?<img src={identity[key+"_url"]} alt={key==="logo"?"Logo sekolah":key==="signature"?"Tanda tangan":"Stempel sekolah"}/>:<UploadCloud size={24}/>}</span>
+       <strong>{["Logo Sekolah","Tanda Tangan","Stempel Sekolah"][i]}</strong>
+       <small>{identity?.[key+"_url"]?"Gambar tersimpan • ganti berkas":"PNG/JPG, maks. 2 MB"}</small>
+       {admin&&<input type="file" aria-label={"Unggah "+["logo sekolah","tanda tangan","stempel sekolah"][i]} accept="image/png,image/jpeg" disabled={busy} onChange={e=>{const file=e.target.files?.[0];e.target.value="";if(file)void upload(file,key);}}/>}
+      </label>)}
+     </div>
+     {!admin&&<p className="hint">Hanya pengelola sekolah yang dapat mengganti aset dokumen.</p>}
+    </section>
+    <section className="rt-config-card">
+     <div className="rt-card-title"><span className="rt-card-icon"><UserRound size={20}/></span><div><h3>Pengesahan & Penandatangan</h3><p>Menggunakan kepala sekolah dari profil, ditempatkan di kanan dokumen.</p></div></div>
+     <div className="rt-identity-grid"><div><small>Nama Penandatangan</small><strong>{identity?.principal_name||"Belum diisi"}</strong></div><div><small>NIP (jika ada)</small><strong>{identity?.principal_nip||"—"}</strong></div></div>
+     <div className="rt-switch-list">
+      {([["show_logo","Tampilkan logo sekolah"],["show_signature","Tampilkan gambar tanda tangan"],["show_stamp","Tampilkan stempel sekolah"]] as const).map(([key,label])=><label key={key} className="rt-switch"><span>{label}</span><input type="checkbox" disabled={!admin||busy} checked={key==="show_stamp"?settings[key]===true:settings[key]!==false} onChange={e=>setIdentity({...identity,report_settings:{...settings,[key]:e.target.checked}})}/></label>)}
+     </div>
+    </section>
+    <section className="rt-config-card">
+     <div className="rt-card-title"><span className="rt-card-icon"><FileText size={20}/></span><div><h3>Format sesuai Jenis Laporan</h3><p>Pilih modul, kemudian periksa dokumen contoh atau laporan tersimpan di sebelah kanan.</p></div></div>
+     <label className="field">Jenis laporan<select value={scopes.some(x=>x[0]===scope)?scope:"custom"} onChange={e=>setScope(e.target.value==="custom"?"":e.target.value)}>{scopes.map(([v,label])=><option key={v} value={v}>{label}</option>)}<option value="custom">Jenis dokumen khusus…</option></select></label>
+     {!scopes.some(x=>x[0]===scope)&&<label className="field" style={{marginTop:12}}>Kode dokumen khusus<input value={scope} placeholder="Contoh: RKT, rekap_nilai, laporan_rapat" onChange={e=>setScope(e.target.value)}/></label>}
+     <p className="hint">Jenis jurnal, akademik, disiplin, BK, keuangan, sarpras, perpustakaan, dan supervisi memiliki contoh tabel masing-masing. Laporan nyata tetap berasal dari modul sumber.</p>
+     {admin&&<label className="rt-template-upload"><UploadCloud size={19}/><span><strong>Unggah template Word untuk kategori ini</strong><small>DOCX maksimal 5 MB • opsional</small></span><input type="file" accept=".docx" disabled={busy||!scope.trim()} onChange={e=>{const f=e.target.files?.[0];e.target.value="";if(f)void upload(f);}}/></label>}
+     <details className="rt-details"><summary>Template Word yang sudah tersimpan ({Object.keys(templates).length})</summary>
+      {Object.entries(templates).map(([key,t])=><div className="entry" key={key}><div><strong>{scopes.find(x=>x[0]===key)?.[1]||key}</strong><small>{t.name} · {new Date(t.updated_at).toLocaleDateString("id-ID")}</small></div><div className="flow"><button className="button secondary" disabled={busy} onClick={()=>void run(async()=>{const {data,error}=await db.storage.from("sc-report-assets").download(t.path);if(error||!data)throw error;download(data,t.name);})}>Unduh</button>{admin&&<button className="button danger" disabled={busy} onClick={()=>{if(confirm("Lepas template ini? Laporan kembali ke format bawaan."))void run(()=>save({templates:{[key]:null}}));}}>Lepas</button>}</div></div>)}
+      {!Object.keys(templates).length&&<p className="muted">Belum ada DOCX kustom. Semua laporan memakai format resmi bawaan.</p>}
+     </details>
+    </section>
+    <section className="rt-config-card">
+     <div className="rt-card-title"><span className="rt-card-icon"><SlidersHorizontal size={20}/></span><div><h3>Pengaturan Dokumen</h3><p>Font isi untuk laporan Word dan ketentuan dokumen formal.</p></div></div>
+     <div className="fields">
+      <label className="field">Font dokumen<input value={settings.body_font||"Times New Roman"} disabled={!admin||busy} onChange={e=>setIdentity({...identity,report_settings:{...settings,body_font:e.target.value}})}/></label>
+      <label className="field">Ukuran (pt)<input type="number" min="8" max="18" value={settings.body_font_size||11} disabled={!admin||busy} onChange={e=>setIdentity({...identity,report_settings:{...settings,body_font_size:Number(e.target.value)}})}/></label>
+     </div>
+     <p className="hint">Kop surat dan tanda tangan dipakai di Word dan cetak PDF. Template DOCX kustom hanya mengubah tata letak Word; isi data tetap mengikuti modul asal.</p>
+     {admin&&<button className="button rt-save" disabled={busy||!identity} onClick={()=>void run(()=>save({show_logo:settings.show_logo!==false,show_signature:settings.show_signature!==false,show_stamp:settings.show_stamp===true,body_font:settings.body_font||"Times New Roman",body_font_size:settings.body_font_size||11}))}><Save size={17}/>{busy?"Menyimpan…":"Simpan Perubahan Template"}</button>}
+     {message&&<div className="banner success" role="status">{message}</div>}{error&&<div className="banner error" role="alert">{error}</div>}
+     {missing.length>0&&<p className="rt-alert"><AlertCircle size={16}/> Identitas belum lengkap: {missing.map(x=>x.label).join(", ")}.</p>}
+     <details className="rt-details"><summary>Pengaturan lanjutan & uji ekspor</summary>
+      <button className="button secondary" disabled={busy||!identity} onClick={()=>void run(async()=>{const selected=templates[scope]||templates.default;const test={...identity,report_settings:{...settings,templates:selected?{default:selected}:{}}} as ReportIdentity;await downloadOfficialDocx(test,{moduleKey:"reports",documentType:"template_test",prefix:"UJI",title:"Uji Format Laporan Sekolah",periodLabel:"Contoh periode",status:"draft",metrics:[{label:"Jumlah data contoh",value:"2"}],sections:[{title:"Data Uji",columns:["Nama","Kelas","Hasil"],rows:[["Peserta Didik A","VII A","Contoh"],["Peserta Didik B","VII B","Periksa tabel dan pengesahan"]]}]});})}>Uji ekspor DOCX</button>
+      <p className="hint">Placeholder: {templateFields.filter(x=>!["report_body","signatories","logo","signature","stamp"].includes(x)).map(x=>"{"+x+"}").join(", ")}. Wajib gunakan {"{@report_body}"}; opsional {"{@signatories}"}, {"{@logo}"}, {"{@signature}"}, {"{@stamp}"}. Gambar tanda tangan bukan tanda tangan elektronik tersertifikasi.</p>
+     </details>
+    </section>
+   </div>
+   <ReportTemplatePreview schoolId={schoolId} scope={scope} identity={identity as ReportIdentity|null}/>
+  </div>
+ </div>;
 }
