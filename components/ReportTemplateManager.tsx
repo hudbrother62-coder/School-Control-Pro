@@ -9,7 +9,7 @@ import {downloadOfficialDocx,type ReportIdentity} from '@/lib/report-engine';
 import {resolveReportAssets} from '@/lib/report-template-client';
 import ReportTemplatePreview from '@/components/ReportTemplatePreview';
 import {AlertCircle,ArrowUpRight,FileDown,FileText,School2,Save,SlidersHorizontal,UploadCloud,UserRound} from 'lucide-react';
-const scopes=[['default','Semua laporan / dokumen'],['journals','Jurnal harian & bulanan'],['library','Perpustakaan'],['sarpras','Sarana & prasarana'],['guru_ai','Perangkat ajar AI'],['buku_kerja','Akademik & kehadiran'],['disiplin','Disiplin & prestasi'],['bk','Bimbingan konseling'],['command','Program & tugas'],['sikas','Keuangan'],['gajian','SDM & payroll'],['kepsek_ai','Supervisi & perencanaan']];
+const scopes=[['default','Semua laporan / dokumen'],['journals','Jurnal harian & bulanan'],['calendar','Agenda & kegiatan sekolah'],['library','Perpustakaan'],['sarpras','Sarana & prasarana'],['guru_ai','Perangkat ajar AI'],['buku_kerja','Akademik & kehadiran siswa'],['attendance','Presensi guru & staf'],['disiplin','Disiplin & prestasi'],['bk','Bimbingan konseling'],['command','Program & tugas'],['sikas','Keuangan'],['gajian','SDM & payroll'],['kepsek_ai','Supervisi & perencanaan']];
 export default function ReportTemplateManager({schoolId,role}:{schoolId:string;role:Role}){
  const db=useMemo(()=>browserDb(),[]),admin=isAdmin(role);
  const [identity,setIdentity]=useState<any>(null),[scope,setScope]=useState('default'),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState('');
@@ -62,7 +62,7 @@ export default function ReportTemplateManager({schoolId,role}:{schoolId:string;r
       <div><small>NPSN</small><strong>{identity?.npsn||"Belum diisi"}</strong></div><div><small>Tahun Pelajaran</small><strong>{identity?.academic_year||"Belum diisi"}</strong></div>
       <div><small>Kepala Sekolah</small><strong>{identity?.principal_name||"Belum diisi"}</strong></div><div><small>Kontak Sekolah</small><strong>{identity?.phone||identity?.email||"Belum diisi"}</strong></div>
      </div>
-     <a className="rt-inline-link" href="#menu=settings&fitur=Profil+sekolah">Lengkapi identitas di Profil Sekolah <ArrowUpRight size={15}/></a>
+     {(role==="owner"||role==="principal")&&<a className="rt-inline-link" href="#menu=settings&fitur=Profil+sekolah">Lengkapi identitas di Profil Sekolah <ArrowUpRight size={15}/></a>}
      <div className="rt-asset-grid">
       {(["logo","signature","stamp"] as const).map((key,i)=><label className="rt-upload" key={key}>
        <span className="rt-upload-icon">{identity?.[key+"_url"]?<img src={identity[key+"_url"]} alt={key==="logo"?"Logo sekolah":key==="signature"?"Tanda tangan":"Stempel sekolah"}/>:<UploadCloud size={24}/>}</span>
