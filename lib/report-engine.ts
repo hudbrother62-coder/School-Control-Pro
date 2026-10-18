@@ -196,11 +196,12 @@ export async function downloadOfficialDocx(identity:ReportIdentity,model:Officia
  }
  children.push(endMarker);
  const signs=model.signatures?.length?model.signatures:defaultSignatures(identity);
- children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[new TableRow({children:signs.map((s,idx)=>new TableCell({borders:{top:{style:"nil"},bottom:{style:"nil"},left:{style:"nil"},right:{style:"nil"},insideHorizontal:{style:"nil"},insideVertical:{style:"nil"}},children:[
-  new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(idx===signs.length-1?schoolLetterDate(identity,model.issuedAt):"")]}),
+ const wordSignatures=signs.length===1?[{role:"",name:" "},...signs]:signs;
+ children.push(new Table({width:{size:100,type:WidthType.PERCENTAGE},rows:[new TableRow({children:wordSignatures.map((s,idx)=>new TableCell({borders:{top:{style:"nil"},bottom:{style:"nil"},left:{style:"nil"},right:{style:"nil"},insideHorizontal:{style:"nil"},insideVertical:{style:"nil"}},children:[
+  new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(idx===wordSignatures.length-1?schoolLetterDate(identity,model.issuedAt):"")]}),
   new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(s.role)]}),
-  new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:80},children:idx===signs.length-1&&signature?[new ImageRun({data:signature.data,transformation:{width:90,height:55},type:signature.type})]:[new TextRun("\n\n")]}),
-  ...(idx===signs.length-1&&stamp?[new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:stamp.data,type:stamp.type,transformation:{width:55,height:55}})]})]:[]),
+  new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:80},children:idx===wordSignatures.length-1&&signature?[new ImageRun({data:signature.data,transformation:{width:90,height:55},type:signature.type})]:[new TextRun("\n\n")]}),
+  ...(idx===wordSignatures.length-1&&stamp?[new Paragraph({alignment:AlignmentType.CENTER,children:[new ImageRun({data:stamp.data,type:stamp.type,transformation:{width:55,height:55}})]})]:[]),
   new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:s.name||"........................",bold:true,underline:{}})]}),
   ...(s.identifier?[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun(s.identifier)]})]:[])
  ]}))})]}));
