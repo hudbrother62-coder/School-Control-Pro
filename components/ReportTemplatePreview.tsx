@@ -27,7 +27,8 @@ const previewCatalog:Record<string,{title:string;subtitle:string;columns:string[
  kepsek_ai:{title:"Laporan Supervisi",subtitle:"Hasil supervisi dan tindak lanjut guru",columns:["Tanggal","Guru","Aspek","Tindak lanjut"],row:["01-10-2026","Contoh Guru","Pembelajaran","Pendampingan"]},
  gajian:{title:"Laporan SDM",subtitle:"Rekap administrasi kepegawaian",columns:["Nama","Unit","Status"],row:["Contoh Pegawai","Sekolah","Aktif"]},
  guru_ai:{title:"Laporan Perangkat Ajar",subtitle:"Daftar modul, RPP dan bahan ajar guru",columns:["Guru","Mapel","Dokumen","Status"],row:["Contoh Guru","Matematika","RPP Semester","Ditinjau"]},
- calendar:{title:"Laporan Kegiatan dan Agenda",subtitle:"Rekap agenda, pelaksanaan dan hasil kegiatan",columns:["Tanggal","Kegiatan","Penanggung jawab","Pelaksanaan","Keterangan"],row:["01-10-2026","Rapat sekolah","Contoh PIC","Selesai","Notulensi tersedia"]}
+ calendar:{title:"Laporan Kegiatan dan Agenda",subtitle:"Rekap agenda, pelaksanaan dan hasil kegiatan",columns:["Tanggal","Kegiatan","Penanggung jawab","Pelaksanaan","Keterangan"],row:["01-10-2026","Rapat sekolah","Contoh PIC","Selesai","Notulensi tersedia"]},
+ attendance:{title:"Laporan Kehadiran Guru dan Staf",subtitle:"Rekap presensi, keterlambatan dan izin",columns:["Tanggal","Nama staf","Check-in","Check-out","Status"],row:["01-10-2026","Contoh Guru","07.00","15.00","Hadir"]}
 };
 function exampleReport(scope:string):OfficialReportModel{
  const x=previewCatalog[scope]||previewCatalog.default;
