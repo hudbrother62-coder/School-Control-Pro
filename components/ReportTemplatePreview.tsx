@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect,useMemo,useState} from "react";
-import {Eye,FileSpreadsheet,FileText,Printer,RefreshCw} from "lucide-react";
+import {FileSpreadsheet,FileText,Printer,RefreshCw,SlidersHorizontal} from "lucide-react";
 import {browserDb} from "@/lib/supabase";
 import {errorMessage} from "@/lib/error-message";
 import {
@@ -25,12 +25,14 @@ const previewCatalog:Record<string,{title:string;subtitle:string;columns:string[
  library:{title:"Laporan Perpustakaan",subtitle:"Koleksi, sirkulasi dan inventaris",columns:["Kode buku","Judul","Jumlah","Keterangan"],row:["BK-001","Buku Contoh",2,"Tersedia"]},
  sarpras:{title:"Laporan Sarana dan Prasarana",subtitle:"Inventaris, kondisi dan pemeliharaan",columns:["Kode inventaris","Nama barang","Jumlah","Kondisi"],row:["INV-001","Meja Contoh",10,"Baik"]},
  kepsek_ai:{title:"Laporan Supervisi",subtitle:"Hasil supervisi dan tindak lanjut guru",columns:["Tanggal","Guru","Aspek","Tindak lanjut"],row:["01-10-2026","Contoh Guru","Pembelajaran","Pendampingan"]},
- gajian:{title:"Laporan SDM",subtitle:"Rekap administrasi kepegawaian",columns:["Nama","Unit","Status"],row:["Contoh Pegawai","Sekolah","Aktif"]}
+ gajian:{title:"Laporan SDM",subtitle:"Rekap administrasi kepegawaian",columns:["Nama","Unit","Status"],row:["Contoh Pegawai","Sekolah","Aktif"]},
+ guru_ai:{title:"Laporan Perangkat Ajar",subtitle:"Daftar modul, RPP dan bahan ajar guru",columns:["Guru","Mapel","Dokumen","Status"],row:["Contoh Guru","Matematika","RPP Semester","Ditinjau"]},
+ calendar:{title:"Laporan Kegiatan dan Agenda",subtitle:"Rekap agenda, pelaksanaan dan hasil kegiatan",columns:["Tanggal","Kegiatan","Penanggung jawab","Pelaksanaan","Keterangan"],row:["01-10-2026","Rapat sekolah","Contoh PIC","Selesai","Notulensi tersedia"]}
 };
 function exampleReport(scope:string):OfficialReportModel{
  const x=previewCatalog[scope]||previewCatalog.default;
  return {moduleKey:scope==="default"?"reports":scope,documentType:"template_preview",prefix:"UJI",
-  title:x.title,subtitle:x.subtitle,periodLabel:"Contoh periode",status:"draft",orientation:"portrait",
+  title:x.title,subtitle:x.subtitle,periodLabel:"Contoh periode",status:"draft",orientation:x.columns.length>4?"landscape":"portrait",
   notes:["DATA CONTOH — hanya untuk menguji desain template; bukan catatan sekolah sebenarnya."],
   metrics:[{label:"Baris data contoh",value:"1"}],
   sections:[{title:"Contoh Tabel Laporan",columns:x.columns,rows:[x.row]}]};
@@ -86,7 +88,7 @@ export default function ReportTemplatePreview({schoolId,scope,identity}:{schoolI
    signerName:identity?.principal_name||"",letterCity:String(identity?.report_settings?.letter_city||identity?.city||""),
    orientation:original.orientation||"portrait"
   });
- },[original,identity]);
+ },[original,identity?.principal_name,identity?.principal_nip,identity?.city,identity?.report_settings?.letter_city,identity?.report_settings?.signer_title]);
 
  const displayIdentity=useMemo(()=>identity?{
   ...identity,report_settings:{...(identity.report_settings||{}),letter_city:editor.letterCity,signer_title:editor.signerTitle}
@@ -121,49 +123,42 @@ export default function ReportTemplatePreview({schoolId,scope,identity}:{schoolI
  const update=(key:keyof Editor,value:string)=>setEditor(old=>({...old,[key]:value}));
  const rows=model.sections.reduce((n,s)=>n+s.rows.length,0);
 
- return <section className="panel" aria-label="Pratinjau interaktif laporan" style={{marginTop:16}}>
-  <div className="sectionhead">
-   <div><h2>Pratinjau laporan langsung di web</h2><p className="muted">Pilih dokumen berisi data sebenarnya atau lihat contoh. Isian template menyesuaikan data sumber tanpa menyalin ulang tabel.</p></div>
-   <Eye size={22}/>
-  </div>
-  <div className="banner"><strong>{selected?"Snapshot laporan sekolah • "+rows+" baris":"Mode contoh template"}</strong>
-   <p>{selected?"Data diambil dari laporan resmi yang tersedia sesuai hak akses. Perubahan format di sini hanya membuat draf baru, bukan mengubah arsip atau nomor dokumen.":"Belum memilih laporan sumber pada kategori ini. Pilih dokumen yang tersedia untuk melihat data sebenarnya, atau gunakan contoh untuk memeriksa desain."}</p>
-   <p className="hint">Pratinjau A4 menggunakan format cetak aplikasi. Template DOCX unggahan digunakan saat mengunduh Word dan mungkin memiliki tata letak berbeda.</p>
-  </div>
-  <div className="fields">
-   <label className="field full">Sumber isi laporan
-    <select value={sourceId} disabled={loading} onChange={e=>setSourceId(e.target.value)}>
-     <option value="">Data contoh untuk pratinjau template</option>
-     {sources.map(source=><option key={source.id} value={source.id}>{source.document_number+" · "+source.title}</option>)}
-    </select>
-    <small className="hint">{loading?"Memuat laporan sesuai akses…":sources.length+" laporan sumber dapat dipilih pada kategori ini."}</small>
-   </label>
-   <label className="field full">Judul laporan<input value={editor.title} onChange={e=>update("title",e.target.value)}/></label>
-   <label className="field full">Subjudul<input value={editor.subtitle} onChange={e=>update("subtitle",e.target.value)}/></label>
-   <label className="field">Periode atau semester<input value={editor.period} onChange={e=>update("period",e.target.value)} placeholder="Contoh: Semester ganjil 2026/2027"/></label>
-   <label className="field">Orientasi kertas
-    <select value={editor.orientation} onChange={e=>update("orientation",e.target.value)}>
-     <option value="portrait">A4 Potret</option><option value="landscape">A4 Lanskap (tabel lebar)</option>
-    </select>
-   </label>
-   <label className="field">Jabatan penandatangan<input value={editor.signerTitle} onChange={e=>update("signerTitle",e.target.value)}/></label>
-   <label className="field">Nama penandatangan<input value={editor.signerName} onChange={e=>update("signerName",e.target.value)}/></label>
-   <label className="field">Kota surat<input value={editor.letterCity} onChange={e=>update("letterCity",e.target.value)}/></label>
-   <label className="field full">Keterangan kaki dokumen<input value={editor.footer} onChange={e=>update("footer",e.target.value)}/></label>
-  </div>
-  <div className="flow" style={{margin:"12px 0"}}>
-   <button className="button secondary" disabled={!identity} onClick={()=>{setSourceId("");setMessage("Pratinjau diatur ulang ke data contoh.")}}><RefreshCw size={15}/> Contoh</button>
-   <button className="button secondary" disabled={!identity||busy} onClick={print}><Printer size={15}/> Cetak / PDF</button>
-   <button className="button secondary" disabled={!identity||busy} onClick={()=>void exportAs("docx")}><FileText size={15}/> Word</button>
-   <button className="button" disabled={!identity||busy} onClick={()=>void exportAs("xlsx")}><FileSpreadsheet size={15}/> Excel ({rows} baris)</button>
-  </div>
-  {identity?
-   <div style={{border:"1px solid var(--border, #CBD5E1)",borderRadius:12,overflow:"hidden",background:"#fff"}}>
-    <iframe title="Pratinjau dokumen A4 Sekolapro" sandbox="" referrerPolicy="no-referrer" srcDoc={html} style={{width:"100%",height:600,border:0,display:"block",background:"#fff"}}/>
-   </div>:
-   <div className="empty">Memuat identitas dan format sekolah untuk pratinjau.</div>}
-  {selected&&<p className="hint">Sumber: {selected.document_number} · {new Date(selected.issued_at).toLocaleDateString("id-ID")}. Nomor laporan asli tidak dipakai pada draf ini.</p>}
-  {error&&<div className="banner error" role="alert">{error}</div>}
-  {message&&<div className="banner success" role="status">{message}</div>}
- </section>;
+ return <section className="rt-preview" aria-label="Pratinjau interaktif laporan">
+   <div className="rt-preview-toolbar">
+    <div><span className="eyebrow">PREVIEW A4 • LANGSUNG</span><h3>{model.title||"Pratinjau Dokumen"}</h3><p>{selected?"Berdasarkan arsip yang dipilih (salinan draf)":"Data ilustrasi, bukan data sekolah sebenarnya"} · {editor.orientation==="portrait"?"A4 potret":"A4 lanskap"}</p></div>
+    <div className="rt-preview-actions"><button className="button secondary" disabled={!identity||busy} onClick={print}><Printer size={15}/> Cetak / PDF</button><button className="button secondary" disabled={!identity||busy} onClick={()=>void exportAs("docx")}><FileText size={15}/> Word</button><button className="button secondary" disabled={!identity||busy} onClick={()=>void exportAs("xlsx")}><FileSpreadsheet size={15}/> Excel</button></div>
+   </div>
+   <div className="rt-source-strip">
+    <label className="field">Sumber isi dokumen
+     <select value={sourceId} disabled={loading} onChange={e=>setSourceId(e.target.value)}>
+      <option value="">Contoh format ({previewCatalog[scope]?.title||"Laporan Sekolah"})</option>
+      {sources.map(source=><option key={source.id} value={source.id}>{source.document_number+" · "+source.title}</option>)}
+     </select>
+    </label>
+    <label className="field">Kertas
+     <select value={editor.orientation} onChange={e=>update("orientation",e.target.value)}><option value="portrait">A4 Potret</option><option value="landscape">A4 Lanskap</option></select>
+    </label>
+   </div>
+   <details className="rt-preview-editor"><summary><SlidersHorizontal size={15}/> Sesuaikan judul, periode, dan pengesahan</summary>
+    <div className="fields">
+     <label className="field full">Judul laporan<input value={editor.title} onChange={e=>update("title",e.target.value)}/></label>
+     <label className="field full">Subjudul<input value={editor.subtitle} onChange={e=>update("subtitle",e.target.value)}/></label>
+     <label className="field">Periode laporan<input value={editor.period} onChange={e=>update("period",e.target.value)}/></label>
+     <label className="field">Kota penerbit<input value={editor.letterCity} onChange={e=>update("letterCity",e.target.value)}/></label>
+     <label className="field">Jabatan penandatangan<input value={editor.signerTitle} onChange={e=>update("signerTitle",e.target.value)}/></label>
+     <label className="field">Nama penandatangan<input value={editor.signerName} onChange={e=>update("signerName",e.target.value)}/></label>
+     <label className="field full">Catatan kaki<input value={editor.footer} onChange={e=>update("footer",e.target.value)}/></label>
+    </div>
+    <button className="button secondary" onClick={()=>{setSourceId("");setMessage("Pratinjau kembali menggunakan data contoh.")}}><RefreshCw size={15}/> Kembali ke contoh</button>
+    <p className="hint">Perubahan pada bagian ini berlaku untuk draf pratinjau dan ekspor saat ini. Arsip dan nomor dokumen yang sudah diterbitkan tidak diubah.</p>
+   </details>
+   <div className="rt-sheet-surround">
+    {identity?<iframe title={"Pratinjau A4 "+model.title} sandbox="" referrerPolicy="no-referrer" srcDoc={html} className={"rt-preview-frame "+(editor.orientation==="landscape"?"landscape":"")}/>:<div className="empty">Memuat identitas sekolah dan pratinjau dokumen…</div>}
+   </div>
+   <div className="rt-preview-footer">
+    <span>{selected?"Sumber: "+selected.document_number+" (draf tanpa nomor asli)":"Contoh format "+(scope==="default"?"umum":scope)+" • "+rows+" baris simulasi"}</span>
+    <small>{loading?"Memuat arsip…":sources.length+" arsip tersedia pada kategori ini"}</small>
+   </div>
+   {error&&<div className="banner error" role="alert">{error}</div>}{message&&<div className="banner success" role="status">{message}</div>}
+  </section>;
 }
