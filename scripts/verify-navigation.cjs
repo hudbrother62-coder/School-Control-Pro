@@ -27,7 +27,7 @@ assert.deepEqual(nav.resolveWorkspaceRoute('payslip','Riwayat Slip','teacher'),{
 assert.deepEqual(catalog.navigationFeatures(catalog.modules.find(m=>m.key==='payslip'),'teacher'),[]);
 assert(!catalog.navigationFeatures(catalog.modules.find(m=>m.key==='gajian'),'owner').includes('Lembur'));
 assert(!catalog.navigationFeatures(catalog.modules.find(m=>m.key==='journals'),'teacher').includes('Jurnal Mengajar'));
-assert.deepEqual(catalog.navigationFeatures(catalog.modules.find(m=>m.key==='reports'),'owner'),['Ringkasan Laporan','Template Laporan Sekolah','Arsip Laporan']);
+assert.deepEqual(catalog.navigationFeatures(catalog.modules.find(m=>m.key==='reports'),'owner'),['Template Laporan Sekolah','Ringkasan Laporan','Arsip Laporan']);
 for(const feature of ['Draft Payroll','Review','Approval','Kunci Periode','Rekap Payroll'])assert.deepEqual(nav.resolveWorkspaceRoute('gajian',feature,'owner'),{module:'gajian',feature:'Proses Payroll'});
 assert.equal(nav.resolveWorkspaceRoute('gajian','Proses Payroll','teacher'),null);
 assert.equal(nav.resolveWorkspaceRoute('assistant','Asisten Kepala Sekolah','teacher'),null);
