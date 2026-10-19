@@ -5,4 +5,6 @@ x=t({status:'active',trial_ends_at:'2026-10-01T12:00:00Z',current_period_end:'20
 x=t({status:'active',trial_ends_at:null,current_period_end:'2026-10-01T11:59:00Z'},now);assert.equal(x.inactiveDays,2);
 x=t({status:'suspended',trial_ends_at:null,current_period_end:'2026-11-01T12:00:00Z',updated_at:'2026-10-02T12:00:00Z'},now);assert.equal(x.active,false);assert.equal(x.inactiveDays,1);
 x=t({status:'none',trial_ends_at:null,current_period_end:null},now);assert.equal(x.deadline,null);assert.equal(x.inactiveDays,null);
-console.log('PASS: exact trial expiry, paid renewal, hour/day countdowns, suspended accounts and missing dates.');
+x=t({status:'active',is_lifetime:true,trial_ends_at:null,current_period_end:'2026-01-01T00:00:00Z'},now);assert.equal(x.active,true);assert.equal(x.isLifetime,true);assert.equal(x.deadline,null);assert.equal(x.dueDays,Infinity);
+x=t({status:'expired',is_lifetime:true,trial_ends_at:null,current_period_end:null},now);assert.equal(x.active,false);
+console.log('PASS: trial expiry, monthly renewal, lifetime entitlement and suspended accounts.');

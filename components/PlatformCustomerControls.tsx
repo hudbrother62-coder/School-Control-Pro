@@ -2,8 +2,9 @@
 import {useMemo,useState} from "react";
 import {browserDb} from "@/lib/supabase";
 import DataEntryModal from "@/components/DataEntryModal";
+import {plans,rupiah} from "@/lib/pricing";
 
-type School={id:string;name:string;is_paused?:boolean;subscription_status:string;current_period_end:string|null;updated_at?:string|null};
+type School={id:string;name:string;is_paused?:boolean;is_lifetime?:boolean;subscription_status:string;current_period_end:string|null;updated_at?:string|null};
 type Account={user_id:string;school_id:string|null;school_name?:string|null;account_name:string;email:string;role:string;banned_until:string|null};
 const roles=[["principal","Kepala Sekolah"],["vice_principal","Wakil Kepala Sekolah"],["teacher","Guru"],["counselor","Guru BK"],["hr","SDM"],["treasurer","Bendahara"],["staff","Staf"],["viewer","Viewer"]] as const;
 const fmt=(value:string|null)=>value?new Date(value).toLocaleDateString("id-ID",{dateStyle:"long",timeZone:"Asia/Jakarta"}):"—";
@@ -13,6 +14,7 @@ export default function PlatformCustomerControls({schools,accounts,onRefresh}:{s
  const db=useMemo(()=>browserDb(),[]);
  const [email,setEmail]=useState(""),[password,setPassword]=useState(""),[name,setName]=useState(""),[schoolName,setSchoolName]=useState("");
  const [schoolId,setSchoolId]=useState(""),[role,setRole]=useState("staff"),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
+ const [newSchoolPlan,setNewSchoolPlan]=useState<"monthly"|"lifetime">("monthly"),[planChoices,setPlanChoices]=useState<Record<string,"monthly"|"lifetime">>({});
  const [search,setSearch]=useState(""),[deleteTarget,setDeleteTarget]=useState<Account|null>(null),[verifyEmail,setVerifyEmail]=useState(""),[verifyPhrase,setVerifyPhrase]=useState("");
  async function send(body:Record<string,unknown>){
   const {data:{session}}=await db.auth.getSession();
@@ -31,7 +33,13 @@ export default function PlatformCustomerControls({schools,accounts,onRefresh}:{s
  async function createAccount(e:React.FormEvent){
   e.preventDefault();
   const result=await act({action:"create",email,password,name,school_name:schoolName,school_id:schoolId||null,role:schoolId?role:"owner"},"Akun berhasil dibuat. Berikan email dan kata sandi melalui saluran pribadi.");
-  if(result){setEmail("");setPassword("");setName("");setSchoolName("");}
+  if(result){
+   if(!schoolId&&result.school_id){
+    setPlanChoices(prev=>({...prev,[result.school_id]:newSchoolPlan}));
+    setNotice("Akun sekolah dibuat. Pilihan "+(newSchoolPlan==="lifetime"?"sekali beli":"bulanan")+" disiapkan di Kontrol Paket. Setelah pembayaran diverifikasi, konfirmasikan paket di tabel.");
+   }
+   setEmail("");setPassword("");setName("");setSchoolName("");
+  }
  }
  async function toggleAccount(a:Account){
   const next=!hold(a);
@@ -43,14 +51,24 @@ export default function PlatformCustomerControls({schools,accounts,onRefresh}:{s
   if(!window.confirm(next?"Hentikan akses SEMUA anggota "+s.name+" untuk sementara?":"Buka kembali akses sekolah "+s.name+"?"))return;
   await act({action:"school_status",school_id:s.id,paused:next},next?"Sekolah dijeda sementara.":"Sekolah dibuka kembali, selama periode berlangganan belum habis.");
  }
- async function renew(s:School){
-  const reference=window.prompt("Masukkan nomor referensi/kwitansi pembayaran untuk "+s.name+". Referensi yang sama tidak boleh memperpanjang dua kali.","");
+ async function confirmPlan(s:School){
+  if(s.is_lifetime)return;
+  const plan=planChoices[s.id]||"monthly";
+  const reference=window.prompt("Nomor referensi pembayaran "+(plan==="lifetime"?"Sekali Beli":"Bulanan")+" untuk "+s.name+":","");
   if(reference===null)return;
-  if(reference.trim().length<8||reference.trim().length>100){setError("Nomor referensi pembayaran harus 8–100 karakter.");return;}
-  const note=window.prompt("Catatan pembayaran (metode, tanggal, atau keterangan lain) — opsional:","");
+  const normalized=reference.trim();
+  if(!/^[A-Za-z0-9-]{8,85}$/.test(normalized)){setError("Referensi harus 8–85 karakter huruf, angka atau tanda hubung.");return;}
+  const note=window.prompt("Catatan pembayaran (opsional):","");
   if(note===null)return;
-  if(!window.confirm("Saya sudah memverifikasi pembayaran untuk "+s.name+". Tambahkan satu bulan masa aktif?"))return;
-  await act({action:"renew",school_id:s.id,confirmation_ref:reference.trim(),note},"Perpanjangan berhasil dikonfirmasi.");
+  if(note.trim().length>500){setError("Catatan maksimal 500 karakter.");return;}
+  const amount=plan==="lifetime"?plans.lifetime.price:plans.monthly.price;
+  const message=plan==="lifetime"
+   ?"Mutasi "+s.name+" ke paket SEKALI BELI setelah pembayaran "+rupiah(amount)+" telah benar-benar diverifikasi? Seluruh data sekolah tetap tersimpan."
+   :"Konfirmasi pembayaran "+rupiah(amount)+" dan tambah satu bulan masa aktif untuk "+s.name+"?";
+  if(!window.confirm(message))return;
+  const result=await act({action:plan==="lifetime"?"lifetime":"renew",school_id:s.id,confirmation_ref:normalized,note:note.trim()},
+   plan==="lifetime"?"Sekolah berhasil dimutasi ke akses selamanya.":"Paket bulanan diperpanjang.");
+  if(result)setPlanChoices(prev=>({...prev,[s.id]:plan}));
  }
 
  async function deleteAccount(){
@@ -64,24 +82,26 @@ export default function PlatformCustomerControls({schools,accounts,onRefresh}:{s
  return <div className="platform-customer-control">
   {error&&<div role="alert" className="platform-error">{error}</div>}
   {notice&&<div role="status" className="banner success">{notice}</div>}
-  <section className="platform-panel"><div className="platform-panel-header"><div><h2>Buat Akun Pelanggan</h2><p>Hanya Super Admin yang bisa membuat akun. Sekolah baru mendapat akses satu bulan, tanpa masa uji coba.</p></div></div>
+  <section className="platform-panel"><div className="platform-panel-header"><div><h2>Buat Akun Pelanggan</h2><p>Hanya Super Admin yang bisa membuat akun. Sekolah baru diaktifkan hanya setelah pembayaran paket dikonfirmasi.</p></div></div>
    <form onSubmit={e=>void createAccount(e)} className="platform-customer-form">
     <label>Penempatan akun<select value={schoolId} onChange={e=>setSchoolId(e.target.value)}><option value="">Sekolah baru (akun pemilik)</option>{schools.map(s=><option key={s.id} value={s.id}>Anggota: {s.name}</option>)}</select></label>
-    {schoolId?<label>Peran akun<select value={role} onChange={e=>setRole(e.target.value)}>{roles.map(([v,label])=><option key={v} value={v}>{label}</option>)}</select></label>:<label>Nama sekolah baru<input required minLength={3} maxLength={120} value={schoolName} onChange={e=>setSchoolName(e.target.value)} placeholder="Nama sekolah pelanggan"/></label>}
+    {schoolId?<label>Peran akun<select value={role} onChange={e=>setRole(e.target.value)}>{roles.map(([v,label])=><option key={v} value={v}>{label}</option>)}</select></label>:<><label>Nama sekolah baru<input required minLength={3} maxLength={120} value={schoolName} onChange={e=>setSchoolName(e.target.value)} placeholder="Nama sekolah pelanggan"/></label><label>Rencana paket<select aria-label="Paket sekolah baru" value={newSchoolPlan} onChange={e=>setNewSchoolPlan(e.target.value as "monthly"|"lifetime")}><option value="monthly">Bulanan · {rupiah(plans.monthly.price)}/bulan</option><option value="lifetime">Sekali Beli · {rupiah(plans.lifetime.price)}</option></select></label></>}
     <label>Nama pengguna<input maxLength={120} value={name} onChange={e=>setName(e.target.value)} placeholder="Nama pemilik atau anggota"/></label>
     <label>Email login<input type="email" autoComplete="off" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="pelanggan@sekolah.sch.id"/></label>
     <label>Kata sandi awal<input type="password" autoComplete="new-password" required minLength={8} maxLength={128} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Minimal 8 karakter"/></label>
     <button type="submit" disabled={busy}>{busy?"Memproses…":"Buat Akun & Aktifkan Akses"}</button>
    </form>
   </section>
-  <section className="platform-panel"><div className="platform-panel-header"><div><h2>Kontrol Masa Aktif Sekolah</h2><p>Pengingat mulai muncul 7 hari sebelum jatuh tempo. Tanpa konfirmasi pembayaran, akses otomatis tertutup pada tenggatnya.</p></div></div>
-   <div className="platform-table-wrap"><table><thead><tr><th>Sekolah</th><th>Batas Akses</th><th>Terakhir Diperbarui</th><th>Status</th><th>Aksi Super Admin</th></tr></thead><tbody>{schools.map(s=>{
+  <section className="platform-panel"><div className="platform-panel-header"><div><h2>Kontrol Paket & Masa Aktif Sekolah</h2><p>Pilih paket bulanan atau mutasi ke sekali beli. Setiap aktivasi membutuhkan referensi dan verifikasi pembayaran. Paket sekali beli tidak memiliki jatuh tempo bulanan.</p></div></div>
+   <div className="platform-table-wrap"><table><thead><tr><th>Sekolah</th><th>Paket Saat Ini</th><th>Batas Akses</th><th>Terakhir Diperbarui</th><th>Status</th><th>Pilih & Konfirmasi Paket</th></tr></thead><tbody>{schools.map(s=>{
     const ms=s.current_period_end?Date.parse(s.current_period_end)-Date.now():0;
     const days=Math.max(0,Math.ceil(ms/86400000));
-    const expired=ms<=0;
-    return <tr key={s.id}><td><b>{s.name}</b><small className="platform-school-contact">{accounts.filter(a=>a.school_id===s.id&&a.role==="owner").map(a=>a.email).filter((email,index,all)=>all.indexOf(email)===index).join(", ")||"Email pemilik belum tersedia"}</small></td><td>{fmt(s.current_period_end)}<small>{expired?"Lewat tenggat":days<=7?"Tagih sekarang · "+days+" hari lagi":days+" hari tersisa"}</small></td><td>{fmt(s.updated_at||null)}<small>Tersinkron ke menu Langganan sekolah</small></td>
-      <td><span className={"platform-status "+(s.is_paused?"inactive":expired?"inactive":"active")}>{s.is_paused?"Dijeda manual":expired?"Nonaktif otomatis":"Aktif"}</span></td>
-      <td><div className="platform-customer-buttons"><button type="button" disabled={busy} onClick={()=>void renew(s)}>Konfirmasi Bayar +1 Bulan</button><button type="button" disabled={busy} onClick={()=>void toggleSchool(s)}>{s.is_paused?"Buka Sekolah":"Jeda Sekolah"}</button></div></td>
+    const expired=!s.is_lifetime&&ms<=0;
+    const active=s.subscription_status==="active"&&!expired;
+    const plan=s.is_lifetime?"lifetime":planChoices[s.id]||"monthly";
+    return <tr key={s.id}><td><b>{s.name}</b><small className="platform-school-contact">{accounts.filter(a=>a.school_id===s.id&&a.role==="owner").map(a=>a.email).filter((email,index,all)=>all.indexOf(email)===index).join(", ")||"Email pemilik belum tersedia"}</small></td><td><span className="platform-plan-label">{s.is_lifetime?"Sekali Beli · Selamanya":"Bulanan"}</span><small>{s.is_lifetime?"Tidak perlu perpanjangan":rupiah(plans.monthly.price)+" / bulan"}</small></td><td>{s.is_lifetime?"Tanpa batas waktu":fmt(s.current_period_end)}<small>{s.is_lifetime?"Akses permanen":expired?"Lewat tenggat":days<=7?"Tagih sekarang · "+days+" hari lagi":days+" hari tersisa"}</small></td><td>{fmt(s.updated_at||null)}<small>Tersinkron ke menu Langganan sekolah</small></td>
+      <td><span className={"platform-status "+(s.is_paused||!active?"inactive":"active")}>{s.is_paused?"Dijeda manual":!active?"Nonaktif":"Aktif"}</span></td>
+      <td><div className="platform-customer-buttons">{s.is_lifetime?<span className="platform-plan-locked">Paket sekali beli aktif</span>:<><select aria-label={"Pilih paket untuk "+s.name} className="platform-plan-select" value={plan} disabled={busy} onChange={e=>setPlanChoices(prev=>({...prev,[s.id]:e.target.value as "monthly"|"lifetime"}))}><option value="monthly">Bulanan · {rupiah(plans.monthly.price)}</option><option value="lifetime">Sekali Beli · {rupiah(plans.lifetime.price)}</option></select><button type="button" disabled={busy} onClick={()=>void confirmPlan(s)}>{plan==="lifetime"?"Konfirmasi Sekali Beli":"Konfirmasi +1 Bulan"}</button></>}<button type="button" disabled={busy} onClick={()=>void toggleSchool(s)}>{s.is_paused?"Buka Sekolah":"Jeda Sekolah"}</button></div></td>
      </tr>})}</tbody></table>{schools.length===0&&<div className="platform-empty">Belum ada sekolah.</div>}</div>
   </section>
   <section className="platform-panel"><div className="platform-panel-header"><div><h2>Kelola Status & Hapus Akun</h2><p>Periksa asal sekolah sebelum mengubah akses. Penghapusan memerlukan verifikasi dan tidak menghapus histori sekolah.</p></div><div className="platform-search"><input aria-label="Cari akun atau sekolah" placeholder="Cari nama, email, atau sekolah" value={search} onChange={e=>setSearch(e.target.value)}/></div></div>
