@@ -75,6 +75,13 @@ Deno.serve(async(req:Request)=>{
    if(error)return reject(error.message,500);
    return respond({ok:true,paused});
   }
+  if(body.action==="lifetime"){
+   const id=String(body.school_id||""),reference=String(body.confirmation_ref||"").trim(),note=String(body.note||"").trim();
+   if(!uuid.test(id)||!/^[A-Za-z0-9-]{8,85}$/.test(reference)||note.length>500)return reject("Konfirmasi paket selamanya tidak valid");
+   const {data:expires_at,error}=await admin.rpc("sc_platform_confirm_lifetime",{p_school:id,p_actor:user.id,p_ref:reference,p_note:note});
+   if(error)return reject(error.message,500);
+   return respond({ok:true,plan:"lifetime",expires_at});
+  }
   if(body.action==="renew"){
    const id=String(body.school_id||""),reference=String(body.confirmation_ref||"").trim(),note=String(body.note||"").trim();
    if(!uuid.test(id)||reference.length<8||reference.length>100||note.length>500)return reject("Konfirmasi tidak valid");
