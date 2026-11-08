@@ -30,6 +30,11 @@ const aliases:Record<string,string[]>={
  Toleransi_Terlambat_Menit:["Toleransi Terlambat Menit","Toleransi Terlambat"],
  Jenjang:["Jenjang","Tingkat","Grade"],
  Mata_Pelajaran:["Mata Pelajaran","Nama Mata Pelajaran","Mapel","Nama Mapel"],
+ Tanggal:["Tanggal Penilaian","Tanggal Presensi","Tanggal Kegiatan","Tgl","Tgl Presensi"],
+ Nama_Penilaian:["Nama Penilaian","Jenis Penilaian","Penilaian","Asesmen"],
+ Nilai:["Skor","Score","Nilai Siswa"],
+ Kegiatan:["Nama Kegiatan","Pelajaran","Aktivitas","Aktivitas Pembelajaran"],
+ Status:["Status Kehadiran","Kehadiran","Keterangan Kehadiran"],
  Jenis:["Jenis","Mode","Jenis Penugasan"],
  Kode:["Kode","Kode Mapel","Kode Pelajaran"]
 };
