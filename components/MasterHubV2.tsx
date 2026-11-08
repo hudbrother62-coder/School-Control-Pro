@@ -1,5 +1,5 @@
-import {normalizeSchoolImportRows} from "@/lib/school-import";
 "use client";
+import {normalizeSchoolImportRows} from "@/lib/school-import";
 import {useRealtimeRefresh} from "@/lib/school-realtime";
 import SearchableSelect from "@/components/SearchableSelect";
 import {errorMessage} from "@/lib/error-message";
