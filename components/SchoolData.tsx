@@ -8,6 +8,8 @@ import DataEntryModal from "@/components/DataEntryModal";
 import {browserDb} from "@/lib/supabase";
 import {isAdmin,type Role} from "@/lib/modules";
 import {downloadExcel,readExcel} from "@/lib/excel";
+import {readAllRows} from "@/lib/read-all-rows";
+import {normalizeSchoolImportRows} from "@/lib/school-import";
 type C={id:string;name:string;grade:string|null;academic_year:string};
 type S={id:string;class_id:string|null;nis:string|null;name:string;status:string};
 type A={id:string;student_id:string;attendance_date:string;lesson_key:string;mark:string};
@@ -23,8 +25,31 @@ export default function SchoolData({mode,schoolId,userId,role,focus}:{mode:"mast
  const [tab,setTab]=useState("grades"),[modal,setModal]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState(""),[busy,setBusy]=useState(false),[editGradeId,setEditGradeId]=useState(""),[editScore,setEditScore]=useState(""),[editNote,setEditNote]=useState(""),[importKind,setImportKind]=useState<"attendance"|"grades">("grades"),[preview,setPreview]=useState<Record<string,unknown>[]>([]),[importFile,setImportFile]=useState("");
  const manager=isAdmin(role);const canTeach=manager||role==="teacher";const student=students.find(s=>s.id===studentId);const name=(id:string)=>students.find(s=>s.id===id)?.name||"Siswa";
  useRealtimeRefresh(schoolId,()=>load());
- async function load(){if(!db)return;const [{data:c},{data:s}]=await Promise.all([db.from("sc_classes").select("id,name,grade,academic_year").eq("school_id",schoolId).order("name"),db.from("sc_students").select("id,class_id,nis,name,status").eq("school_id",schoolId).order("name")]);setClasses((c||[]) as C[]);setStudents((s||[]) as S[]);
- if(mode==="academic"){const [{data:a},{data:g},{data:j},{data:ag}]=await Promise.all([db.from("sc_student_attendance").select("id,student_id,attendance_date,lesson_key,mark").eq("school_id",schoolId).order("attendance_date",{ascending:false}).limit(100),db.from("sc_grades").select("id,student_id,subject,assessment_name,score,assessment_date").eq("school_id",schoolId).order("assessment_date",{ascending:false}).limit(100),db.from("sc_teacher_journals").select("id,class_id,subject,topic,lesson_date").eq("school_id",schoolId).order("lesson_date",{ascending:false}).limit(100),db.from("sc_calendar_events").select("id,title,event_date,notes,created_by").eq("school_id",schoolId).eq("category","teaching").order("event_date",{ascending:false}).limit(100)]);setAtt((a||[]) as A[]);setGrades((g||[]) as G[]);setJournals((j||[]) as J[]);setAgenda((ag||[]) as Agenda[])}}
+ async function load(){
+  if(!db)return;
+  const [classResult,studentResult]=await Promise.all([
+   readAllRows(db.from("sc_classes").select("id,name,grade,academic_year").eq("school_id",schoolId).order("name").order("id")),
+   readAllRows(db.from("sc_students").select("id,class_id,nis,name,status").eq("school_id",schoolId).order("name").order("id"))
+  ]);
+  if(classResult.error||studentResult.error){setError("Gagal memuat kelas dan siswa: "+(classResult.error||studentResult.error)?.message);return}
+  if(mode==="academic"){
+   const [attendanceResult,gradeResult,journalResult,agendaResult]=await Promise.all([
+    readAllRows(db.from("sc_student_attendance").select("id,student_id,attendance_date,lesson_key,mark").eq("school_id",schoolId).order("attendance_date",{ascending:false}).order("id")),
+    readAllRows(db.from("sc_grades").select("id,student_id,subject,assessment_name,score,assessment_date").eq("school_id",schoolId).order("assessment_date",{ascending:false}).order("id")),
+    readAllRows(db.from("sc_teacher_journals").select("id,class_id,subject,topic,lesson_date").eq("school_id",schoolId).order("lesson_date",{ascending:false}).order("id")),
+    readAllRows(db.from("sc_calendar_events").select("id,title,event_date,notes,created_by").eq("school_id",schoolId).eq("category","teaching").order("event_date",{ascending:false}).order("id"))
+   ]);
+   const failure=[attendanceResult,gradeResult,journalResult,agendaResult].find(result=>result.error);
+   if(failure?.error){setError("Gagal memuat data akademik: "+failure.error.message);return}
+   setAtt((attendanceResult.data||[]) as A[]);
+   setGrades((gradeResult.data||[]) as G[]);
+   setJournals((journalResult.data||[]) as J[]);
+   setAgenda((agendaResult.data||[]) as Agenda[]);
+  }
+  setClasses((classResult.data||[]) as C[]);
+  setStudents((studentResult.data||[]) as S[]);
+  setError("");
+ }
  useEffect(()=>{void load()},[db,schoolId,mode]);
  useEffect(()=>{const f=(focus||"").toLowerCase();setModal(false);if(f.includes("presensi"))setTab("attendance");else if(f.includes("nilai"))setTab("grades");else if(f.includes("jurnal"))setTab("journal");else if(f.includes("agenda"))setTab("agenda");else if(f.includes("import")||f.includes("export"))setTab("import")},[focus]);
  async function save(action:()=>Promise<void>){setError("");setOk("");setBusy(true);try{await action();await load();setOk("Data tersimpan pada sekolah ini.")}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
@@ -32,7 +57,7 @@ export default function SchoolData({mode,schoolId,userId,role,focus}:{mode:"mast
  async function op(name:string,args:Record<string,unknown>){if(!db)throw Error("Database belum terhubung.");const {error:e}=await db.rpc(name,args);if(e)throw e}
  async function remove(entity:string,id:string){if(!confirm("Hapus data ini?"))return;await save(()=>op("sc_delete_operational",{p_school:schoolId,p_entity:entity,p_id:id}))}
  async function academicTemplate(){const guide=[{Kolom:"Panduan",Keterangan:"Gunakan NIS yang sudah ada di Data Induk. Maksimal 500 baris per import. Excel atau CSV diterima."}];const rows=importKind==="grades"?[{NIS:"1001",Mata_Pelajaran:"Matematika",Nama_Penilaian:"Kuis 1",Tanggal:"2026-09-30",Nilai:88}]:[{NIS:"1001",Tanggal:"2026-09-30",Kegiatan:"Matematika",Status:"Hadir"}];await downloadExcel("template-"+importKind+"-sekolapro.xlsx",[{name:"Data",rows},{name:"Panduan",rows:guide}])}
- async function readAcademic(file?:File){if(!file)return;try{if(file.size>5_000_000)throw Error("File maksimal 5 MB");const rows=await readExcel(file);if(rows.length>500)throw Error("Maksimal 500 baris");setPreview(rows as Record<string,unknown>[]);setImportFile(file.name)}catch(e){setError(errorMessage(e));setPreview([])}}
+ async function readAcademic(file?:File){if(!file)return;try{if(file.size>5_000_000)throw Error("File maksimal 5 MB");const rows=await readExcel(file);if(rows.length>500)throw Error("Maksimal 500 baris");setPreview(normalizeSchoolImportRows(rows) as Record<string,unknown>[]);setImportFile(file.name)}catch(e){setError(errorMessage(e));setPreview([])}}
  async function commitAcademicImport(){await save(async()=>{if(!preview.length)return;const rows=importKind==="grades"?preview.map(x=>({nis:String(x.NIS||"").trim(),subject:String(x.Mata_Pelajaran||"").trim(),assessment_name:String(x.Nama_Penilaian||"").trim(),assessment_date:String(x.Tanggal||"").trim(),score:Number(x.Nilai||0)})):preview.map(x=>({nis:String(x.NIS||"").trim(),attendance_date:String(x.Tanggal||"").trim(),lesson_key:String(x.Kegiatan||"").trim(),mark:String(x.Status||"").trim()}));await op(importKind==="grades"?"sc_import_grades":"sc_import_student_attendance",{p_school:schoolId,p_rows:rows});setPreview([]);setImportFile("")})}
  async function exportAcademic(){await downloadExcel("akademik-sekolapro.xlsx",[{name:"Presensi",rows:att.map(a=>({Tanggal:a.attendance_date,NIS:students.find(s=>s.id===a.student_id)?.nis||"",Nama:name(a.student_id),Kegiatan:a.lesson_key,Status:a.mark}))},{name:"Nilai",rows:grades.map(g=>({Tanggal:g.assessment_date,NIS:students.find(s=>s.id===g.student_id)?.nis||"",Nama:name(g.student_id),Mata_Pelajaran:g.subject,Penilaian:g.assessment_name,Nilai:g.score}))},{name:"Jurnal",rows:journals.map(j=>({Tanggal:j.lesson_date,Kelas:classes.find(c=>c.id===j.class_id)?.name||"",Mata_Pelajaran:j.subject,Topik:j.topic}))}])}
  const cls=<label className="field">Kelas<SearchableSelect label="Kelas" value={classId} onChange={e=>setClassId(e.target.value)}><option value="">Pilih kelas</option>{classes.map(c=><option key={c.id} value={c.id}>{c.name} · {c.academic_year}</option>)}</SearchableSelect></label>;
